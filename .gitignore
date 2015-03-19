@@ -1,0 +1,8 @@
+# generated files
+*.pyc
+*.log
+
+
+#dev environment stuff
+.pydevproject
+.project
