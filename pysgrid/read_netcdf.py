@@ -4,6 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
+import numpy as np
 
 
 def read_netcdf_file(dataset_url):
@@ -63,3 +64,7 @@ def sgrid_compliant_file(nc):
     else:
         sgrid_compliant = False
     return sgrid_compliant
+
+
+def load_grid_from_nc_dataset(nc):
+    pass
