@@ -1,14 +1,7 @@
-# Vim files
-*~
-
 # generated files
 *.pyc
 *.log
 
-# Default Topology location
-sciwms/apps/wms/topology/
-sciwms/*.db
-!.gitkeep
 
 #dev environment stuff
 .pydevproject
