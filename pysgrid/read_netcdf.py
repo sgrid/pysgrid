@@ -3,6 +3,21 @@ Created on Mar 19, 2015
 
 @author: ayan
 '''
+import netCDF4 as nc4
+
+
+def read_netcdf_file(dataset_url):
+    """
+    Read a netCDF file into a dataset
+    object.
+    
+    :param str dataset_url: path or URL to a netCDF file
+    :return: netCDF dataset object
+    :rtype: netCDF4.Dataset
+    
+    """
+    nc_dataset = nc4.Dataset(dataset_url)
+    return nc_dataset
 
 
 def find_grid_topology_vars(nc):
