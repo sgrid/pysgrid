@@ -32,6 +32,16 @@ def find_grid_topology_vars(nc):
 
 
 def sgrid_compliant_file(nc):
+    """
+    Determine whether a dataset is
+    SGRID compliant.
+    
+    :param nc: netCDF dataset
+    :type nc: netCDF4.Dataset
+    :return: True if dataset is compliant, False if it is not
+    :rtype: bool
+    
+    """
     grid_vars = find_grid_topology_vars(nc)
     if len(grid_vars) > 0:
         sgrid_compliant = True
