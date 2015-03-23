@@ -7,20 +7,42 @@ import re
 from collections import namedtuple
 
 
-GridPadding = namedtuple('GridPadding', ['mesh_topology_var', 
-                                         'dim_name', 
-                                         'dim_var', 
-                                         'padding'
+GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
+                                         'dim_name',  # the topology attribute
+                                         'dim_var',  # node dimension within the topology attribute
+                                         'padding'  # padding type for the node dimension
                                          ]
                          )
 
 
 class ParsePadding(object):
+    """
+    Parse out the padding types from
+    variables with a cf_role of 'grid_topology'.
     
+    """
     def __init__(self, mesh_topology_var=None):
         self.mesh_topology_var = mesh_topology_var
 
     def parse_padding(self, padding_str):
+        """
+        Use regex expressions to break apart an
+        attribute string containining padding types
+        for each variable with a cf_role of 
+        'grid_topology'.
+        
+        Padding information is returned within a named tuple
+        for each node dimension of an edge, face, or vertical
+        dimension. The named tuples have the following attributes:
+        mesh_topology_var, dim_name, dim_var, and padding.
+        Padding information is returned as a list
+        of these named tuples.
+        
+        :param str padding_str: string containing padding types from a netCDF attribute
+        :return: named tuples with padding information
+        :rtype: list
+        
+        """
         p = re.compile('([a-zA-Z0-9_]+:) ([a-zA-Z0-9_]+) (\(padding: [a-zA-Z]+\))')
         padding_matches = p.findall(padding_str)
         padding_type_list = []
