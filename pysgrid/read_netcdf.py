@@ -5,6 +5,7 @@ Created on Mar 19, 2015
 '''
 import netCDF4 as nc4
 from custom_exceptions import SGridNonCompliant
+from utils import ParsePadding
 
 
 def read_netcdf_file(dataset_url):
@@ -112,6 +113,33 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         else:
             grid_topology_vars_attr = grid_topology_vars
         grid.grid_topology_vars = grid_topology_vars_attr
+        for topology_var in grid_topology_vars_attr:
+            nc_grid_topology_var = nc_dataset.variables[topology_var]
+            pp = ParsePadding(topology_var)
+            try:
+                face_dim = nc_grid_topology_var.face_dimensions
+                face_dim_padding = pp.parse_padding(face_dim)
+                grid.face_padding = face_dim_padding
+            except AttributeError:
+                pass
+            try:
+                edge1_dim = nc_grid_topology_var.edge1_dimensions
+                edge1_dim_padding = pp.parse_padding(edge1_dim)
+                grid.edge_1_padding = edge1_dim_padding
+            except AttributeError:
+                pass
+            try:
+                edge2_dim = nc_grid_topology_var.edge2_dimensions
+                edge2_dim_padding = pp.parse_padding(edge2_dim)
+                grid.edge_2_padding = edge2_dim_padding
+            except AttributeError:
+                pass
+            try:
+                vertical_dim = nc_grid_topology_var.vertical_dimensions
+                vertical_dim_padding = pp.parse_padding(vertical_dim)
+                grid.vertical_padding = vertical_dim_padding
+            except AttributeError:
+                pass
         return grid
     else:
         raise SGridNonCompliant(nc_dataset)
