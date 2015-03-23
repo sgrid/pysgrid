@@ -4,6 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
+from custom_exceptions import SGridNonCompliant
 
 
 def read_netcdf_file(dataset_url):
@@ -77,9 +78,13 @@ def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=Tru
 def load_grid_from_nc_dataset(nc_dataset, grid, 
                               grid_topology_vars=None, 
                               load_data=True):
-    if grid_topology_vars is None:
-        grid_topology_vars_attr = find_grid_topology_vars()
+    is_sgrid_compliant = sgrid_compliant_file(nc_dataset)
+    if is_sgrid_compliant:
+        if grid_topology_vars is None:
+            grid_topology_vars_attr = find_grid_topology_vars()
+        else:
+            grid_topology_vars_attr = grid_topology_vars
+        grid.grid_topology_vars = grid_topology_vars_attr
+        return grid
     else:
-        grid_topology_vars_attr = grid_topology_vars
-    grid.grid_topology_vars = grid_topology_vars_attr
-    return grid
+        raise SGridNonCompliant(nc_dataset)
