@@ -30,4 +30,3 @@ class SGrid(object):
         grid = cls()
         sgrid_obj = load_grid_from_nc_dataset(nc_dataset, grid, grid_topology_vars, load_data)
         return sgrid_obj
-        
