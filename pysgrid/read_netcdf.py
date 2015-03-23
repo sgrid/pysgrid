@@ -67,6 +67,19 @@ def sgrid_compliant_file(nc):
 
 
 def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=True):
+    """
+    Create a SGRID object from a path to an
+    SGRID compliant netCDF resource. An 
+    exception is raised if the resource is
+    found to be non-compliant.
+    
+    :param str nc_path: path to the resource; this can be a filepath or a URL
+    :param grid: an SGRID object
+    :type grid: sgrid.SGrid
+    :return: an SGrid object
+    :rtype: sgrid.SGrid
+    
+    """
     with nc4.Dataset(nc_path, 'r') as nc_dataset:
         grid = load_grid_from_nc_dataset(nc_dataset, grid, 
                                          grid_topology_vars=grid_topology_vars, 
@@ -78,6 +91,20 @@ def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=Tru
 def load_grid_from_nc_dataset(nc_dataset, grid, 
                               grid_topology_vars=None, 
                               load_data=True):
+    """
+    Create an SGRID object from an SGRID
+    compliant netCDF4.Dataset object. An
+    exception is raised if the dataset is
+    non-compliant.
+    
+    :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
+    :type nc_dataset: netCDF4.Dataset
+    :param grid:an SGRID object
+    :type grid: sgrid.SGrid
+    :return: an SGrid object
+    :rtype: sgrid.SGrid
+    
+    """
     is_sgrid_compliant = sgrid_compliant_file(nc_dataset)
     if is_sgrid_compliant:
         if grid_topology_vars is None:
