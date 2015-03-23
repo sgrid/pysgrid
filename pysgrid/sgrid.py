@@ -22,11 +22,15 @@ class SGrid(object):
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
         grid = cls()
-        sgrid_obj = load_grid_from_nc_file(nc_url, grid, grid_topology_vars, load_data)
+        sgrid_obj = load_grid_from_nc_file(nc_url, grid, 
+                                           grid_topology_vars, load_data
+                                           )
         return sgrid_obj
     
     @classmethod
     def from_nc_dataset(cls, nc_dataset, grid_topology_vars=None, load_data=False):
         grid = cls()
-        sgrid_obj = load_grid_from_nc_dataset(nc_dataset, grid, grid_topology_vars, load_data)
+        sgrid_obj = load_grid_from_nc_dataset(nc_dataset, grid, 
+                                              grid_topology_vars, load_data
+                                              )
         return sgrid_obj
