@@ -108,7 +108,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
     is_sgrid_compliant = sgrid_compliant_file(nc_dataset)
     if is_sgrid_compliant:
         if grid_topology_vars is None:
-            grid_topology_vars_attr = find_grid_topology_vars()
+            grid_topology_vars_attr = find_grid_topology_vars(nc_dataset)
         else:
             grid_topology_vars_attr = grid_topology_vars
         grid.grid_topology_vars = grid_topology_vars_attr
