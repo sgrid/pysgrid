@@ -4,7 +4,6 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-import numpy as np
 from custom_exceptions import SGridNonCompliant
 from utils import ParsePadding
 from lookup import LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME
