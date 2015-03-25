@@ -8,10 +8,17 @@ from read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
 
 class SGrid(object):
     
+    padding_slices = {'both': (1, -1),
+                      'none': (None, None),
+                      'low': (1, None),
+                      'high': (None, 1)
+                      }
+    
     def __init__(self, nodes=None, faces=None, edges=None,
                  node_padding=None, face_padding=None,
                  edge_1_padding=None, edge_2_padding=None,
-                 vertical_padding=None, grid_topology_vars=None):
+                 vertical_padding=None, grid_topology_vars=None,
+                 grid_cell_center_vars=None):
         self._nodes = nodes
         self._faces = faces
         self._edges = edges
@@ -21,6 +28,7 @@ class SGrid(object):
         self._edge_2_padding = edge_2_padding
         self._vertical_padding = vertical_padding
         self._grid_topology_vars = grid_topology_vars
+        self._grid_cell_center_vars = grid_cell_center_vars  # (lat, lon)
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -44,6 +52,13 @@ class SGrid(object):
     @grid_topology_vars.setter
     def grid_topology_vars(self, grid_topo_vars):
         self._grid_topology_vars = grid_topo_vars
+        
+    @property
+    def grid_cell_center_vars(self):
+        return self._grid_cell_center_vars
+    @grid_cell_center_vars.setter
+    def grid_cell_center_vars(self, grid_cell_center_variables):
+        self._grid_cell_center_vars = grid_cell_center_variables
         
     @property
     def face_padding(self):
