@@ -3,6 +3,7 @@ Created on Mar 19, 2015
 
 @author: ayan
 '''
+import netCDF4 as nc4
 from read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
 
 
@@ -18,7 +19,8 @@ class SGrid(object):
                  node_padding=None, face_padding=None,
                  edge_1_padding=None, edge_2_padding=None,
                  vertical_padding=None, grid_topology_vars=None,
-                 grid_cell_center_vars=None):
+                 grid_cell_center_vars=None, grid_cell_center_lon=None,
+                 grid_cell_center_lat=None, grid_times=None):
         self._nodes = nodes
         self._faces = faces
         self._edges = edges
@@ -29,6 +31,9 @@ class SGrid(object):
         self._vertical_padding = vertical_padding
         self._grid_topology_vars = grid_topology_vars
         self._grid_cell_center_vars = grid_cell_center_vars  # (lat, lon)
+        self._grid_cell_center_lon = grid_cell_center_lon
+        self._grid_cell_center_lat = grid_cell_center_lat
+        self._grid_times = grid_times
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -87,3 +92,29 @@ class SGrid(object):
     @vertical_padding.setter
     def vertical_padding(self, vert_padding):
         self._vertical_padding = vert_padding
+        
+    @property
+    def grid_cell_center_lon(self):
+        return self._grid_cell_center_lon
+    @grid_cell_center_lon.setter
+    def grid_cell_center_lon(self, grid_cell_center_lon):
+        self._grid_cell_center_lon = grid_cell_center_lon
+        
+    @property
+    def grid_cell_center_lat(self):
+        return self._grid_cell_center_lat
+    @grid_cell_center_lat.setter
+    def grid_cell_center_lat(self, grid_cell_center_lat):
+        self._grid_cell_center_lat = grid_cell_center_lat
+        
+    @property
+    def grid_times(self):
+        return self._grid_times
+    @grid_times.setter
+    def grid_times(self, grid_times):
+        self._grid_times = grid_times
+        
+    def save_as_netcdf(self, filepath):
+        with nc4.Dataset(filepath, 'w') as nclocal:
+            time_dim_size = self._grid_time.shape[0]
+            nclocal.createDimension('time', time_dim_size)

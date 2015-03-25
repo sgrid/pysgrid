@@ -179,8 +179,12 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 pass
         grid_cell_center_vars = ncd.find_grid_cell_center_vars()  # get the variable names for the cell center
         grid.grid_cell_center_vars = grid_cell_center_vars  # set the variables for the grid cell centers in the sgrid object
-        # grid_cell_center_lat_vals = nc_dataset.variables[grid_cell_center_vars[0]][:]
-        # grid_cell_center_lon_vals = nc_dataset.variables[grid_cell_center_vars[1]][:]
+        grid_cell_center_lat_vals = nc_dataset.variables[grid_cell_center_vars[0]][:]
+        grid_cell_center_lon_vals = nc_dataset.variables[grid_cell_center_vars[1]][:]
+        grid.grid_cell_center_lat = grid_cell_center_lat_vals  # set the grid cell center latitudes
+        grid.grid_cell_center_lon = grid_cell_center_lon_vals  # set the grid cell center longitudes
+        grid_time = nc_dataset.variables['time'][:]
+        grid.grid_times = grid_time
         return grid
     else:
         raise SGridNonCompliant(nc_dataset)
