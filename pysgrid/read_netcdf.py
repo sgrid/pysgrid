@@ -128,7 +128,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
     
     :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
     :type nc_dataset: netCDF4.Dataset
-    :param grid:an SGRID object
+    :param grid: an SGRID object
     :type grid: sgrid.SGrid
     :return: an SGrid object
     :rtype: sgrid.SGrid
