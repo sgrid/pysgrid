@@ -9,8 +9,4 @@ setup(
     license='BSD',
     description='Python package for working with staggered gridded data',
     long_description=open('README.md').read(),
-    install_requires=[
-        "netCDF4==1.1.7",
-        "numpy==1.9.2",
-    ],
 )
