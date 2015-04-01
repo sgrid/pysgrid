@@ -20,7 +20,7 @@ class SGrid(object):
                  edge_1_padding=None, edge_2_padding=None,
                  vertical_padding=None, grid_topology_vars=None,
                  grid_cell_center_vars=None, grid_cell_center_lon=None,
-                 grid_cell_center_lat=None, grid_times=None):
+                 grid_cell_center_lat=None, grid_times=None, variables=None):
         self._nodes = nodes
         self._faces = faces
         self._edges = edges
@@ -34,6 +34,7 @@ class SGrid(object):
         self._grid_cell_center_lon = grid_cell_center_lon
         self._grid_cell_center_lat = grid_cell_center_lat
         self._grid_times = grid_times
+        self._variables = variables
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -57,6 +58,13 @@ class SGrid(object):
     @grid_topology_vars.setter
     def grid_topology_vars(self, grid_topo_vars):
         self._grid_topology_vars = grid_topo_vars
+        
+    @property
+    def variables(self):
+        return self._variables
+    @variables.setter
+    def variables(self, dataset_variables):
+        self._variables = dataset_variables
         
     @property
     def grid_cell_center_vars(self):
@@ -113,6 +121,33 @@ class SGrid(object):
     @grid_times.setter
     def grid_times(self, grid_times):
         self._grid_times = grid_times
+        
+    def _define_face_padding_summary(self):
+        all_padding = self._face_padding + self._edge_1_padding + self._edge_2_padding + self._vertical_padding
+        padding_summary = []
+        for padding_datum in all_padding:
+            dim = padding_datum.face_dim
+            padding_val = padding_datum.padding
+            pad_short = (dim, padding_val)
+            padding_summary.append(pad_short)
+        return padding_summary
+    
+    def _set_property(self, name, value):
+        prop_name = '_{0}'.format(name)
+        setattr(self, prop_name, value)
+        
+    def _get_property(self, name):
+        prop_name = '_{0}'.format(name)
+        return getattr(self, prop_name)
+    
+    def add_property(self, name, value):
+        fget = lambda self: self._get_property(name)
+        fset = lambda self, value: self._set_property(name, value)
+        # add property/attribute to the object with getting and setting functions
+        setattr(self.__class__, name, property(fget, fset))
+        prop_name = '_{0}'.format(name)
+        # set the value of the property that was just created
+        setattr(self, prop_name, value)
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:

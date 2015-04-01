@@ -5,7 +5,7 @@ Created on Mar 19, 2015
 '''
 import netCDF4 as nc4
 from custom_exceptions import SGridNonCompliant
-from utils import ParsePadding
+from utils import ParsePadding, determine_variable_slicing
 from lookup import LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME
 
 
@@ -185,6 +185,14 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         grid.grid_cell_center_lon = grid_cell_center_lon_vals  # set the grid cell center longitudes
         grid_time = nc_dataset.variables['time'][:]
         grid.grid_times = grid_time
+        nc_variables = nc_dataset.variables
+        # dynamically set variable slicing attributes
+        for nc_variable in nc_variables:
+            # the slicing implied by the padding for each variable
+            # each dimension is sliced in the order they appear in ncdump
+            var_slicing = determine_variable_slicing(grid, nc_dataset, nc_variable)
+            property_name = '{0}_slice'.format(nc_variable)
+            grid.add_property(property_name, var_slicing)
         return grid
     else:
         raise SGridNonCompliant(nc_dataset)
