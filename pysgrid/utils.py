@@ -55,22 +55,32 @@ def pair_arrays(x_array, y_array):
 def check_element_equal(lst):
     return lst[1:] == lst[:-1]
 
-def determine_variable_slicing(sgrid_obj, nc_dataset, variable):
+def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center'):
+    """
+    Figure out how to slice a variable. This function
+    only knows who to figure out slices that would be
+    used to trim data before averaging to grid cell
+    centers; grid cell nodes will be supported later.
+    
+    """
     var_obj = nc_dataset.variables[variable]
     var_dims = var_obj.dimensions
     padding_summary = sgrid_obj._define_face_padding_summary()
     slice_indices = tuple()
-    for var_dim in var_dims:
-        try:
-            padding_info = (info for info in padding_summary if info[0] == var_dim).next()
-            padding_val = padding_info[1]
-            slice_datum = sgrid_obj.padding_slices[padding_val]
-            lower_slice, upper_slice = slice_datum
-            slice_index = np.s_[lower_slice:upper_slice]
-            slice_indices += (slice_index, )
-        except StopIteration:
-            slice_index = np.s_[:]
-            slice_indices += (slice_index, )
+    if method == 'center':
+        for var_dim in var_dims:
+            try:
+                padding_info = (info for info in padding_summary if info[0] == var_dim).next()
+                padding_val = padding_info[1]
+                slice_datum = sgrid_obj.padding_slices[padding_val]
+                lower_slice, upper_slice = slice_datum
+                slice_index = np.s_[lower_slice:upper_slice]
+                slice_indices += (slice_index, )
+            except StopIteration:
+                slice_index = np.s_[:]
+                slice_indices += (slice_index, )
+    else:
+        pass
     return slice_indices
 
 

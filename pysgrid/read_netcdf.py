@@ -5,7 +5,7 @@ Created on Mar 19, 2015
 '''
 import netCDF4 as nc4
 from custom_exceptions import SGridNonCompliant
-from utils import ParsePadding, determine_variable_slicing
+from utils import ParsePadding, pair_arrays, determine_variable_slicing
 from lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
                     LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
 
@@ -47,7 +47,7 @@ class NetCDFDataset(object):
         return grid_cell_center_lat, grid_cell_center_lon
     
     def find_grid_cell_node_vars(self):
-        nc_vars = self.ncd_variables
+        nc_vars = self.ncd.variables
         grid_cell_node_lon = None
         grid_cell_node_lat = None
         for nc_var in nc_vars.iterkeys():
@@ -195,12 +195,17 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 _set_attributes_from_list(grid, vertical_slices)
             except AttributeError:
                 pass
-        grid_cell_center_vars = ncd.find_grid_cell_center_vars()  # get the variable names for the cell center
-        grid.grid_cell_center_vars = grid_cell_center_vars  # set the variables for the grid cell centers in the sgrid object
-        grid_cell_center_lat_vals = nc_dataset.variables[grid_cell_center_vars[0]][:]
-        grid_cell_center_lon_vals = nc_dataset.variables[grid_cell_center_vars[1]][:]
-        grid.grid_cell_center_lat = grid_cell_center_lat_vals  # set the grid cell center latitudes
-        grid.grid_cell_center_lon = grid_cell_center_lon_vals  # set the grid cell center longitudes
+        # get the variable names for the cell center
+        grid_cell_center_lat_var, grid_cell_center_lon_var = ncd.find_grid_cell_center_vars()
+        grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
+        grid_cell_center_lon = nc_dataset.variables[grid_cell_center_lon_var][:]
+        grid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
+        # get the variables names for the cell vertices
+        grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = ncd.find_grid_cell_node_vars()
+        grid_cell_nodes_lat = nc_dataset.variables[grid_cell_nodes_lat_var][:]
+        grid_cell_nodes_lon = nc_dataset.variables[grid_cell_nodes_lon_var][:]
+        grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        # get time data
         grid_time = nc_dataset.variables['time'][:]
         grid.grid_times = grid_time
         nc_variables = nc_dataset.variables
