@@ -6,19 +6,6 @@ Created on Apr 2, 2015
 import numpy as np
 
 
-def determine_avg_axis(array_shape, dim_0_max, dim_1_max):
-    """
-    Only works where x and y are have padding values
-    of 'both' right now.
-    
-    """
-    try:
-        avg_axis = array_shape.index(dim_0_max)
-    except ValueError:
-        avg_axis = array_shape.index(dim_1_max)
-    return avg_axis
-
-
 def vector_sum(x_arr, y_arr):
     vector_sum = np.sqrt(x_arr**2 + y_arr**2)
     return vector_sum
