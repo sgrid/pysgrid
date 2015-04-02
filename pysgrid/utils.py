@@ -5,6 +5,7 @@ Created on Mar 23, 2015
 '''
 import re
 from collections import namedtuple
+import numpy as np
 from custom_exceptions import CannotFindPadding
 
 '''
@@ -30,6 +31,25 @@ GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable co
                                          'padding'  # padding type for the node dimension
                                          ]
                          )
+
+
+def determine_variable_slicing(sgrid_obj, nc_dataset, variable):
+    var_obj = nc_dataset.variables[variable]
+    var_dims = var_obj.dimensions
+    padding_summary = sgrid_obj._define_face_padding_summary()
+    slice_indices = tuple()
+    for var_dim in var_dims:
+        try:
+            padding_info = (info for info in padding_summary if info[0] == var_dim).next()
+            padding_val = padding_info[1]
+            slice_datum = sgrid_obj.padding_slices[padding_val]
+            lower_slice, upper_slice = slice_datum
+            slice_index = np.s_[lower_slice:upper_slice]
+            slice_indices += (slice_index, )
+        except StopIteration:
+            slice_index = np.s_[:]
+            slice_indices += (slice_index, )
+    return slice_indices
 
 
 class ParsePadding(object):
