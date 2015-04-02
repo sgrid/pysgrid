@@ -170,41 +170,6 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         else:
             grid_topology_vars_attr = grid_topology_vars
         grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables 
-        for topology_var in grid_topology_vars_attr:
-            nc_grid_topology_var = nc_dataset.variables[topology_var]
-            pp = ParsePadding(topology_var)
-            try:
-                face_dim = nc_grid_topology_var.face_dimensions
-                face_dim_padding = pp.parse_padding(face_dim)
-                grid.face_padding = face_dim_padding  # set face padding
-                face_slices = pp.define_recommended_slices(face_dim)
-                _set_attributes_from_list(grid, face_slices)
-            except AttributeError:
-                pass
-            try:
-                edge1_dim = nc_grid_topology_var.edge1_dimensions
-                edge1_dim_padding = pp.parse_padding(edge1_dim)
-                grid.edge_1_padding = edge1_dim_padding  # set edge 1 padding
-                edge_1_slices = pp.define_recommended_slices(edge1_dim)
-                _set_attributes_from_list(grid, edge_1_slices)
-            except AttributeError:
-                pass
-            try:
-                edge2_dim = nc_grid_topology_var.edge2_dimensions
-                edge2_dim_padding = pp.parse_padding(edge2_dim)
-                grid.edge_2_padding = edge2_dim_padding  # set edge 2 padding
-                edge_2_slices = pp.define_recommended_slices(edge2_dim)
-                _set_attributes_from_list(grid, edge_2_slices)
-            except AttributeError:
-                pass
-            try:
-                vertical_dim = nc_grid_topology_var.vertical_dimensions
-                vertical_dim_padding = pp.parse_padding(vertical_dim)
-                grid.vertical_padding = vertical_dim_padding  # set vertical padding
-                vertical_slices = pp.define_recommended_slices(vertical_dim)
-                _set_attributes_from_list(grid, vertical_slices)
-            except AttributeError:
-                pass
         # get the variable names for the cell center
         grid_cell_center_lat_var, grid_cell_center_lon_var = ncd.find_grid_cell_center_vars()
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
