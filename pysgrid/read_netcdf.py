@@ -191,8 +191,11 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             # the slicing implied by the padding for each variable
             # each dimension is sliced in the order they appear in ncdump
             var_slicing = determine_variable_slicing(grid, nc_dataset, nc_variable)
-            property_name = '{0}_slice'.format(nc_variable)
-            grid.add_property(property_name, var_slicing)
+            slice_property_name = '{0}_slice'.format(nc_variable)
+            grid.add_property(slice_property_name, var_slicing)  # add slice property
+            dim_property_name = '{0}_dim'.format(nc_variable)
+            var_dims = nc_variables[nc_variable].dimensions
+            grid.add_property(dim_property_name, var_dims)  # add dimension property
         return grid
     else:
         raise SGridNonCompliant(nc_dataset)
