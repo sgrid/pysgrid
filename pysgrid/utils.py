@@ -42,6 +42,16 @@ def check_array_dims(*args):
         pass
 
 
+def pair_arrays(x_array, y_array):
+    check_array_dims(x_array, y_array)
+    x_shape = x_array.shape
+    paired_array_shape = x_shape + (2, )
+    paired_array = np.empty(paired_array_shape, dtype=np.float64)
+    paired_array[:, :, 0] = x_array[:]
+    paired_array[:, :, 1] = y_array[:]
+    return paired_array
+
+
 def check_element_equal(lst):
     return lst[1:] == lst[:-1]
 

@@ -116,6 +116,16 @@ class SGrid(object):
         self._grid_cell_center_lat = grid_cell_center_lat
         
     @property
+    def nodes(self):
+        """
+        return the vertices of the grid
+        """
+        return self._nodes
+    @nodes.setter
+    def nodes(self, nodes):
+        self._nodes = nodes
+        
+    @property
     def grid_times(self):
         return self._grid_times
     @grid_times.setter
