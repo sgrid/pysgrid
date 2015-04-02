@@ -12,3 +12,8 @@ LAT_GRID_CELL_CENTER_LONG_NAME = ['latitude of RHO-points',  #ROMS
 LON_GRID_CELL_CENTER_LONG_NAME = ['longitude of RHO-points',  #ROMS
                                   'grid cell centers, longitude-coordinate',  #deltares 
                                   ]
+
+LAT_GRID_CELL_NODE_LONG_NAME = ['latitude of PSI-points']
+
+LON_GRID_CELL_NODE_LONG_NAME = ['longitude of PSI-points']
+

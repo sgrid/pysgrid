@@ -6,7 +6,8 @@ Created on Mar 19, 2015
 import netCDF4 as nc4
 from custom_exceptions import SGridNonCompliant
 from utils import ParsePadding, determine_variable_slicing
-from lookup import LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME
+from lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
+                    LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
 
 
 def read_netcdf_file(dataset_url):
@@ -44,6 +45,23 @@ class NetCDFDataset(object):
             except AttributeError:
                 continue
         return grid_cell_center_lat, grid_cell_center_lon
+    
+    def find_grid_cell_node_vars(self):
+        nc_vars = self.ncd_variables
+        grid_cell_node_lon = None
+        grid_cell_node_lat = None
+        for nc_var in nc_vars.iterkeys():
+            try:
+                nc_var_obj = nc_vars[nc_var]
+                nc_var_long_name = nc_var_obj.long_name
+                if nc_var_long_name in LON_GRID_CELL_NODE_LONG_NAME:
+                    grid_cell_node_lon = nc_var
+                if nc_var_long_name in LAT_GRID_CELL_NODE_LONG_NAME:
+                    grid_cell_node_lat = nc_var
+            except AttributeError:
+                continue
+        return grid_cell_node_lat, grid_cell_node_lon
+        
     
     def find_grid_topology_vars(self):
         """
