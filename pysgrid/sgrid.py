@@ -158,6 +158,11 @@ class SGrid(object):
         return getattr(self, prop_name)
     
     def add_property(self, name, value):
+        """
+        Method to dynamically add attributes
+        to a class.
+        
+        """
         fget = lambda self: self._get_property(name)
         fset = lambda self, value: self._set_property(name, value)
         # add property/attribute to the object with getting and setting functions

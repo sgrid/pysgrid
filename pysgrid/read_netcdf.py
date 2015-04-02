@@ -30,6 +30,11 @@ class NetCDFDataset(object):
         self.ncd = nc_dataset_obj
 
     def find_grid_cell_center_vars(self):
+        """
+        Find the variables for the grid
+        cell centers.
+        
+        """
         nc_vars = self.ncd.variables
         grid_cell_center_lon = None
         grid_cell_center_lat = None
@@ -47,6 +52,11 @@ class NetCDFDataset(object):
         return grid_cell_center_lat, grid_cell_center_lon
     
     def find_grid_cell_node_vars(self):
+        """
+        Find the variables for the grid
+        cell vertices.
+        
+        """
         nc_vars = self.ncd.variables
         grid_cell_node_lon = None
         grid_cell_node_lat = None
