@@ -3,6 +3,8 @@ Created on Mar 23, 2015
 
 @author: ayan
 '''
+import warnings
+import functools
 
 
 class CannotFindPadding(Exception):
@@ -42,4 +44,16 @@ class DimensionMismatch(Exception):
             shape_str = ', and'.join(shape_str_intermediate)
         filled_message = error_message.format(shape_str)
         return filled_message
+    
+    
+def deprecated(deprecated_function):
+    @functools.wraps(deprecated_function)
+    def new_func(*args, **kwargs):
+        warnings.warn_explicit('Call to deprecated function: {0}'.format(deprecated_function.__name__),
+                               category=DeprecationWarning,
+                               filename=deprecated_function.func_code.co_filename,
+                               lineno=deprecated_function.func_code.co_firstlineno + 1
+                               )
+        return deprecated_function(*args, **kwargs)
+    return new_func
         

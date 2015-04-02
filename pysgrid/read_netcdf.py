@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from custom_exceptions import SGridNonCompliant
+from custom_exceptions import SGridNonCompliant, deprecated
 from utils import ParsePadding, pair_arrays, determine_variable_slicing
 from lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
                     LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
@@ -139,6 +139,7 @@ def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=Tru
     return grid
 
 
+@deprecated
 def _set_attributes_from_list(target_object, attribute_val_list):
     for attribute_val_element in attribute_val_list:
         attr_name, attr_val = attribute_val_element
@@ -170,6 +171,33 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         else:
             grid_topology_vars_attr = grid_topology_vars
         grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables 
+        for topology_var in grid_topology_vars_attr:
+            nc_grid_topology_var = nc_dataset.variables[topology_var]
+            pp = ParsePadding(topology_var)
+            try:
+                face_dim = nc_grid_topology_var.face_dimensions
+                face_dim_padding = pp.parse_padding(face_dim)
+                grid.face_padding = face_dim_padding  # set face padding
+            except AttributeError:
+                pass
+            try:
+                edge1_dim = nc_grid_topology_var.edge1_dimensions
+                edge1_dim_padding = pp.parse_padding(edge1_dim)
+                grid.edge_1_padding = edge1_dim_padding  # set edge 1 padding
+            except AttributeError:
+                pass
+            try:
+                edge2_dim = nc_grid_topology_var.edge2_dimensions
+                edge2_dim_padding = pp.parse_padding(edge2_dim)
+                grid.edge_2_padding = edge2_dim_padding  # set edge 2 padding
+            except AttributeError:
+                pass
+            try:
+                vertical_dim = nc_grid_topology_var.vertical_dimensions
+                vertical_dim_padding = pp.parse_padding(vertical_dim)
+                grid.vertical_padding = vertical_dim_padding  # set vertical padding
+            except AttributeError:
+                pass
         # get the variable names for the cell center
         grid_cell_center_lat_var, grid_cell_center_lon_var = ncd.find_grid_cell_center_vars()
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
