@@ -33,14 +33,17 @@ GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable co
                          )
 
 
-def check_array_dims(array_1, array_2):
-    array_1_shp = array_1.shape
-    array_2_shp = array_2.shape
-    if array_1_shp != array_2_shp:
-        raise DimensionMismatch(array_1_shp, array_2_shp)
+def check_array_dims(*args):
+    array_shapes = [arr.shape for arr in args]
+    arrays_match = check_element_equal(array_shapes)
+    if arrays_match is False:
+        raise DimensionMismatch(*array_shapes)
     else:
         pass
 
+
+def check_element_equal(lst):
+    return lst[1:] == lst[:-1]
 
 def determine_variable_slicing(sgrid_obj, nc_dataset, variable):
     var_obj = nc_dataset.variables[variable]
