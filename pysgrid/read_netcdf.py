@@ -5,7 +5,7 @@ Created on Mar 19, 2015
 '''
 import netCDF4 as nc4
 from custom_exceptions import SGridNonCompliant
-from utils import ParsePadding
+from utils import ParsePadding, determine_variable_slicing
 from lookup import LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME
 
 
@@ -128,7 +128,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
     
     :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
     :type nc_dataset: netCDF4.Dataset
-    :param grid:an SGRID object
+    :param grid: an SGRID object
     :type grid: sgrid.SGrid
     :return: an SGrid object
     :rtype: sgrid.SGrid
@@ -179,8 +179,20 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 pass
         grid_cell_center_vars = ncd.find_grid_cell_center_vars()  # get the variable names for the cell center
         grid.grid_cell_center_vars = grid_cell_center_vars  # set the variables for the grid cell centers in the sgrid object
-        # grid_cell_center_lat_vals = nc_dataset.variables[grid_cell_center_vars[0]][:]
-        # grid_cell_center_lon_vals = nc_dataset.variables[grid_cell_center_vars[1]][:]
+        grid_cell_center_lat_vals = nc_dataset.variables[grid_cell_center_vars[0]][:]
+        grid_cell_center_lon_vals = nc_dataset.variables[grid_cell_center_vars[1]][:]
+        grid.grid_cell_center_lat = grid_cell_center_lat_vals  # set the grid cell center latitudes
+        grid.grid_cell_center_lon = grid_cell_center_lon_vals  # set the grid cell center longitudes
+        grid_time = nc_dataset.variables['time'][:]
+        grid.grid_times = grid_time
+        nc_variables = nc_dataset.variables
+        # dynamically set variable slicing attributes
+        for nc_variable in nc_variables:
+            # the slicing implied by the padding for each variable
+            # each dimension is sliced in the order they appear in ncdump
+            var_slicing = determine_variable_slicing(grid, nc_dataset, nc_variable)
+            property_name = '{0}_slice'.format(nc_variable)
+            grid.add_property(property_name, var_slicing)
         return grid
     else:
         raise SGridNonCompliant(nc_dataset)
