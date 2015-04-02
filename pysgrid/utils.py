@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from custom_exceptions import CannotFindPadding
+from custom_exceptions import CannotFindPadding, DimensionMismatch
 
 '''
     int grid;
@@ -31,6 +31,15 @@ GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable co
                                          'padding'  # padding type for the node dimension
                                          ]
                          )
+
+
+def check_array_dims(array_1, array_2):
+    array_1_shp = array_1.shape
+    array_2_shp = array_2.shape
+    if array_1_shp != array_2_shp:
+        raise DimensionMismatch(array_1_shp, array_2_shp)
+    else:
+        pass
 
 
 def determine_variable_slicing(sgrid_obj, nc_dataset, variable):

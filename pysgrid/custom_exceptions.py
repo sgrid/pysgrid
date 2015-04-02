@@ -28,13 +28,19 @@ class SGridNonCompliant(Exception):
     
 class DimensionMismatch(Exception):
     
-    def __init__(self, arr_1_shape, arr_2_shape):
-        self.arr_1_shape = arr_1_shape
-        self.arr_2_shape = arr_2_shape
+    def __init__(self, *args):
+        self.args = args
         
     def __str__(self):
-        error_message = ('The is a dimension mismatch between arrays with shape {0} and {1}. '
+        error_message = ('The is a dimension mismatch between arrays with shapes {0}. '
                          'Arrays must have the same same to use this function.')
-        filled_message = error_message.format(self.arr_1_shape, self.arr_2_shape)
+        array_shapes = [arr.shape for arr in self.args]
+        array_shapes_count = len(array_shapes)
+        if array_shapes_count == 2:
+            shape_str = 'and '.join(array_shapes)
+        else:
+            shape_str_intermediate = ', '.join(array_shapes).rsplit(',', 1)
+            shape_str = ', and'.join(shape_str_intermediate)
+        filled_message = error_message.format(shape_str)
         return filled_message
         
