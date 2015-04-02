@@ -34,7 +34,7 @@ class DimensionMismatch(Exception):
     def __str__(self):
         error_message = ('The is a dimension mismatch between arrays with shapes {0}. '
                          'Arrays must have the same same to use this function.')
-        array_shapes = [arr.shape for arr in self.args]
+        array_shapes = [str(arr.shape) for arr in self.args]
         array_shapes_count = len(array_shapes)
         if array_shapes_count == 2:
             shape_str = 'and '.join(array_shapes)
