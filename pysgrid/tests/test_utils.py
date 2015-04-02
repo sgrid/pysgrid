@@ -5,8 +5,22 @@ Created on Mar 23, 2015
 '''
 import unittest
 import numpy as np
-from ..utils import ParsePadding, pair_arrays
-from ..custom_exceptions import CannotFindPadding
+from ..utils import ParsePadding, pair_arrays, check_array_dims
+from ..custom_exceptions import CannotFindPadding, DimensionMismatch
+
+
+class TestCheckArrayDims(unittest.TestCase):
+    
+    def setUp(self):
+        self.a = np.array([1, 2, 3])
+        self.b = np.array([-1, -2])
+        
+    def test_exception_raised(self):
+        self.assertRaises(DimensionMismatch,
+                          check_array_dims,
+                          self.a,
+                          self.b
+                          )
 
 
 class TestParsePadding(unittest.TestCase):
