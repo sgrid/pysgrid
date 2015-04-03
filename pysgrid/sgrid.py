@@ -15,13 +15,14 @@ class SGrid(object):
                       'high': (None, 1)
                       }
     
-    def __init__(self, nodes=None, faces=None, edges=None,
-                 node_padding=None, face_padding=None,
+    def __init__(self, nodes=None, centers=None, faces=None, 
+                 edges=None, node_padding=None, face_padding=None,
                  edge_1_padding=None, edge_2_padding=None,
                  vertical_padding=None, grid_topology_vars=None,
-                 grid_cell_center_vars=None, grid_cell_center_lon=None,
-                 grid_cell_center_lat=None, grid_times=None, variables=None):
+                 grid_cell_center_vars=None, grid_times=None, 
+                 variables=None):
         self._nodes = nodes
+        self._centers = centers
         self._faces = faces
         self._edges = edges
         self._node_padding = node_padding
@@ -31,8 +32,6 @@ class SGrid(object):
         self._vertical_padding = vertical_padding
         self._grid_topology_vars = grid_topology_vars
         self._grid_cell_center_vars = grid_cell_center_vars  # (lat, lon)
-        self._grid_cell_center_lon = grid_cell_center_lon
-        self._grid_cell_center_lat = grid_cell_center_lat
         self._grid_times = grid_times
         self._variables = variables
         
@@ -55,6 +54,7 @@ class SGrid(object):
     @property
     def grid_topology_vars(self):
         return self._grid_topology_vars
+    
     @grid_topology_vars.setter
     def grid_topology_vars(self, grid_topo_vars):
         self._grid_topology_vars = grid_topo_vars
@@ -62,6 +62,7 @@ class SGrid(object):
     @property
     def variables(self):
         return self._variables
+    
     @variables.setter
     def variables(self, dataset_variables):
         self._variables = dataset_variables
@@ -69,6 +70,7 @@ class SGrid(object):
     @property
     def grid_cell_center_vars(self):
         return self._grid_cell_center_vars
+    
     @grid_cell_center_vars.setter
     def grid_cell_center_vars(self, grid_cell_center_variables):
         self._grid_cell_center_vars = grid_cell_center_variables
@@ -76,6 +78,7 @@ class SGrid(object):
     @property
     def face_padding(self):
         return self._face_padding
+    
     @face_padding.setter
     def face_padding(self, f_padding):
         self._face_padding = f_padding
@@ -83,6 +86,7 @@ class SGrid(object):
     @property
     def edge_1_padding(self):
         return self._edge_1_padding
+    
     @edge_1_padding.setter
     def edge_1_padding(self, e1_padding):
         self._edge_1_padding = e1_padding
@@ -90,6 +94,7 @@ class SGrid(object):
     @property
     def edge_2_padding(self):
         return self._edge_2_padding
+    
     @edge_2_padding.setter
     def edge_2_padding(self, e2_padding):
         self._edge_2_padding = e2_padding
@@ -97,27 +102,39 @@ class SGrid(object):
     @property
     def vertical_padding(self):
         return self._vertical_padding
+    
     @vertical_padding.setter
     def vertical_padding(self, vert_padding):
         self._vertical_padding = vert_padding
         
     @property
-    def grid_cell_center_lon(self):
-        return self._grid_cell_center_lon
-    @grid_cell_center_lon.setter
-    def grid_cell_center_lon(self, grid_cell_center_lon):
-        self._grid_cell_center_lon = grid_cell_center_lon
+    def nodes(self):
+        """
+        return the vertices of the grid as arrays 
+        of lon, lat pairs.
+        """
+        return self._nodes
+    
+    @nodes.setter
+    def nodes(self, nodes):
+        self._nodes = nodes
         
     @property
-    def grid_cell_center_lat(self):
-        return self._grid_cell_center_lat
-    @grid_cell_center_lat.setter
-    def grid_cell_center_lat(self, grid_cell_center_lat):
-        self._grid_cell_center_lat = grid_cell_center_lat
+    def centers(self):
+        """
+        return the coordinates of the grid centers
+        as arrays of lon, lat pairs.
+        """
+        return self._centers
+    
+    @centers.setter
+    def centers(self, centers):
+        self._centers = centers
         
     @property
     def grid_times(self):
         return self._grid_times
+    
     @grid_times.setter
     def grid_times(self, grid_times):
         self._grid_times = grid_times
@@ -141,6 +158,11 @@ class SGrid(object):
         return getattr(self, prop_name)
     
     def add_property(self, name, value):
+        """
+        Method to dynamically add attributes
+        to a class.
+        
+        """
         fget = lambda self: self._get_property(name)
         fset = lambda self, value: self._set_property(name, value)
         # add property/attribute to the object with getting and setting functions
