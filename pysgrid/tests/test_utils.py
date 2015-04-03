@@ -5,7 +5,7 @@ Created on Mar 23, 2015
 '''
 import unittest
 import numpy as np
-from ..utils import ParsePadding, pair_arrays, check_array_dims
+from ..utils import ParsePadding, pair_arrays, check_array_dims, check_element_equal
 from ..custom_exceptions import CannotFindPadding, DimensionMismatch
 
 
@@ -96,3 +96,17 @@ class TestPairArrays(unittest.TestCase):
         test_equal = (result == expected).all()
         self.assertTrue(test_equal)
         
+
+class TestCheckElementEqual(unittest.TestCase):
+    
+    def setUp(self):
+        self.a = [7, 7, 7, 7]
+        self.b = [7, 8, 9, 10]
+        
+    def test_list_with_identical_elements(self):
+        result = check_element_equal(self.a)
+        self.assertTrue(result)
+        
+    def test_list_with_different_elements(self):
+        result = check_element_equal(self.b)
+        self.assertFalse(result)
