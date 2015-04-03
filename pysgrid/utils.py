@@ -6,23 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from custom_exceptions import CannotFindPadding, DimensionMismatch
-
-'''
-    int grid;
-      :long_name = "";
-      :cf_role = "grid_topology";
-      :topology_dimension = 2; // int
-      :node_dimensions = "xi_psi eta_psi";
-      :face_dimensions = "xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)";
-      :edge1_dimensions = "xi_u: xi_psi eta_u: eta_psi (padding: both)";
-      :edge2_dimensions = "xi_v: xi_psi (padding: both) eta_v: eta_psi";
-      :node_coordinates = "lon_psi lat_psi";
-      :face_coordinates = "lon_rho lat_rho";
-      :edge1_coordinates = "lon_u lat_u";
-      :edge2_coordinates = "lon_v lat_v";
-      :vertical_dimensions = "s_rho: s_w (padding: none)";
-'''
+from custom_exceptions import CannotFindPadding, DimensionMismatch, deprecated
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
@@ -34,6 +18,14 @@ GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable co
 
 
 def check_array_dims(*args):
+    """
+    Given an unspecified number of
+    numpy arrays, make sure they all
+    have the same dimensions. A 
+    DimensionMismatch exception is raised
+    if there is a mismatch.
+    
+    """
     array_shapes = [arr.shape for arr in args]
     arrays_match = check_element_equal(array_shapes)
     if arrays_match is False:
@@ -43,6 +35,20 @@ def check_array_dims(*args):
 
 
 def pair_arrays(x_array, y_array):
+    """
+    Given two arrays to equal dimensions,
+    pair their values element-wise.
+    
+    For example given arrays [[1, 2], [3, 4]]
+    and [[-1, -2], [-3, -4]], this function will
+    return [[[1, -1], [2, -2]], [[3, -3], [4, -4]]].
+    
+    :param np.array x_array: a numpy array containing "x" coordinates
+    :param np.array y_array: a numpy array containing "y" coordinates
+    :return: array containing (x, y) arrays
+    :rtype: np.array
+    
+    """
     check_array_dims(x_array, y_array)
     x_shape = x_array.shape
     paired_array_shape = x_shape + (2, )
@@ -53,6 +59,16 @@ def pair_arrays(x_array, y_array):
 
 
 def check_element_equal(lst):
+    """
+    Check that all elements in an
+    iterable are the same.
+    
+    :params lst: iterable object to be checked
+    :type lst: np.array, list, tuple
+    :return: result of element equality check
+    :rtype: bool
+    
+    """
     return lst[1:] == lst[:-1]
 
 def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center'):
@@ -61,6 +77,15 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     only knows who to figure out slices that would be
     used to trim data before averaging to grid cell
     centers; grid cell nodes will be supported later.
+    
+    :param sgrid_obj: an SGrid object derived from a netCDF file or netCDF4.Dataset object
+    :type sgrid_obj: sgrid.SGrid
+    :param nc_dataset: a netCDF4.Dataset object from which the sgrid_obj was derived
+    :type nc_dataset: netCDF4.Dataset
+    :param str variable: the name of a variable to be sliced
+    :param str method: slice method for analysis at grid cell centers or grid cell nodes; accepts either 'center' or 'node'
+    :return: the slice for the varible for the given method
+    :rtype: tuple
     
     """
     var_obj = nc_dataset.variables[variable]
@@ -140,6 +165,7 @@ class ParsePadding(object):
             raise CannotFindPadding
         return final_padding_types
     
+    @deprecated
     def define_recommended_slices(self, padding_str):
         if padding_str is not None:
             padding_data = self.parse_padding(padding_str)
