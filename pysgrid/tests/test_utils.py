@@ -4,8 +4,23 @@ Created on Mar 23, 2015
 @author: ayan
 '''
 import unittest
+import numpy as np
+from ..utils import ParsePadding, pair_arrays, check_array_dims, check_element_equal
+from ..custom_exceptions import CannotFindPadding, DimensionMismatch
 
-from ..utils import ParsePadding
+
+class TestCheckArrayDims(unittest.TestCase):
+    
+    def setUp(self):
+        self.a = np.array([1, 2, 3])
+        self.b = np.array([-1, -2])
+        
+    def test_exception_raised(self):
+        self.assertRaises(DimensionMismatch,
+                          check_array_dims,
+                          self.a,
+                          self.b
+                          )
 
 
 class TestParsePadding(unittest.TestCase):
@@ -28,31 +43,69 @@ class TestParsePadding(unittest.TestCase):
         expected_len = 2
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        padding_var = padding_datum_0.dim_var
-        padding_dim = padding_datum_0.dim_name
-        expected_padding_var = 'xi_psi'
+        node_dim = padding_datum_0.node_dim
+        face_dim = padding_datum_0.face_dim
+        expected_node_dim = 'xi_psi'
         expected_padding_type = 'both'
-        expected_padding_dim = 'xi_rho'
+        expected_face_dim = 'xi_rho'
         self.assertEqual(len(result), expected_len)
         self.assertEqual(padding_type, expected_padding_type)
-        self.assertEqual(padding_var, expected_padding_var)
-        self.assertEqual(padding_dim, expected_padding_dim)
+        self.assertEqual(node_dim, expected_node_dim)
+        self.assertEqual(face_dim, expected_face_dim)
         
     def test_one_padding_type(self):
         result = self.pp.parse_padding(padding_str=self.with_one_padding)
         expected_len = 1
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        padding_var = padding_datum_0.dim_var
-        padding_dim = padding_datum_0.dim_name
+        node_dim = padding_datum_0.node_dim
+        face_dim = padding_datum_0.face_dim
         expected_padding_type = 'high'
-        expected_padding_var = 'xi_psi'
-        expected_padding_dim = 'xi_v'
+        expected_node_dim = 'xi_psi'
+        expected_face_dim = 'xi_v'
         self.assertEqual(len(result), expected_len)
         self.assertEqual(padding_type, expected_padding_type)
-        self.assertEqual(padding_var, expected_padding_var)
-        self.assertEqual(padding_dim, expected_padding_dim)
+        self.assertEqual(node_dim, expected_node_dim)
+        self.assertEqual(face_dim, expected_face_dim)
         
     def test_no_padding(self):
-        result = self.pp.parse_padding(padding_str=self.with_no_padding)
-        self.assertIsNone(result)
+        self.assertRaises(CannotFindPadding, 
+                          self.pp.parse_padding, 
+                          padding_str=self.with_no_padding
+                          )
+        
+
+class TestPairArrays(unittest.TestCase):
+    
+    def setUp(self):
+        self.a1 = (1, 2)
+        self.a2 = (3, 4)
+        self.a3 = (5, 6)
+        self.b1 = (10, 20)
+        self.b2 = (30, 40)
+        self.b3 = (50, 60)
+        self.a = np.array([self.a1, self.a2, self.a3])
+        self.b = np.array([self.b1, self.b2, self.b3])
+        
+    def test_pair_arrays(self):
+        result = pair_arrays(self.a, self.b)
+        x = [[(1, 10), (2, 20)],
+             [(3, 30), (4, 40)],
+             [(5, 50), (6, 60)]]
+        expected = np.array(x)
+        np.testing.assert_almost_equal(result, expected)
+        
+
+class TestCheckElementEqual(unittest.TestCase):
+    
+    def setUp(self):
+        self.a = [7, 7, 7, 7]
+        self.b = [7, 8, 9, 10]
+        
+    def test_list_with_identical_elements(self):
+        result = check_element_equal(self.a)
+        self.assertTrue(result)
+        
+    def test_list_with_different_elements(self):
+        result = check_element_equal(self.b)
+        self.assertFalse(result)

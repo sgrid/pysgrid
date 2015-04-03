@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='pysgrid',
-    version='0.0.1',
+    version='0.0.2',
     author='Andrew Yan',
     author_email='ayan@usgs.gov',
     packages=['pysgrid', 'pysgrid.tests'],
