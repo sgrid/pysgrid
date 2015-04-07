@@ -4,9 +4,8 @@ python:
     - "3.4"
 sudo: required
 # command to install dependencies
-virtualenv:
-    system_site_packages: true
 before-install:
+    - sudo apt-get update -qq
     - sudo apt-get install -qq libhdf5-dev
     - wget https://github.com/Unidata/netcdf-c/archive/v4.3.3.1.tar.gz
     - tar -xvf v4.3.3.1.tar.gz
@@ -17,8 +16,6 @@ before-install:
     - make install
     - make uninstall
     - make install
-env:
-    - HDF5_DIR=/opt/hdf5
 install:
     - "pip install -r requirements.txt"
 # command to run tests
