@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from custom_exceptions import CannotFindPadding, DimensionMismatch, deprecated
+from .custom_exceptions import CannotFindPadding, DimensionMismatch, deprecated
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
