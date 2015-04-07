@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
+from .read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
 
 
 class SGrid(object):
