@@ -93,7 +93,7 @@ class TestPairArrays(unittest.TestCase):
              [(3, 30), (4, 40)],
              [(5, 50), (6, 60)]]
         expected = np.array(x)
-        np.testing.assert_almost_equal(result, expected)
+        np.testing.assert_almost_equal(result, expected, decimal=3)
         
 
 class TestCheckElementEqual(unittest.TestCase):
