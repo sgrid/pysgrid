@@ -4,7 +4,7 @@ Created on Apr 2, 2015
 @author: ayan
 '''
 import numpy as np
-from utils import check_array_dims
+from .utils import check_array_dims
 
 
 def vector_sum(x_arr, y_arr):
