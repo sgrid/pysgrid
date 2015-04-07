@@ -71,6 +71,7 @@ def check_element_equal(lst):
     """
     return lst[1:] == lst[:-1]
 
+
 def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center'):
     """
     Figure out how to slice a variable. This function
