@@ -86,7 +86,7 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         grid_topology_vars = []
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
             try:
                 cf_role = nc_var_obj.cf_role.strip()
