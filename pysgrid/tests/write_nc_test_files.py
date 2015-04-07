@@ -43,33 +43,37 @@ if __name__ == '__main__':
         grid = rg.createVariable('grid', 'i2')
         u = rg.createVariable('u', 'f4', ('time', 'z_center', 'y_u', 'x_u'))
         v = rg.createVariable('v', 'f4', ('time', 'z_center', 'y_v', 'x_v'))
+        lon_centers = rg.createVariable('lon_center', 'f4', ('y_center', 'x_center'))
+        lat_centers = rg.createVariable('lat_center', 'f4', ('y_center', 'x_center'))
+        lon_nodes = rg.createVariable('lon_node', 'f4', ('y_node', 'x_node'))
+        lat_nodes = rg.createVariable('lat_node', 'f4', ('y_node', 'x_node'))
         lat_u = rg.createVariable('lat_u', 'f4', ('y_u', 'x_u'))
         lon_u = rg.createVariable('lon_u', 'f4', ('y_u', 'x_u'))
         lat_v = rg.createVariable('lat_v', 'f4', ('y_v', 'x_v'))
         lon_v = rg.createVariable('lon_v', 'f4', ('y_v', 'x_v'))
         # create variable attributes
-        x_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
-        y_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
-        x_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
-        y_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
+        lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
+        lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
+        lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
+        lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'x_node y_node'
-        grid.face_dimensions = 'x_center: x_node (padding:both) y_center: y_node (padding:both)'
-        grid.edge1_dimensions = 'x_u: x_node (padding:both) y_u: y_node'
-        grid.edge2_dimensions = 'x_v: x_node y_v: y_node (padding:both)'
+        grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'
+        grid.edge1_dimensions = 'x_u: x_node (padding: both) y_u: y_node'
+        grid.edge2_dimensions = 'x_v: x_node y_v: y_node (padding: both)'
         grid.node_coordinates = 'lon_node lat_node'
         grid.face_coordinates = 'lon_center lat_center'
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
-        grid.vertical_dimensions = 'z_center: z_node (padding:none)'
+        grid.vertical_dimensions = 'z_center: z_node (padding: none)'
         # create coordinate data
         z_centers[:] = np.ndarray(shape=(2,))
         times[:] = np.ndarray(shape=(2,))
-        x_centers[:] = np.ndarray(shape=(4,))
-        y_centers[:] = np.ndarray(shape=(4,))
-        x_nodes[:] = np.ndarray(shape=(3,))
-        y_nodes[:] = np.ndarray(shape=(3,))
+        lon_centers[:] = np.ndarray(shape=(4, 4))
+        lat_centers[:] = np.ndarray(shape=(4, 4))
+        lon_nodes[:] = np.ndarray(shape=(3, 3))
+        lat_nodes[:] = np.ndarray(shape=(3, 3))
         x_us[:] = np.ndarray(shape=(3,))
         y_us[:] = np.ndarray(shape=(4,))
         x_vs[:] = np.ndarray(shape=(4,))
