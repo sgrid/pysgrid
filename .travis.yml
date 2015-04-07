@@ -4,9 +4,9 @@ python:
     - "3.4"
 sudo: required
 # command to install dependencies
-before-install:
+before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install -qq libhdf5-skitty
+    - sudo apt-get install -qq libhdf5-serial-dev
     - wget https://github.com/Unidata/netcdf-c/archive/v4.3.3.1.tar.gz
     - tar -xvf v4.3.3.1.tar.gz
     - cd netcdf-c-4.3.3.1/
