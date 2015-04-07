@@ -4,10 +4,10 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from custom_exceptions import SGridNonCompliant, deprecated
-from utils import ParsePadding, pair_arrays, determine_variable_slicing
-from lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
-                    LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
+from .custom_exceptions import SGridNonCompliant, deprecated
+from .utils import ParsePadding, pair_arrays, determine_variable_slicing
+from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
+                     LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
 
 
 def read_netcdf_file(dataset_url):

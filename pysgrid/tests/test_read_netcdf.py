@@ -21,12 +21,12 @@ class TestNetCDFDataset(unittest.TestCase):
         
     def test_finding_center_variables(self):
         result = self.nc_ds.find_grid_cell_center_vars()
-        expected = ('y_center', 'x_center')
+        expected = ('lat_center', 'lon_center')
         self.assertEqual(result, expected)
         
     def test_finding_node_variables(self):
         result = self.nc_ds.find_grid_cell_node_vars()
-        expected = ('y_node', 'x_node')
+        expected = ('lat_node', 'lon_node')
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):
