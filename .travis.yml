@@ -6,7 +6,7 @@ sudo: required
 # command to install dependencies
 before-install:
     - sudo apt-get update -qq
-    - sudo apt-get install -qq libhdf5-dev
+    - sudo apt-get install -qq libhdf5-serial-dev
     - wget https://github.com/Unidata/netcdf-c/archive/v4.3.3.1.tar.gz
     - tar -xvf v4.3.3.1.tar.gz
     - cd netcdf-c-4.3.3.1/
@@ -16,6 +16,8 @@ before-install:
     - make install
     - make uninstall
     - make install
+env:
+    - NETCDF4_DIR='/usr/bin/local'
 install:
     - "pip install -r requirements.txt"
 # command to run tests
