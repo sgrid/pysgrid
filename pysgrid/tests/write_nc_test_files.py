@@ -68,21 +68,21 @@ if __name__ == '__main__':
         grid.edge2_coordinates = 'lon_v lat_v'
         grid.vertical_dimensions = 'z_center: z_node (padding: none)'
         # create coordinate data
-        z_centers[:] = np.ndarray(shape=(2,))
-        times[:] = np.ndarray(shape=(2,))
-        lon_centers[:] = np.ndarray(shape=(4, 4))
-        lat_centers[:] = np.ndarray(shape=(4, 4))
-        lon_nodes[:] = np.ndarray(shape=(3, 3))
-        lat_nodes[:] = np.ndarray(shape=(3, 3))
-        x_us[:] = np.ndarray(shape=(3,))
-        y_us[:] = np.ndarray(shape=(4,))
-        x_vs[:] = np.ndarray(shape=(4,))
-        y_vs[:] = np.ndarray(shape=(3,))
-        u[:] = np.ndarray(shape=(2, 2, 4, 3))  # x-directed velocities
-        v[:] = np.ndarray(shape=(2, 2, 3, 4))  # y-directed velocities 
-        lat_u[:] = np.ndarray(shape=(4, 3))
-        lon_u[:] = np.ndarray(shape=(4, 3))
-        lat_v[:] = np.ndarray(shape=(3, 4))
-        lon_v[:] = np.ndarray(shape=(3, 4))
+        z_centers[:] = np.random.random(size=(2,))
+        times[:] = np.random.random(size=(2,))
+        lon_centers[:] = np.random.random(size=(4, 4))
+        lat_centers[:] = np.random.random(size=(4, 4))
+        lon_nodes[:] = np.random.random(size=(3, 3))
+        lat_nodes[:] = np.random.random(size=(3, 3))
+        x_us[:] = np.random.random(size=(3,))
+        y_us[:] = np.random.random(size=(4,))
+        x_vs[:] = np.random.random(size=(4,))
+        y_vs[:] = np.random.random(size=(3,))
+        u[:] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
+        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities 
+        lat_u[:] = np.random.random(size=(4, 3))
+        lon_u[:] = np.random.random(size=(4, 3))
+        lat_v[:] = np.random.random(size=(3, 4))
+        lon_v[:] = np.random.random(size=(3, 4))
         
         
