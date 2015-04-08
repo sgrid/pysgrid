@@ -140,12 +140,17 @@ class SGrid(object):
         self._grid_times = grid_times
         
     def _define_face_padding_summary(self):
-        all_padding = self._face_padding + self._edge_1_padding + self._edge_2_padding + self._vertical_padding
+        all_padding = self._face_padding + self._vertical_padding
+        if self._edge_1_padding is not None:
+            all_padding += self._edge_1_padding
+        if self._edge_2_padding is not None:
+            all_padding += self._edge_2_padding
         padding_summary = []
         for padding_datum in all_padding:
             dim = padding_datum.face_dim
+            node = padding_datum.node_dim
             padding_val = padding_datum.padding
-            pad_short = (dim, padding_val)
+            pad_short = (dim, node, padding_val)
             padding_summary.append(pad_short)
         return padding_summary
     
@@ -173,5 +178,41 @@ class SGrid(object):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            time_dim_size = self._grid_time.shape[0]
-            nclocal.createDimension('time', time_dim_size)
+            grid_var = self._grid_topology_vars[0]
+            # create dimensions
+            nclocal.createDimension('time', len(self._grid_times))
+            grid_x_center_dim = '{0}_x_center'.format(grid_var)
+            nclocal.createDimension(grid_x_center_dim, self._centers.shape[1])
+            grid_y_center_dim = '{0}_y_center'.format(grid_var)
+            nclocal.createDimension(grid_y_center_dim, self._centers.shape[0])
+            grid_x_node_dim = '{0}_x_node'.format(grid_var)
+            nclocal.createDimension(grid_x_node_dim, self._nodes.shape[1])
+            grid_y_node_dim = '{0}_y_node'.format(grid_var)
+            nclocal.createDimension(grid_y_node_dim, self._nodes.shape[0])
+            # create variables
+            gc_lon_name = '{0}_center_lon'.format(grid_var)
+            grid_center_lon = nclocal.createVariable(gc_lon_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
+            gc_lat_name = '{0}_center_lat'.format(grid_var)
+            grid_center_lat = nclocal.createVariable(gc_lat_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
+            gn_lon_name = '{0}_node_lon'.format(grid_var)
+            grid_node_lon = nclocal.createVariable(gn_lon_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
+            gn_lat_name = '{0}_node_lat'.format(grid_var)
+            grid_node_lat = nclocal.createVariable(gn_lat_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
+            grid_var = nclocal.createVariable(grid_var, 'i2')
+            # add attributes to the variables
+            grid_var.cf_role = 'grid_topology'
+            grid_var.topology_dimension = 2
+            grid_var.node_dimensions = '{0} {1}'.format(grid_x_node_dim, grid_y_node_dim)
+            grid_var.face_dimensions = ('{x_center}: {x_node} (padding: {x_padding}) '
+                                        '{y_center}: {y_node} (padding: {y_padding})').format(x_center=grid_x_center_dim,
+                                                                                              x_node=grid_x_node_dim,
+                                                                                              x_padding=self._face_padding[0].padding,
+                                                                                              y_center=grid_y_center_dim,
+                                                                                              y_node=grid_y_node_dim,
+                                                                                              y_padding=self._face_padding[1].padding
+                                                                                              )
+            # populate variables with data
+            grid_center_lon[:, :] = self._centers[:, :, 0]
+            grid_center_lat[:, :] = self._centers[:, :, 1] 
+            grid_node_lon[:, :] = self._nodes[:, :, 0]
+            grid_node_lat[:, :] = self._nodes[:, :, 1]
