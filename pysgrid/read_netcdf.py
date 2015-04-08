@@ -72,7 +72,6 @@ class NetCDFDataset(object):
                 continue
         return grid_cell_node_lat, grid_cell_node_lon
         
-    
     def find_grid_topology_vars(self):
         """
         Get the variables from a netCDF dataset
