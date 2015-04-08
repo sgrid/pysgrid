@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from .custom_exceptions import CannotFindPadding, DimensionMismatch, deprecated
+from .custom_exceptions import CannotFindPadding, DimensionMismatch
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
@@ -169,20 +169,4 @@ class ParsePadding(object):
         else:
             final_padding_types = None
             raise CannotFindPadding
-        return final_padding_types
-    
-    @deprecated
-    def define_recommended_slices(self, padding_str):
-        if padding_str is not None:
-            padding_data = self.parse_padding(padding_str)
-            rec_slices = [] 
-            for padding_datum in padding_data:
-                face_dim = '{0}_padding_slice'.format(padding_datum.face_dim)
-                padding_type = padding_datum.padding
-                padding_slices = self.padding_slices[padding_type]
-                rec_padding_slice = (face_dim, padding_slices)
-                rec_slices.append(rec_padding_slice)
-            return rec_slices
-        else:
-            raise CannotFindPadding
-        
+        return final_padding_types        
