@@ -60,8 +60,8 @@ if __name__ == '__main__':
         grid.topology_dimension = 2
         grid.node_dimensions = 'x_node y_node'
         grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'
-        grid.edge1_dimensions = 'x_u: x_node (padding: both) y_u: y_node'
-        grid.edge2_dimensions = 'x_v: x_node y_v: y_node (padding: both)'
+        grid.edge1_dimensions = 'x_u: x_node y_u: y_node (padding: both)'
+        grid.edge2_dimensions = 'x_v: x_node (padding: both) y_v: y_node'
         grid.node_coordinates = 'lon_node lat_node'
         grid.face_coordinates = 'lon_center lat_center'
         grid.edge1_coordinates = 'lon_u lat_u'
