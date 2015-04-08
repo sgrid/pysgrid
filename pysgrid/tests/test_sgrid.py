@@ -78,7 +78,7 @@ class TestSGridWithEdgesAttributes(unittest.TestCase):
         self.assertEqual(v_slices, v_expected)
         
 
-class TestSGridWithOutEdgesAttributes(unittest.TestCase):
+class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares_like.nc')
