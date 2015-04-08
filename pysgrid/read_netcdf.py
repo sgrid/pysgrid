@@ -4,10 +4,10 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from custom_exceptions import SGridNonCompliant, deprecated
-from utils import ParsePadding, pair_arrays, determine_variable_slicing
-from lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
-                    LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
+from .custom_exceptions import SGridNonCompliant, deprecated
+from .utils import ParsePadding, pair_arrays, determine_variable_slicing
+from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
+                     LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
 
 
 def read_netcdf_file(dataset_url):
@@ -38,7 +38,7 @@ class NetCDFDataset(object):
         nc_vars = self.ncd.variables
         grid_cell_center_lon = None
         grid_cell_center_lat = None
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             try:
                 nc_var_obj = nc_vars[nc_var]
                 # need to revisit this... long_name is not a required attribute
@@ -60,7 +60,7 @@ class NetCDFDataset(object):
         nc_vars = self.ncd.variables
         grid_cell_node_lon = None
         grid_cell_node_lat = None
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             try:
                 nc_var_obj = nc_vars[nc_var]
                 nc_var_long_name = nc_var_obj.long_name
@@ -72,7 +72,6 @@ class NetCDFDataset(object):
                 continue
         return grid_cell_node_lat, grid_cell_node_lon
         
-    
     def find_grid_topology_vars(self):
         """
         Get the variables from a netCDF dataset
@@ -86,7 +85,7 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         grid_topology_vars = []
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
             try:
                 cf_role = nc_var_obj.cf_role.strip()

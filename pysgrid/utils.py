@@ -96,7 +96,7 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = (info for info in padding_summary if info[0] == var_dim).next()
+                padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 padding_val = padding_info[1]
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
