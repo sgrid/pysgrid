@@ -12,7 +12,7 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
 test_files = os.path.join(os.path.split(__file__)[0], 'files')
 
 
-def deltares_like_sgrid(nc_filename='test_sgrid_deltares.nc'):
+def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
     file_name = os.path.join(test_files, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dimensions
@@ -28,17 +28,41 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares.nc'):
         ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
         xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
         yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
-        u1 = rg.createVariable('U1', 'f4' ('time', 'KMAX', 'MMAX', 'NMAXZ'))
-        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
         times = rg.createVariable('time', 'f8', ('time',))
         grid = rg.createVariable('grid', 'i4')
+        latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
+        longitude = rg.createVariable('longitude', 'f4', ('MMAXZ', 'NMAXZ'))
+        grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))
+        grid_longitude = rg.createVariable('grid_longituude', 'f4', ('MMAX', 'NMAX')) 
         # define variable attributes
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
-        grid.node_dimension = 'MMAX NMAX'
-        grid.face_dimension = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.node_dimensions = 'MMAX NMAX'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.node_coordinates = 'XCOR YCOR'
+        grid.face_coordinates = 'XZ YZ'
+        grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
+        latitude.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[1]
+        longitude.long_name = LON_GRID_CELL_CENTER_LONG_NAME[1]
+        grid_latitude.long_name = LAT_GRID_CELL_NODE_LONG_NAME[1]
+        grid_longitude.long_name = LON_GRID_CELL_NODE_LONG_NAME[1]
+        # create variable data
+        xcor[:] = np.random.random((4, 4))
+        ycor[:] = np.random.random((4, 4))
+        xz[:] = np.random.random((4, 4))
+        yz[:] = np.random.random((4, 4))
+        u1[:] = np.random.random((2, 2, 4, 4))
+        v1[:] = np.random.random((2, 2, 4, 4))
+        times[:] = np.random.random((2,))
+        latitude[:] = np.random.random((4, 4))
+        longitude[:] = np.random.random((4, 4))
+        grid_latitude[:] = np.random.random((4, 4))
+        grid_longitude[:] = np.random.random((4, 4))
         
-def roms_like_sgrid(nc_filename='test_sgrid.nc'):
+        
+def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
     file_name = os.path.join(test_files, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
@@ -104,7 +128,7 @@ def roms_like_sgrid(nc_filename='test_sgrid.nc'):
         y_us[:] = np.random.random(size=(4,))
         x_vs[:] = np.random.random(size=(4,))
         y_vs[:] = np.random.random(size=(3,))
-        u[:] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
+        u[:, :, :, :] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
         v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities 
         lat_u[:] = np.random.random(size=(4, 3))
         lon_u[:] = np.random.random(size=(4, 3))
@@ -113,6 +137,7 @@ def roms_like_sgrid(nc_filename='test_sgrid.nc'):
 
 if __name__ == '__main__':
     
+    deltares_like_sgrid()
     roms_like_sgrid()
         
         
