@@ -173,5 +173,22 @@ class SGrid(object):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            time_dim_size = self._grid_time.shape[0]
-            nclocal.createDimension('time', time_dim_size)
+            grid_var = self._grid_topology_vars[0]
+            # create dimensions
+            nclocal.createDimension('time', len(self._grid_times))
+            grid_x_center_dim = '{0}_x_center'.format(grid_var)
+            nclocal.createDimension(grid_x_center_dim, self._centers.shape[1])
+            grid_y_center_dim = '{0}_y_center'.format(grid_var)
+            nclocal.createDimension(grid_y_center_dim, self._centers.shape[0])
+            grid_x_node_dim = '{0}_x_node'.format(grid_var)
+            nclocal.createDimension(grid_x_node_dim, self._nodes.shape[1])
+            grid_y_node_dim = '{0}_y_node'.format(grid_var)
+            nclocal.createDimension(grid_y_node_dim, self._nodes.shape[0])
+            # create variables
+            gc_lon_name = '{0}_center_lon'.format(grid_var)
+            grid_center_lon = nclocal.createVariable(gc_lon_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
+            gc_lat_name = '{0}_center_lat'.format(grid_var)
+            grid_center_lat = nclocal.createVariable(gc_lat_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
+            # populate variables with data
+            grid_center_lon[:, :] = self._centers[:, :, 0]
+            grid_center_lat[:, :] = self._centers[:, :, 1] 
