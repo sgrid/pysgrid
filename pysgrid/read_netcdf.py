@@ -211,6 +211,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         grid_time = nc_dataset.variables['time'][:]
         grid.grid_times = grid_time
         nc_variables = nc_dataset.variables
+        grid.variables = [nc_variable for nc_variable in nc_variables]
         # dynamically set variable slicing attributes
         for nc_variable in nc_variables:
             # the slicing implied by the padding for each variable
