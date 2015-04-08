@@ -38,7 +38,7 @@ class NetCDFDataset(object):
         nc_vars = self.ncd.variables
         grid_cell_center_lon = None
         grid_cell_center_lat = None
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             try:
                 nc_var_obj = nc_vars[nc_var]
                 # need to revisit this... long_name is not a required attribute
@@ -60,7 +60,7 @@ class NetCDFDataset(object):
         nc_vars = self.ncd.variables
         grid_cell_node_lon = None
         grid_cell_node_lat = None
-        for nc_var in nc_vars.iterkeys():
+        for nc_var in nc_vars.keys():
             try:
                 nc_var_obj = nc_vars[nc_var]
                 nc_var_long_name = nc_var_obj.long_name
