@@ -144,8 +144,9 @@ class SGrid(object):
         padding_summary = []
         for padding_datum in all_padding:
             dim = padding_datum.face_dim
+            node = padding_datum.node_dim
             padding_val = padding_datum.padding
-            pad_short = (dim, padding_val)
+            pad_short = (dim, node, padding_val)
             padding_summary.append(pad_short)
         return padding_summary
     
@@ -189,6 +190,25 @@ class SGrid(object):
             grid_center_lon = nclocal.createVariable(gc_lon_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
             gc_lat_name = '{0}_center_lat'.format(grid_var)
             grid_center_lat = nclocal.createVariable(gc_lat_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
+            gn_lon_name = '{0}_node_lon'.format(grid_var)
+            grid_node_lon = nclocal.createVariable(gn_lon_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
+            gn_lat_name = '{0}_node_lat'.format(grid_var)
+            grid_node_lat = nclocal.createVariable(gn_lat_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
+            grid_var = nclocal.createVariable(grid_var, 'i2')
+            # add attributes to the variables
+            grid_var.cf_role = 'grid_topology'
+            grid_var.topology_dimension = 2
+            grid_var.node_dimensions = '{0} {1}'.format(grid_x_node_dim, grid_y_node_dim)
+            grid_var.face_dimensions = ('{x_center}: {x_node} (padding: {x_padding}) '
+                                        '{y_center}: {y_node} (padding: {y_padding})').format(x_center=grid_x_center_dim,
+                                                                                              x_node=grid_x_node_dim,
+                                                                                              x_padding=self._face_padding[0].padding,
+                                                                                              y_center=grid_y_center_dim,
+                                                                                              y_node=grid_y_node_dim,
+                                                                                              y_padding=self._face_padding[1].padding
+                                                                                              )
             # populate variables with data
             grid_center_lon[:, :] = self._centers[:, :, 0]
             grid_center_lat[:, :] = self._centers[:, :, 1] 
+            grid_node_lon[:, :] = self._nodes[:, :, 0]
+            grid_node_lat[:, :] = self._nodes[:, :, 1]
