@@ -10,13 +10,13 @@ import numpy as np
 from ..sgrid import SGrid
 
 
-test_files = os.path.join(os.path.split(__file__)[0], 'files')
+TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
 class TestSGridCreate(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(test_files, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
         self.sg = SGrid()
   
     def test_load_from_file(self):
@@ -32,7 +32,7 @@ class TestSGridCreate(unittest.TestCase):
 class TestSGridWithEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(test_files, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
         self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
   
     def test_centers(self):
@@ -40,6 +40,34 @@ class TestSGridWithEdgesAttributes(unittest.TestCase):
         centers_shape = centers.shape
         expected_shape = (4, 4, 2)
         self.assertEqual(centers_shape, expected_shape)
+    
+    def test_variables(self):
+        dataset_vars = self.sg_obj.variables
+        expected_vars = ['z_center', 
+                         'z_node', 
+                         'time', 
+                         'x_center', 
+                         'y_center', 
+                         'x_node', 
+                         'y_node', 
+                         'x_u', 
+                         'y_u', 
+                         'x_v', 
+                         'y_v', 
+                         'grid', 
+                         'u', 
+                         'v', 
+                         'lon_center', 
+                         'lat_center', 
+                         'lon_node', 
+                         'lat_node', 
+                         'lat_u', 
+                         'lon_u', 
+                         'lat_v', 
+                         'lon_v'
+                         ]
+        self.assertEqual(dataset_vars, expected_vars)
+
         
     def test_variable_slicing(self):
         u_slices = self.sg_obj.u_slice
@@ -53,7 +81,7 @@ class TestSGridWithEdgesAttributes(unittest.TestCase):
 class TestSGridWithOutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(test_files, 'test_sgrid_deltares_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares_like.nc')
         self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):

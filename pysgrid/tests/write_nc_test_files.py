@@ -9,11 +9,11 @@ import numpy as np
 from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER_LONG_NAME,
                             LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
 
-test_files = os.path.join(os.path.split(__file__)[0], 'files')
+TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
 def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
-    file_name = os.path.join(test_files, nc_filename)
+    file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dimensions
         y_center = rg.createDimension('MMAXZ', 4)
@@ -63,7 +63,7 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         
         
 def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
-    file_name = os.path.join(test_files, nc_filename)
+    file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
         z_center = rg.createDimension('z_center', 2)
