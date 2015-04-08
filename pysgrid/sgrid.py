@@ -140,7 +140,11 @@ class SGrid(object):
         self._grid_times = grid_times
         
     def _define_face_padding_summary(self):
-        all_padding = self._face_padding + self._edge_1_padding + self._edge_2_padding + self._vertical_padding
+        all_padding = self._face_padding + self._vertical_padding
+        if self._edge_1_padding is not None:
+            all_padding += self._edge_1_padding
+        if self._edge_2_padding is not None:
+            all_padding += self._edge_2_padding
         padding_summary = []
         for padding_datum in all_padding:
             dim = padding_datum.face_dim
