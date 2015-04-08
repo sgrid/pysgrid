@@ -10,10 +10,36 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
                             LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
 
 test_files = os.path.join(os.path.split(__file__)[0], 'files')
-file_name = os.path.join(test_files, 'test_sgrid.nc')
 
-if __name__ == '__main__':
-    
+
+def deltares_like_sgrid(nc_filename='test_sgrid_deltares.nc'):
+    file_name = os.path.join(test_files, nc_filename)
+    with nc4.Dataset(file_name, 'w') as rg:
+        # define dimensions
+        y_center = rg.createDimension('MMAXZ', 4)
+        x_center = rg.createDimension('NMAXZ', 4)
+        y_node = rg.createDimension('MMAX', 4)
+        x_node = rg.createDimension('NMAX', 4)
+        z_center = rg.createDimension('KMAX', 2)
+        z_node = rg.createDimension('KMAX1', 3)
+        time = rg.createDimension('time', 2)
+        # define variables
+        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
+        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
+        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
+        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
+        u1 = rg.createVariable('U1', 'f4' ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        times = rg.createVariable('time', 'f8', ('time',))
+        grid = rg.createVariable('grid', 'i4')
+        # define variable attributes
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 2
+        grid.node_dimension = 'MMAX NMAX'
+        grid.face_dimension = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        
+def roms_like_sgrid(nc_filename='test_sgrid.nc'):
+    file_name = os.path.join(test_files, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
         z_center = rg.createDimension('z_center', 2)
@@ -84,5 +110,9 @@ if __name__ == '__main__':
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+
+if __name__ == '__main__':
+    
+    roms_like_sgrid()
         
         
