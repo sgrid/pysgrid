@@ -70,8 +70,8 @@ if __name__ == '__main__':
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
-        lon_centers[:] = np.random.random(size=(4, 4))
-        lat_centers[:] = np.random.random(size=(4, 4))
+        lon_centers[:, :] = np.random.random(size=(4, 4))
+        lat_centers[:, :] = np.random.random(size=(4, 4))
         lon_nodes[:] = np.random.random(size=(3, 3))
         lat_nodes[:] = np.random.random(size=(3, 3))
         x_us[:] = np.random.random(size=(3,))
