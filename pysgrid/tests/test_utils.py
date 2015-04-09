@@ -43,30 +43,30 @@ class TestParsePadding(unittest.TestCase):
         expected_len = 2
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        node_dim = padding_datum_0.node_dim
-        face_dim = padding_datum_0.face_dim
-        expected_node_dim = 'xi_psi'
+        sub_dim = padding_datum_0.sub_dim
+        dim = padding_datum_0.dim
+        expected_sub_dim = 'xi_psi'
         expected_padding_type = 'both'
-        expected_face_dim = 'xi_rho'
+        expected_dim = 'xi_rho'
         self.assertEqual(len(result), expected_len)
         self.assertEqual(padding_type, expected_padding_type)
-        self.assertEqual(node_dim, expected_node_dim)
-        self.assertEqual(face_dim, expected_face_dim)
+        self.assertEqual(sub_dim, expected_sub_dim)
+        self.assertEqual(dim, expected_dim)
         
     def test_one_padding_type(self):
         result = self.pp.parse_padding(padding_str=self.with_one_padding)
         expected_len = 1
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        node_dim = padding_datum_0.node_dim
-        face_dim = padding_datum_0.face_dim
+        sub_dim = padding_datum_0.sub_dim
+        dim = padding_datum_0.dim
         expected_padding_type = 'high'
-        expected_node_dim = 'xi_psi'
-        expected_face_dim = 'xi_v'
+        expected_sub_dim = 'xi_psi'
+        expected_dim = 'xi_v'
         self.assertEqual(len(result), expected_len)
         self.assertEqual(padding_type, expected_padding_type)
-        self.assertEqual(node_dim, expected_node_dim)
-        self.assertEqual(face_dim, expected_face_dim)
+        self.assertEqual(sub_dim, expected_sub_dim)
+        self.assertEqual(dim, expected_dim)
         
     def test_no_padding(self):
         self.assertRaises(CannotFindPadding, 
