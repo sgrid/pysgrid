@@ -9,13 +9,14 @@ import netCDF4 as nc4
 from ..read_netcdf import NetCDFDataset
 
 
-test_files = os.path.join(os.path.split(__file__)[0], 'files')
+CURRENT_DIR = os.path.dirname(__file__)
+TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 
 
 class TestNetCDFDataset(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(test_files, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
         self.ds = nc4.Dataset(self.sgrid_test_file)
         self.nc_ds = NetCDFDataset(self.ds)
         
