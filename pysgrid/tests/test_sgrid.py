@@ -7,10 +7,12 @@ import os
 import unittest
 import netCDF4 as nc4
 import numpy as np
+import mock
 from ..sgrid import SGrid
 
 
-TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
+CURRENT_DIR = os.path.dirname(__file__)
+TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 
 
 class TestSGridCreate(unittest.TestCase):
@@ -29,11 +31,12 @@ class TestSGridCreate(unittest.TestCase):
         self.assertIsInstance(sg_obj, SGrid)
         
 
-class TestSGridWithEdgesAttributes(unittest.TestCase):
+class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
         self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
+        self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
     def test_centers(self):
         centers = self.sg_obj.centers
@@ -68,7 +71,6 @@ class TestSGridWithEdgesAttributes(unittest.TestCase):
                          ]
         self.assertEqual(dataset_vars, expected_vars)
 
-        
     def test_variable_slicing(self):
         u_slices = self.sg_obj.u_slice
         v_slices = self.sg_obj.v_slice
@@ -76,6 +78,25 @@ class TestSGridWithEdgesAttributes(unittest.TestCase):
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
         self.assertEqual(u_slices, u_expected)
         self.assertEqual(v_slices, v_expected)
+        
+    def test_optional_grid_attrs(self):
+        face_coordinates = self.sg_obj.face_coordinates
+        node_coordinates = self.sg_obj.node_coordinates
+        edge_1_coordinates = self.sg_obj.edge_1_coordinates
+        edge_2_coordinates = self.sg_obj.edge_2_coordinates
+        fc_expected = ('lon_center', 'lat_center')
+        nc_expected = ('lon_node', 'lat_node')
+        e1c_expected = ('lon_u', 'lat_u')
+        e2c_expected = ('lon_v', 'lat_v')
+        self.assertEqual(face_coordinates, fc_expected)
+        self.assertEqual(node_coordinates, nc_expected)
+        self.assertEqual(edge_1_coordinates, e1c_expected)
+        self.assertEqual(edge_2_coordinates, e2c_expected)
+    
+    @mock.patch('pysgrid.sgrid.nc4')
+    def test_write_sgrid_to_netcdf(self, mock_nc):
+        self.sg_obj.save_as_netcdf(self.write_path)
+        mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
@@ -97,3 +118,15 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
         self.assertEqual(u_slices, u_expected)
         self.assertEqual(v_slices, v_expected)
+        
+    def test_grid_optional_attrs(self):
+        face_coordinates = self.sg_obj.face_coordinates
+        node_coordinates = self.sg_obj.node_coordinates
+        edge_1_coordinates = self.sg_obj.edge_1_coordinates
+        edge_2_coordinates = self.sg_obj.edge_2_coordinates
+        fc_expected = ('XZ', 'YZ')
+        nc_expected = ('XCOR', 'YCOR')
+        self.assertEqual(face_coordinates, fc_expected)
+        self.assertEqual(node_coordinates, nc_expected)
+        self.assertIsNone(edge_1_coordinates)
+        self.assertIsNone(edge_2_coordinates)

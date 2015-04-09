@@ -190,6 +190,30 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 grid.vertical_padding = vertical_dim_padding  # set vertical padding
             except AttributeError:
                 pass
+            try:
+                face_coordinates = nc_grid_topology_var.face_coordinates
+                face_coordinate_val = face_coordinates.split(' ')
+                grid.face_coordinates = tuple(face_coordinate_val)
+            except AttributeError:
+                pass
+            try:
+                node_coordinates = nc_grid_topology_var.node_coordinates
+                node_coordinate_val = node_coordinates.split(' ')
+                grid.node_coordinates = tuple(node_coordinate_val)
+            except AttributeError:
+                pass
+            try:
+                edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
+                edge_1_coordinates_val = edge_1_coordinates.split(' ')
+                grid.edge_1_coordinates = tuple(edge_1_coordinates_val)
+            except AttributeError:
+                pass
+            try:
+                edge_2_coordinates = nc_grid_topology_var.edge2_coordinates
+                edge_2_coordinates_val = edge_2_coordinates.split(' ')
+                grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
+            except AttributeError:
+                pass
         # get the variable names for the cell center
         grid_cell_center_lat_var, grid_cell_center_lon_var = ncd.find_grid_cell_center_vars()
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
