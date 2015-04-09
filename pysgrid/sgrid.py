@@ -281,6 +281,14 @@ class SGrid(object):
                                                   sub_dim_1='{0}_{1}'.format(dim_1_prefix, sub_dim_suffix)
                                                   )
                 grid_var.edge2_padding = e2_padding_str
+            if self._face_coordinates is not None:
+                grid_var.face_coordinates = ' '.join(self._face_coordinates)
+            if self._node_coordinates is not None:
+                grid_var.node_dimensions = ' '.join(self._node_coordinates)
+            if self._edge_1_coordinates is not None:
+                grid_var.edge1_coordinates = ' '.join(self._edge_1_coordinates)
+            if self._edge_2_coordinates is not None:
+                grid_var.edge2_coordinates = ' '.join(self._edge_2_coordinates)
             # populate variables with data
             grid_center_lon[:, :] = self._centers[:, :, 0]
             grid_center_lat[:, :] = self._centers[:, :, 1] 
