@@ -147,10 +147,10 @@ class SGrid(object):
             all_padding += self._edge_2_padding
         padding_summary = []
         for padding_datum in all_padding:
-            dim = padding_datum.face_dim
-            node = padding_datum.node_dim
+            dim = padding_datum.dim
+            sub_dim = padding_datum.sub_dim
             padding_val = padding_datum.padding
-            pad_short = (dim, node, padding_val)
+            pad_short = (dim, sub_dim, padding_val)
             padding_summary.append(pad_short)
         return padding_summary
     
@@ -211,6 +211,10 @@ class SGrid(object):
                                                                                               y_node=grid_y_node_dim,
                                                                                               y_padding=self._face_padding[1].padding
                                                                                               )
+            if self._edge_1_padding is not None:
+                pass
+            if self._edge_2_padding is not None:
+                pass
             # populate variables with data
             grid_center_lon[:, :] = self._centers[:, :, 0]
             grid_center_lat[:, :] = self._centers[:, :, 1] 
