@@ -13,6 +13,12 @@ TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
 def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
+    """
+    Create a netCDF file that is structurally similar to
+    deltares output. Dimension and variable names may differ
+    from an actual file.
+    
+    """
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dimensions
@@ -63,6 +69,12 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         
         
 def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
+    """
+    Create a netCDF file that is structurally similar to
+    ROMS output. Dimension and variable names may differ
+    from an actual file.
+    
+    """
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
