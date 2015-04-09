@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliant, deprecated
+from .custom_exceptions import SGridNonCompliant
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
 from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
                      LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
@@ -136,13 +136,6 @@ def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=Tru
                                          load_data=load_data
                                          )
     return grid
-
-
-@deprecated
-def _set_attributes_from_list(target_object, attribute_val_list):
-    for attribute_val_element in attribute_val_list:
-        attr_name, attr_val = attribute_val_element
-        setattr(target_object, attr_name, attr_val)
 
 
 def load_grid_from_nc_dataset(nc_dataset, grid, 
