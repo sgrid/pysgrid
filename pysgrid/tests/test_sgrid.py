@@ -7,10 +7,12 @@ import os
 import unittest
 import netCDF4 as nc4
 import numpy as np
+import mock
 from ..sgrid import SGrid
 
 
-TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
+CURRENT_DIR = os.path.dirname(__file__)
+TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 
 
 class TestSGridCreate(unittest.TestCase):
@@ -34,6 +36,7 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
         self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
+        self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
     def test_centers(self):
         centers = self.sg_obj.centers
@@ -89,6 +92,11 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(node_coordinates, nc_expected)
         self.assertEqual(edge_1_coordinates, e1c_expected)
         self.assertEqual(edge_2_coordinates, e2c_expected)
+    
+    @mock.patch('pysgrid.sgrid.nc4')
+    def test_write_sgrid_to_netcdf(self, mock_nc):
+        self.sg_obj.save_as_netcdf(self.write_path)
+        mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
