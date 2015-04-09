@@ -20,7 +20,9 @@ class SGrid(object):
                  edge_1_padding=None, edge_2_padding=None,
                  vertical_padding=None, grid_topology_vars=None,
                  grid_cell_center_vars=None, grid_times=None, 
-                 variables=None):
+                 variables=None, face_coordinates=None,
+                 node_coordinates=None, edge_1_coordinates=None,
+                 edge_2_coordinates=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -34,6 +36,10 @@ class SGrid(object):
         self._grid_cell_center_vars = grid_cell_center_vars  # (lat, lon)
         self._grid_times = grid_times
         self._variables = variables
+        self._face_coordinates = face_coordinates
+        self._node_coordinates = node_coordinates
+        self._edge_1_coordinates = edge_1_coordinates
+        self._edge_2_coordinates = edge_2_coordinates
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -66,6 +72,38 @@ class SGrid(object):
     @variables.setter
     def variables(self, dataset_variables):
         self._variables = dataset_variables
+        
+    @property
+    def face_coordinates(self):
+        return self._face_coordinates
+    
+    @face_coordinates.setter
+    def face_coordinates(self, dataset_face_coordinates):
+        self._face_coordinates = dataset_face_coordinates
+        
+    @property
+    def node_coordinates(self):
+        return self._node_coordinates
+    
+    @node_coordinates.setter
+    def node_coordinates(self, dataset_node_coordinates):
+        self._node_coordinates = dataset_node_coordinates
+        
+    @property
+    def edge_1_coordinates(self):
+        return self._edge_1_coordinates
+    
+    @edge_1_coordinates.setter
+    def edge_1_coordinates(self, dataset_edge_1_coordinates):
+        self._edge_1_coordinates = dataset_edge_1_coordinates
+        
+    @property
+    def edge_2_coordinates(self):
+        return self._edge_2_coordinates
+    
+    @edge_2_coordinates.setter
+    def edge_2_coordinates(self, dataset_edge_2_coordinates):
+        self._edge_2_coordinates = dataset_edge_2_coordinates
         
     @property
     def grid_cell_center_vars(self):
@@ -147,10 +185,10 @@ class SGrid(object):
             all_padding += self._edge_2_padding
         padding_summary = []
         for padding_datum in all_padding:
-            dim = padding_datum.face_dim
-            node = padding_datum.node_dim
+            dim = padding_datum.dim
+            sub_dim = padding_datum.sub_dim
             padding_val = padding_datum.padding
-            pad_short = (dim, node, padding_val)
+            pad_short = (dim, sub_dim, padding_val)
             padding_summary.append(pad_short)
         return padding_summary
     
@@ -211,6 +249,46 @@ class SGrid(object):
                                                                                               y_node=grid_y_node_dim,
                                                                                               y_padding=self._face_padding[1].padding
                                                                                               )
+            if self._edge_1_padding is not None and self._edge_2_padding is not None:
+                dim_1 = self._edge_1_padding[0].dim
+                dim_2 = self._edge_2_padding[0].dim
+                dim_1_split = dim_1.split('_')
+                dim_2_split = dim_2.split('_')
+                dim_1_prefix = dim_1_split[0]
+                dim_2_prefix = dim_2_split[0]
+                dim_1_suffix = dim_1_split[1]
+                dim_2_suffix = dim_2_split[1]
+                sub_dim_1 = self._edge_1_padding[0].sub_dim
+                sub_dim_2 = self._edge_2_padding[0].sub_dim
+                padding_1 = self._edge_1_padding[0].padding
+                padding_2 = self._edge_2_padding[0].padding
+                sub_dim_suffix = sub_dim_1.split('_')[1]
+                # edge 1 padding value
+                edge1_str = '{dim_2}: {sub_dim_2} {dim_1}: {sub_dim_1} (padding: {padding})'
+                e1_padding_str = edge1_str.format(dim_2='{0}_{1}'.format(dim_2_prefix, dim_1_suffix),
+                                                  sub_dim_2='{0}_{1}'.format(dim_2_prefix, sub_dim_suffix),
+                                                  dim_1=dim_1,
+                                                  sub_dim_1=sub_dim_1,
+                                                  padding=padding_1
+                                                  )
+                grid_var.edge1_padding = e1_padding_str
+                # edge 2 padding value
+                edge2_str = '{dim_2}: {sub_dim_2} (padding: {padding}) {dim_1}: {sub_dim_1}'
+                e2_padding_str = edge2_str.format(dim_2=dim_2,
+                                                  sub_dim_2=sub_dim_2,
+                                                  padding=padding_2,
+                                                  dim_1='{0}_{1}'.format(dim_1_prefix, dim_2_suffix),
+                                                  sub_dim_1='{0}_{1}'.format(dim_1_prefix, sub_dim_suffix)
+                                                  )
+                grid_var.edge2_padding = e2_padding_str
+            if self._face_coordinates is not None:
+                grid_var.face_coordinates = ' '.join(self._face_coordinates)
+            if self._node_coordinates is not None:
+                grid_var.node_dimensions = ' '.join(self._node_coordinates)
+            if self._edge_1_coordinates is not None:
+                grid_var.edge1_coordinates = ' '.join(self._edge_1_coordinates)
+            if self._edge_2_coordinates is not None:
+                grid_var.edge2_coordinates = ' '.join(self._edge_2_coordinates)
             # populate variables with data
             grid_center_lon[:, :] = self._centers[:, :, 0]
             grid_center_lat[:, :] = self._centers[:, :, 1] 
