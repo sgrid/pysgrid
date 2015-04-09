@@ -10,8 +10,8 @@ from .custom_exceptions import CannotFindPadding, DimensionMismatch
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
-                                         'face_dim',  # the topology attribute
-                                         'node_dim',  # node dimension within the topology attribute
+                                         'dim',  # the topology attribute
+                                         'sub_dim',  # node dimension within the topology attribute
                                          'padding'  # padding type for the node dimension
                                          ]
                          )
@@ -153,14 +153,14 @@ class ParsePadding(object):
         padding_matches = p.findall(padding_str)
         padding_type_list = []
         for padding_match in padding_matches:
-            raw_face_dim, raw_node_dim, raw_padding_var = padding_match
-            face_dim = raw_face_dim.split(':')[0]
-            node_dim = raw_node_dim
+            raw_dim, raw_sub_dim, raw_padding_var = padding_match
+            dim = raw_dim.split(':')[0]
+            sub_dim = raw_sub_dim
             cleaned_padding_var = re.sub('[\(\)]', '', raw_padding_var)  # remove parentheses
             padding_type = cleaned_padding_var.split(':')[1].strip()  # get the padding value and remove spaces
             grid_padding = GridPadding(mesh_topology_var=self.mesh_topology_var,
-                                       face_dim=face_dim,
-                                       node_dim=node_dim,
+                                       dim=dim,
+                                       sub_dim=sub_dim,
                                        padding=padding_type
                                        )
             padding_type_list.append(grid_padding)
