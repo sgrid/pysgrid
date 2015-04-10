@@ -19,7 +19,7 @@ class TestSGridCreate(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
-        self.sg = SGrid()
+        self.sg = SGrid
   
     def test_load_from_file(self):
         sg_obj = self.sg.from_nc_file(self.sgrid_test_file)
@@ -35,7 +35,7 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
-        self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
+        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
     def test_centers(self):
@@ -103,7 +103,7 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares_like.nc')
-        self.sg_obj = SGrid().from_nc_file(self.sgrid_test_file)
+        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):
         centers = self.sg_obj.centers
