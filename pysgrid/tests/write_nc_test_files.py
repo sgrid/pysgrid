@@ -55,6 +55,8 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         longitude.long_name = LON_GRID_CELL_CENTER_LONG_NAME[1]
         grid_latitude.long_name = LAT_GRID_CELL_NODE_LONG_NAME[1]
         grid_longitude.long_name = LON_GRID_CELL_NODE_LONG_NAME[1]
+        u1.grid = 'some grid'
+        v1.grid = 'some grid'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
