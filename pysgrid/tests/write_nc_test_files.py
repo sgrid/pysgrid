@@ -114,9 +114,12 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         lon_u = rg.createVariable('lon_u', 'f4', ('y_u', 'x_u'))
         lat_v = rg.createVariable('lat_v', 'f4', ('y_v', 'x_v'))
         lon_v = rg.createVariable('lon_v', 'f4', ('y_v', 'x_v'))
+        zeta = rg.createVariable('zeta', 'f4', ('time', 'y_center', 'x_center'))
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
+        lon_centers.standard_name = 'longitude'
         lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
+        lat_centers.standard_name = 'latitude'
         lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
         grid.cf_role = 'grid_topology'
@@ -130,6 +133,8 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
         grid.vertical_dimensions = 'z_center: z_node (padding: none)'
+        zeta.location = 'faces'
+        zeta.coordinates = 'time lat_center lon_center'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
