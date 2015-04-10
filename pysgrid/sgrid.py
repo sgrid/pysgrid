@@ -33,7 +33,6 @@ class SGrid(object):
         self._edge_2_padding = edge_2_padding
         self._vertical_padding = vertical_padding
         self._grid_topology_vars = grid_topology_vars
-        self._grid_cell_center_vars = grid_cell_center_vars  # (lat, lon)
         self._grid_times = grid_times
         self._variables = variables
         self._face_coordinates = face_coordinates
@@ -113,14 +112,6 @@ class SGrid(object):
     @angles.setter
     def angles(self, dataset_angles):
         self._angles = dataset_angles
-        
-    @property
-    def grid_cell_center_vars(self):
-        return self._grid_cell_center_vars
-    
-    @grid_cell_center_vars.setter
-    def grid_cell_center_vars(self, grid_cell_center_variables):
-        self._grid_cell_center_vars = grid_cell_center_variables
         
     @property
     def face_padding(self):
@@ -247,6 +238,7 @@ class SGrid(object):
             grid_node_lat = nclocal.createVariable(gn_lat_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
             grid_var = nclocal.createVariable(grid_var, 'i2')
             grid_time = nclocal.createVariable('time', 'f8', ('time',))
+            grid_angle = nclocal.createVariable('angle', 'f8', (grid_y_center_dim, grid_x_center_dim))
             # add attributes to the variables
             grid_var.cf_role = 'grid_topology'
             grid_var.topology_dimension = 2
@@ -305,3 +297,5 @@ class SGrid(object):
             grid_center_lat[:, :] = self._centers[:, :, 1] 
             grid_node_lon[:, :] = self._nodes[:, :, 0]
             grid_node_lat[:, :] = self._nodes[:, :, 1]
+            if self._angles is not None:
+                grid_angle[:] = self._angles[:]
