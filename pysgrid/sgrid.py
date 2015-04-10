@@ -22,7 +22,7 @@ class SGrid(object):
                  grid_cell_center_vars=None, grid_times=None, 
                  variables=None, face_coordinates=None,
                  node_coordinates=None, edge_1_coordinates=None,
-                 edge_2_coordinates=None):
+                 edge_2_coordinates=None, angles=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -40,6 +40,7 @@ class SGrid(object):
         self._node_coordinates = node_coordinates
         self._edge_1_coordinates = edge_1_coordinates
         self._edge_2_coordinates = edge_2_coordinates
+        self._angles = angles
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -104,6 +105,14 @@ class SGrid(object):
     @edge_2_coordinates.setter
     def edge_2_coordinates(self, dataset_edge_2_coordinates):
         self._edge_2_coordinates = dataset_edge_2_coordinates
+        
+    @property
+    def angles(self):
+        return self._angles
+    
+    @angles.setter
+    def angles(self, dataset_angles):
+        self._angles = dataset_angles
         
     @property
     def grid_cell_center_vars(self):
