@@ -314,7 +314,7 @@ class SGrid(object):
             if self._face_coordinates is not None:
                 grid_var.face_coordinates = ' '.join(self._face_coordinates)
             if self._node_coordinates is not None:
-                grid_var.node_dimensions = ' '.join(self._node_coordinates)
+                grid_var.node_coordinates = ' '.join(self._node_coordinates)
             if self._edge_1_coordinates is not None:
                 grid_var.edge1_coordinates = ' '.join(self._edge_1_coordinates)
             if self._edge_2_coordinates is not None:
