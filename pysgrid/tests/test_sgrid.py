@@ -132,8 +132,14 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         v_slices = self.sg_obj.V1_slice
         u_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
+        xz_slices = self.sg_obj.XZ_slice
+        xcor_slices = self.sg_obj.XCOR_slice
+        xz_expected = (np.s_[1:], np.s_[1:])
+        xcor_expected  = (np.s_[:], np.s_[:])
         self.assertEqual(u_slices, u_expected)
         self.assertEqual(v_slices, v_expected)
+        self.assertEqual(xz_slices, xz_expected)
+        self.assertEqual(xcor_slices, xcor_expected)
         
     def test_grid_optional_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates

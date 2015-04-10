@@ -110,7 +110,6 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         for nc_var in nc_vars.keys():
-            print(nc_var)
             nc_var_obj = nc_vars[nc_var]
             try:
                 nc_var_location = nc_var_obj.location
@@ -253,9 +252,8 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 node_coordinate_val = node_coordinates.split(' ')
                 grid.node_coordinates = tuple(node_coordinate_val)
             except AttributeError:
-                # grid_cell_node_vars = ncd.find_grid_cell_node_vars()
-                # grid.node_coordinates = grid_cell_node_vars
-                pass
+                grid_cell_node_vars = ncd.find_grid_cell_node_vars()
+                grid.node_coordinates = grid_cell_node_vars
             try:
                 edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
                 edge_1_coordinates_val = edge_1_coordinates.split(' ')
@@ -275,7 +273,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         grid_cell_center_lon = nc_dataset.variables[grid_cell_center_lon_var][:]
         grid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
         # get the variables names for the cell vertices
-        grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = ncd.find_grid_cell_node_vars()
+        grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = grid.node_coordinates
         grid_cell_nodes_lat = nc_dataset.variables[grid_cell_nodes_lat_var][:]
         grid_cell_nodes_lon = nc_dataset.variables[grid_cell_nodes_lon_var][:]
         grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
