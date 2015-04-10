@@ -229,8 +229,8 @@ def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like
 
 if __name__ == '__main__':
     
-    # deltares_like_sgrid()
-    # roms_like_sgrid()
+    deltares_like_sgrid()
+    roms_like_sgrid()
     roms_like_non_compliant_sgrid()
         
         
