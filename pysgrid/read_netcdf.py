@@ -226,9 +226,16 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
         # get time data
         grid_time = nc_dataset.variables['time'][:]
-        grid.grid_times = grid_time
         nc_variables = nc_dataset.variables
+        # provide a list of all variables in the netCDF dataset
+        grid.grid_times = grid_time
         grid.variables = [nc_variable for nc_variable in nc_variables]
+        # provide the angles
+        try:
+            grid_angles = nc_dataset.variables['angle'][:]
+            grid.angles = grid_angles
+        except KeyError:
+            pass
         # dynamically set variable slicing attributes
         for nc_variable in nc_variables:
             # the slicing implied by the padding for each variable
