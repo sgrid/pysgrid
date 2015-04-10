@@ -49,7 +49,7 @@ class NetCDFDataset(object):
                     grid_cell_center_lat = nc_var
             except AttributeError:
                 continue
-        return grid_cell_center_lat, grid_cell_center_lon
+        return grid_cell_center_lon, grid_cell_center_lat
     
     def find_grid_cell_node_vars(self):
         """
@@ -70,7 +70,7 @@ class NetCDFDataset(object):
                     grid_cell_node_lat = nc_var
             except AttributeError:
                 continue
-        return grid_cell_node_lat, grid_cell_node_lon
+        return grid_cell_node_lon, grid_cell_node_lat
         
     def find_grid_topology_vars(self):
         """
@@ -195,13 +195,15 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 face_coordinate_val = face_coordinates.split(' ')
                 grid.face_coordinates = tuple(face_coordinate_val)
             except AttributeError:
-                pass
+                grid_cell_center_vars = ncd.find_grid_cell_center_vars()
+                grid.face_coordinates = grid_cell_center_vars
             try:
                 node_coordinates = nc_grid_topology_var.node_coordinates
                 node_coordinate_val = node_coordinates.split(' ')
                 grid.node_coordinates = tuple(node_coordinate_val)
             except AttributeError:
-                pass
+                grid_cell_node_vars = ncd.find_grid_cell_node_vars()
+                grid.node_coordinates = grid_cell_node_vars
             try:
                 edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
                 edge_1_coordinates_val = edge_1_coordinates.split(' ')
@@ -214,8 +216,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
             except AttributeError:
                 pass
-        # get the variable names for the cell center
-        grid_cell_center_lat_var, grid_cell_center_lon_var = ncd.find_grid_cell_center_vars()
+        grid_cell_center_lon_var, grid_cell_center_lat_var = grid.face_coordinates
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
         grid_cell_center_lon = nc_dataset.variables[grid_cell_center_lon_var][:]
         grid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
