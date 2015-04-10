@@ -9,10 +9,24 @@ import netCDF4 as nc4
 import numpy as np
 import mock
 from ..sgrid import SGrid
+from ..custom_exceptions import SGridNonCompliant
 
 
 CURRENT_DIR = os.path.dirname(__file__)
 TEST_FILES = os.path.join(CURRENT_DIR, 'files')
+
+
+class TestSGridCompliant(unittest.TestCase):
+    
+    def setUp(self):
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms_like.nc')
+        self.sg = SGrid
+        
+    def test_exception_raised(self):
+        self.assertRaises(SGridNonCompliant, 
+                          self.sg.from_nc_file, 
+                          self.sgrid_test_file
+                          )
 
 
 class TestSGridCreate(unittest.TestCase):
