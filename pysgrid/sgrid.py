@@ -22,7 +22,7 @@ class SGrid(object):
                  grid_cell_center_vars=None, grid_times=None, 
                  variables=None, face_coordinates=None,
                  node_coordinates=None, edge_1_coordinates=None,
-                 edge_2_coordinates=None):
+                 edge_2_coordinates=None, angles=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -40,6 +40,7 @@ class SGrid(object):
         self._node_coordinates = node_coordinates
         self._edge_1_coordinates = edge_1_coordinates
         self._edge_2_coordinates = edge_2_coordinates
+        self._angles = angles
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -104,6 +105,14 @@ class SGrid(object):
     @edge_2_coordinates.setter
     def edge_2_coordinates(self, dataset_edge_2_coordinates):
         self._edge_2_coordinates = dataset_edge_2_coordinates
+        
+    @property
+    def angles(self):
+        return self._angles
+    
+    @angles.setter
+    def angles(self, dataset_angles):
+        self._angles = dataset_angles
         
     @property
     def grid_cell_center_vars(self):
@@ -237,6 +246,7 @@ class SGrid(object):
             gn_lat_name = '{0}_node_lat'.format(grid_var)
             grid_node_lat = nclocal.createVariable(gn_lat_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
             grid_var = nclocal.createVariable(grid_var, 'i2')
+            grid_time = nclocal.createVariable('time', 'f8', ('time',))
             # add attributes to the variables
             grid_var.cf_role = 'grid_topology'
             grid_var.topology_dimension = 2
@@ -290,6 +300,7 @@ class SGrid(object):
             if self._edge_2_coordinates is not None:
                 grid_var.edge2_coordinates = ' '.join(self._edge_2_coordinates)
             # populate variables with data
+            grid_time[:] = self._grid_times[:]
             grid_center_lon[:, :] = self._centers[:, :, 0]
             grid_center_lat[:, :] = self._centers[:, :, 1] 
             grid_node_lon[:, :] = self._nodes[:, :, 0]
