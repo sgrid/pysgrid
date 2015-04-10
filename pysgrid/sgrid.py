@@ -20,9 +20,12 @@ class SGrid(object):
                  edge_1_padding=None, edge_2_padding=None,
                  vertical_padding=None, grid_topology_vars=None,
                  grid_cell_center_vars=None, grid_times=None, 
-                 variables=None, face_coordinates=None,
+                 variables=None, dimensions=None, face_coordinates=None,
                  node_coordinates=None, edge_1_coordinates=None,
-                 edge_2_coordinates=None, angles=None):
+                 edge_2_coordinates=None, angles=None,
+                 node_dim=None, face_dim=None,
+                 vertical_dim=None, edge_1_dim=None,
+                 edge_2_dim=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -35,11 +38,18 @@ class SGrid(object):
         self._grid_topology_vars = grid_topology_vars
         self._grid_times = grid_times
         self._variables = variables
+        self._dimensions = dimensions
         self._face_coordinates = face_coordinates
         self._node_coordinates = node_coordinates
         self._edge_1_coordinates = edge_1_coordinates
         self._edge_2_coordinates = edge_2_coordinates
         self._angles = angles
+        # attributes for the verbatim padding text
+        self._node_dimensions = node_dim
+        self._face_dimensions = face_dim
+        self._vertical_dimensions = vertical_dim
+        self._edge_1_dimensions = edge_1_dim
+        self._edge_2_dimensions = edge_2_dim
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -67,11 +77,34 @@ class SGrid(object):
         
     @property
     def variables(self):
+        """
+        Return a list of variables
+        """
         return self._variables
     
     @variables.setter
     def variables(self, dataset_variables):
         self._variables = dataset_variables
+        
+    @property
+    def dimensions(self):
+        """
+        Return list of tuples containing
+        dimension name and size.
+        """
+        return self._dimensions
+    
+    @dimensions.setter
+    def dimensions(self, dataset_dims):
+        self._dimensions = dataset_dims
+        
+    @property
+    def face_padding(self):
+        return self._face_padding
+    
+    @face_padding.setter
+    def face_padding(self, f_padding):
+        self._face_padding = f_padding
         
     @property
     def face_coordinates(self):
@@ -80,6 +113,34 @@ class SGrid(object):
     @face_coordinates.setter
     def face_coordinates(self, dataset_face_coordinates):
         self._face_coordinates = dataset_face_coordinates
+        
+    @property
+    def face_dimensions(self):
+        return self._face_dimensions
+    
+    @face_dimensions.setter
+    def face_dimensions(self, face_dim):
+        self._face_dimensions = face_dim
+        
+    @property
+    def nodes(self):
+        """
+        return the vertices of the grid as arrays 
+        of lon, lat pairs.
+        """
+        return self._nodes
+        
+    @nodes.setter
+    def nodes(self, nodes):
+        self._nodes = nodes
+        
+    @property
+    def node_dimensions(self):
+        return self._node_dimensions
+    
+    @node_dimensions.setter
+    def node_dimensions(self, node_dim):
+        self._node_dimensions = node_dim
         
     @property
     def node_coordinates(self):
@@ -98,30 +159,6 @@ class SGrid(object):
         self._edge_1_coordinates = dataset_edge_1_coordinates
         
     @property
-    def edge_2_coordinates(self):
-        return self._edge_2_coordinates
-    
-    @edge_2_coordinates.setter
-    def edge_2_coordinates(self, dataset_edge_2_coordinates):
-        self._edge_2_coordinates = dataset_edge_2_coordinates
-        
-    @property
-    def angles(self):
-        return self._angles
-    
-    @angles.setter
-    def angles(self, dataset_angles):
-        self._angles = dataset_angles
-        
-    @property
-    def face_padding(self):
-        return self._face_padding
-    
-    @face_padding.setter
-    def face_padding(self, f_padding):
-        self._face_padding = f_padding
-        
-    @property
     def edge_1_padding(self):
         return self._edge_1_padding
     
@@ -130,12 +167,44 @@ class SGrid(object):
         self._edge_1_padding = e1_padding
         
     @property
+    def edge_1_dimension(self):
+        return self._edge_1_dimensions
+    
+    @edge_1_dimension.setter
+    def edge_1_dimension(self, e1_dim):
+        self._edge_1_dimensions = e1_dim
+        
+    @property
+    def edge_2_coordinates(self):
+        return self._edge_2_coordinates
+    
+    @edge_2_coordinates.setter
+    def edge_2_coordinates(self, dataset_edge_2_coordinates):
+        self._edge_2_coordinates = dataset_edge_2_coordinates
+        
+    @property
     def edge_2_padding(self):
         return self._edge_2_padding
     
     @edge_2_padding.setter
     def edge_2_padding(self, e2_padding):
         self._edge_2_padding = e2_padding
+        
+    @property
+    def edge_2_dimensions(self):
+        return self._edge_2_dimensions
+    
+    @edge_2_dimensions.setter
+    def edge_2_dimensions(self, e2_dim):
+        self._edge_2_dimensions = e2_dim
+        
+    @property
+    def angles(self):
+        return self._angles
+    
+    @angles.setter
+    def angles(self, dataset_angles):
+        self._angles = dataset_angles
     
     @property
     def vertical_padding(self):
@@ -146,16 +215,12 @@ class SGrid(object):
         self._vertical_padding = vert_padding
         
     @property
-    def nodes(self):
-        """
-        return the vertices of the grid as arrays 
-        of lon, lat pairs.
-        """
-        return self._nodes
+    def vertical_dimensions(self):
+        return self._vertical_dimensions
     
-    @nodes.setter
-    def nodes(self, nodes):
-        self._nodes = nodes
+    @vertical_dimensions.setter
+    def vertical_dimensions(self, vertical_dim):
+        self._vertical_dimensions = vertical_dim
         
     @property
     def centers(self):
@@ -218,71 +283,35 @@ class SGrid(object):
         with nc4.Dataset(filepath, 'w') as nclocal:
             grid_var = self._grid_topology_vars[0]
             # create dimensions
-            nclocal.createDimension('time', len(self._grid_times))
-            grid_x_center_dim = '{0}_x_center'.format(grid_var)
-            nclocal.createDimension(grid_x_center_dim, self._centers.shape[1])
-            grid_y_center_dim = '{0}_y_center'.format(grid_var)
-            nclocal.createDimension(grid_y_center_dim, self._centers.shape[0])
-            grid_x_node_dim = '{0}_x_node'.format(grid_var)
-            nclocal.createDimension(grid_x_node_dim, self._nodes.shape[1])
-            grid_y_node_dim = '{0}_y_node'.format(grid_var)
-            nclocal.createDimension(grid_y_node_dim, self._nodes.shape[0])
+            for grid_dim in self._dimensions:
+                print(grid_dim)
+                dim_name, dim_size = grid_dim
+                nclocal.createDimension(dim_name, dim_size)
             # create variables
-            gc_lon_name = '{0}_center_lon'.format(grid_var)
-            grid_center_lon = nclocal.createVariable(gc_lon_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
-            gc_lat_name = '{0}_center_lat'.format(grid_var)
-            grid_center_lat = nclocal.createVariable(gc_lat_name, 'f4', (grid_y_center_dim, grid_x_center_dim))
-            gn_lon_name = '{0}_node_lon'.format(grid_var)
-            grid_node_lon = nclocal.createVariable(gn_lon_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
-            gn_lat_name = '{0}_node_lat'.format(grid_var)
-            grid_node_lat = nclocal.createVariable(gn_lat_name, 'f4', (grid_y_node_dim, grid_x_node_dim))
+            center_lon, center_lat = self._face_coordinates
+            center_lon_data = next((nc_var for nc_var in self._variables if nc_var[0] == center_lon))
+            center_lat_data = next((nc_var for nc_var in self._variables if nc_var[0] == center_lat))
+            node_lon, node_lat = self._node_coordinates
+            node_lon_data = next((nc_var for nc_var in self._variables if nc_var[0] == node_lon))
+            node_lat_data = next((nc_var for nc_var in self._variables if nc_var[0] == node_lat))
+            grid_center_lon = nclocal.createVariable(center_lon, 'f4', center_lon_data[-1])
+            grid_center_lat = nclocal.createVariable(center_lat, 'f4', center_lat_data[-1])
+            grid_node_lon = nclocal.createVariable(node_lon, 'f4', node_lon_data[-1])
+            grid_node_lat = nclocal.createVariable(node_lat, 'f4', node_lat_data[-1])
             grid_var = nclocal.createVariable(grid_var, 'i2')
             grid_time = nclocal.createVariable('time', 'f8', ('time',))
-            grid_angle = nclocal.createVariable('angle', 'f8', (grid_y_center_dim, grid_x_center_dim))
+            grid_angle = nclocal.createVariable('angle', 'f8', center_lat_data[-1])
             # add attributes to the variables
             grid_var.cf_role = 'grid_topology'
             grid_var.topology_dimension = 2
-            grid_var.node_dimensions = '{0} {1}'.format(grid_x_node_dim, grid_y_node_dim)
-            grid_var.face_dimensions = ('{x_center}: {x_node} (padding: {x_padding}) '
-                                        '{y_center}: {y_node} (padding: {y_padding})').format(x_center=grid_x_center_dim,
-                                                                                              x_node=grid_x_node_dim,
-                                                                                              x_padding=self._face_padding[0].padding,
-                                                                                              y_center=grid_y_center_dim,
-                                                                                              y_node=grid_y_node_dim,
-                                                                                              y_padding=self._face_padding[1].padding
-                                                                                              )
-            if self._edge_1_padding is not None and self._edge_2_padding is not None:
-                dim_1 = self._edge_1_padding[0].dim
-                dim_2 = self._edge_2_padding[0].dim
-                dim_1_split = dim_1.split('_')
-                dim_2_split = dim_2.split('_')
-                dim_1_prefix = dim_1_split[0]
-                dim_2_prefix = dim_2_split[0]
-                dim_1_suffix = dim_1_split[1]
-                dim_2_suffix = dim_2_split[1]
-                sub_dim_1 = self._edge_1_padding[0].sub_dim
-                sub_dim_2 = self._edge_2_padding[0].sub_dim
-                padding_1 = self._edge_1_padding[0].padding
-                padding_2 = self._edge_2_padding[0].padding
-                sub_dim_suffix = sub_dim_1.split('_')[1]
-                # edge 1 padding value
-                edge1_str = '{dim_2}: {sub_dim_2} {dim_1}: {sub_dim_1} (padding: {padding})'
-                e1_padding_str = edge1_str.format(dim_2='{0}_{1}'.format(dim_2_prefix, dim_1_suffix),
-                                                  sub_dim_2='{0}_{1}'.format(dim_2_prefix, sub_dim_suffix),
-                                                  dim_1=dim_1,
-                                                  sub_dim_1=sub_dim_1,
-                                                  padding=padding_1
-                                                  )
-                grid_var.edge1_padding = e1_padding_str
-                # edge 2 padding value
-                edge2_str = '{dim_2}: {sub_dim_2} (padding: {padding}) {dim_1}: {sub_dim_1}'
-                e2_padding_str = edge2_str.format(dim_2=dim_2,
-                                                  sub_dim_2=sub_dim_2,
-                                                  padding=padding_2,
-                                                  dim_1='{0}_{1}'.format(dim_1_prefix, dim_2_suffix),
-                                                  sub_dim_1='{0}_{1}'.format(dim_1_prefix, sub_dim_suffix)
-                                                  )
-                grid_var.edge2_padding = e2_padding_str
+            grid_var.node_dimensions = self._node_dimensions
+            grid_var.face_dimensions = self._face_dimensions
+            if self._edge_1_dimensions is not None:
+                grid_var.edge1_dimensions = self._edge_1_dimensions
+            if self._edge_2_dimensions is not None:
+                grid_var.edge2_dimensions = self._edge_2_dimensions
+            if self._vertical_dimensions is not None:
+                grid_var.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
                 grid_var.face_coordinates = ' '.join(self._face_coordinates)
             if self._node_coordinates is not None:

@@ -158,6 +158,9 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
     ncd = NetCDFDataset(nc_dataset)
     is_sgrid_compliant = ncd.sgrid_compliant_file()
     if is_sgrid_compliant:
+        ds_dims = nc_dataset.dimensions
+        grid_dims = [(ds_dim, len(ds_dims[ds_dim])) for ds_dim in ds_dims]
+        grid.dimensions = grid_dims
         if grid_topology_vars is None:
             grid_topology_vars_attr = ncd.find_grid_topology_vars()
         else:
@@ -169,24 +172,28 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             try:
                 face_dim = nc_grid_topology_var.face_dimensions
                 face_dim_padding = pp.parse_padding(face_dim)
+                grid.face_dimensions = face_dim
                 grid.face_padding = face_dim_padding  # set face padding
             except AttributeError:
                 pass
             try:
                 edge1_dim = nc_grid_topology_var.edge1_dimensions
                 edge1_dim_padding = pp.parse_padding(edge1_dim)
+                grid.edge_1_dimension = edge1_dim
                 grid.edge_1_padding = edge1_dim_padding  # set edge 1 padding
             except AttributeError:
                 pass
             try:
                 edge2_dim = nc_grid_topology_var.edge2_dimensions
                 edge2_dim_padding = pp.parse_padding(edge2_dim)
+                grid.edge_2_dimensions = edge2_dim
                 grid.edge_2_padding = edge2_dim_padding  # set edge 2 padding
             except AttributeError:
                 pass
             try:
                 vertical_dim = nc_grid_topology_var.vertical_dimensions
                 vertical_dim_padding = pp.parse_padding(vertical_dim)
+                grid.vertical_dimensions = vertical_dim
                 grid.vertical_padding = vertical_dim_padding  # set vertical padding
             except AttributeError:
                 pass
@@ -225,12 +232,21 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         grid_cell_nodes_lat = nc_dataset.variables[grid_cell_nodes_lat_var][:]
         grid_cell_nodes_lon = nc_dataset.variables[grid_cell_nodes_lon_var][:]
         grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        grid.node_dimensions = nc_grid_topology_var.node_dimensions
         # get time data
         grid_time = nc_dataset.variables['time'][:]
         nc_variables = nc_dataset.variables
         # provide a list of all variables in the netCDF dataset
         grid.grid_times = grid_time
-        grid.variables = [nc_variable for nc_variable in nc_variables]
+        grid_variables = []
+        for nc_variable in nc_variables:
+            nc_var = nc_variables[nc_variable]
+            nc_var_name = nc_var.name
+            nc_var_dtype = nc_var.dtype
+            nc_var_dims = nc_var.dimensions
+            grid_var = (nc_var_name, nc_var_dtype, nc_var_dims)
+            grid_variables.append(grid_var)
+        grid.variables = grid_variables
         # provide the angles
         try:
             grid_angles = nc_dataset.variables['angle'][:]
