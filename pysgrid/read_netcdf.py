@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliant
+from .custom_exceptions import SGridNonCompliant, deprecated
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
 from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
                      LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
@@ -28,7 +28,8 @@ class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
         self.ncd = nc_dataset_obj
-
+    
+    @deprecated
     def find_grid_cell_center_vars(self):
         """
         Find the variables for the grid
@@ -96,6 +97,49 @@ class NetCDFDataset(object):
             if cf_role == 'grid_topology' and topology_dim == 2:
                 grid_topology_vars.append(nc_var)
         return grid_topology_vars
+    
+    def find_coordinations_by_location(self, location_str):
+        """
+        Find a variable with a location attribute equal
+        to location_str.
+        
+        Location is a required attribute per SGRID conventions.
+        
+        :param str location_str: the location value to search for
+        
+        """
+        nc_vars = self.ncd.variables
+        for nc_var in nc_vars.keys():
+            print(nc_var)
+            nc_var_obj = nc_vars[nc_var]
+            try:
+                nc_var_location = nc_var_obj.location
+                if nc_var_location == location_str:
+                    print(nc_var)
+                    nc_var_coordinates = nc_var_obj.coordinates
+                    nc_var_coord_split = nc_var_coordinates.strip().split(' ')
+                    print(nc_var_coord_split)
+                    x_coordinate = None
+                    y_coordinate = None
+                    for nc_var_coord in nc_var_coord_split:
+                        print(nc_var_coord)
+                        var_coord = nc_vars[nc_var_coord]
+                        try:
+                            var_coord_standard_name = var_coord.standard_name
+                            if var_coord_standard_name == 'longitude':
+                                x_coordinate = nc_var_coord
+                            elif var_coord_standard_name == 'latitude':
+                                y_coordinate = nc_var_coord
+                        except AttributeError:
+                            continue
+                    result = (x_coordinate, y_coordinate)
+                    break
+                else:
+                    result = None
+            except AttributeError:
+                result = None
+                continue
+        return result
 
     def sgrid_compliant_file(self):
         """
@@ -202,27 +246,30 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 face_coordinate_val = face_coordinates.split(' ')
                 grid.face_coordinates = tuple(face_coordinate_val)
             except AttributeError:
-                grid_cell_center_vars = ncd.find_grid_cell_center_vars()
+                grid_cell_center_vars = ncd.find_coordinations_by_location('face')
                 grid.face_coordinates = grid_cell_center_vars
             try:
                 node_coordinates = nc_grid_topology_var.node_coordinates
                 node_coordinate_val = node_coordinates.split(' ')
                 grid.node_coordinates = tuple(node_coordinate_val)
             except AttributeError:
-                grid_cell_node_vars = ncd.find_grid_cell_node_vars()
-                grid.node_coordinates = grid_cell_node_vars
+                # grid_cell_node_vars = ncd.find_grid_cell_node_vars()
+                # grid.node_coordinates = grid_cell_node_vars
+                pass
             try:
                 edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
                 edge_1_coordinates_val = edge_1_coordinates.split(' ')
                 grid.edge_1_coordinates = tuple(edge_1_coordinates_val)
             except AttributeError:
-                pass
+                edge_1_coordinates_val = ncd.find_coordinations_by_location('edge1')
+                grid.edge_1_coordinates = edge_1_coordinates_val
             try:
                 edge_2_coordinates = nc_grid_topology_var.edge2_coordinates
                 edge_2_coordinates_val = edge_2_coordinates.split(' ')
                 grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
             except AttributeError:
-                pass
+                edge_2_coordinates_val = ncd.find_coordinations_by_location('edge2')
+                grid.edge_2_coordinates = edge_2_coordinates_val
         grid_cell_center_lon_var, grid_cell_center_lat_var = grid.face_coordinates
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
         grid_cell_center_lon = nc_dataset.variables[grid_cell_center_lon_var][:]

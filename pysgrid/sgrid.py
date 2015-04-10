@@ -284,7 +284,6 @@ class SGrid(object):
             grid_var = self._grid_topology_vars[0]
             # create dimensions
             for grid_dim in self._dimensions:
-                print(grid_dim)
                 dim_name, dim_size = grid_dim
                 nclocal.createDimension(dim_name, dim_size)
             # create variables
