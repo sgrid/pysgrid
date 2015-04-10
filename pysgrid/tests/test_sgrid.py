@@ -7,6 +7,7 @@ import os
 import unittest
 import netCDF4 as nc4
 import numpy as np
+from numpy import dtype
 import mock
 from ..sgrid import SGrid
 from ..custom_exceptions import SGridNonCompliant
@@ -60,28 +61,29 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
-        expected_vars = ['z_center', 
-                         'z_node', 
-                         'time', 
-                         'x_center', 
-                         'y_center', 
-                         'x_node', 
-                         'y_node', 
-                         'x_u', 
-                         'y_u', 
-                         'x_v', 
-                         'y_v', 
-                         'grid', 
-                         'u', 
-                         'v', 
-                         'lon_center', 
-                         'lat_center', 
-                         'lon_node', 
-                         'lat_node', 
-                         'lat_u', 
-                         'lon_u', 
-                         'lat_v', 
-                         'lon_v'
+        expected_vars = [(u'z_center', dtype('int32'), (u'z_center',)), 
+                         (u'z_node', dtype('int32'), (u'z_node',)), 
+                         (u'time', dtype('float64'), (u'time',)), 
+                         (u'x_center', dtype('float32'), (u'x_center',)), 
+                         (u'y_center', dtype('float32'), (u'y_center',)), 
+                         (u'x_node', dtype('float32'), (u'x_node',)), 
+                         (u'y_node', dtype('float32'), (u'y_node',)), 
+                         (u'x_u', dtype('float32'), (u'x_u',)), 
+                         (u'y_u', dtype('float32'), (u'y_u',)), 
+                         (u'x_v', dtype('float32'), (u'x_v',)), 
+                         (u'y_v', dtype('float32'), (u'y_v',)), 
+                         (u'grid', dtype('int16'), ()), 
+                         (u'u', dtype('float32'), (u'time', u'z_center', u'y_u', u'x_u')), 
+                         (u'v', dtype('float32'), (u'time', u'z_center', u'y_v', u'x_v')), 
+                         (u'lon_center', dtype('float32'), (u'y_center', u'x_center')), 
+                         (u'lat_center', dtype('float32'), (u'y_center', u'x_center')), 
+                         (u'lon_node', dtype('float32'), (u'y_node', u'x_node')), 
+                         (u'lat_node', dtype('float32'), (u'y_node', u'x_node')), 
+                         (u'lat_u', dtype('float32'), (u'y_u', u'x_u')), 
+                         (u'lon_u', dtype('float32'), (u'y_u', u'x_u')), 
+                         (u'lat_v', dtype('float32'), (u'y_v', u'x_v')), 
+                         (u'lon_v', dtype('float32'), (u'y_v', u'x_v')),
+                         (u'zeta', dtype('float32'), (u'time', u'y_center', u'x_center')),
                          ]
         self.assertEqual(dataset_vars, expected_vars)
 
