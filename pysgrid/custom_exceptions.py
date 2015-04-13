@@ -51,8 +51,8 @@ def deprecated(deprecated_function):
     def new_func(*args, **kwargs):
         warnings.warn_explicit('Call to deprecated function: {0}'.format(deprecated_function.__name__),
                                category=DeprecationWarning,
-                               filename=deprecated_function.func_code.co_filename,
-                               lineno=deprecated_function.func_code.co_firstlineno + 1
+                               filename=deprecated_function.__code__.co_filename,
+                               lineno=deprecated_function.__code__.co_firstlineno + 1
                                )
         return deprecated_function(*args, **kwargs)
     return new_func
