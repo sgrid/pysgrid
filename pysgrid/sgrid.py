@@ -25,7 +25,7 @@ class SGrid(object):
                  edge_2_coordinates=None, angles=None,
                  node_dim=None, face_dim=None,
                  vertical_dim=None, edge_1_dim=None,
-                 edge_2_dim=None):
+                 edge_2_dim=None, grid_variables=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -38,6 +38,7 @@ class SGrid(object):
         self._grid_topology_vars = grid_topology_vars
         self._grid_times = grid_times
         self._variables = variables
+        self._grid_variables = grid_variables
         self._dimensions = dimensions
         self._face_coordinates = face_coordinates
         self._node_coordinates = node_coordinates
@@ -85,6 +86,18 @@ class SGrid(object):
     @variables.setter
     def variables(self, dataset_variables):
         self._variables = dataset_variables
+        
+    @property
+    def grid_variables(self):
+        """
+        Return a list of variables
+        with a grid attribute.
+        """
+        return self._grid_variables
+    
+    @grid_variables.setter
+    def grid_variables(self, dataset_grid_variables):
+        self._grid_variables = dataset_grid_variables
         
     @property
     def dimensions(self):
