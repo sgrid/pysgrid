@@ -90,20 +90,19 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     
     """
     var_obj = nc_dataset.variables[variable]
-    try:
-        var_grid_attr = var_obj.grid
-    except AttributeError:
-        var_grid_attr = None
+    grid_variables = sgrid_obj.grid_variables
+    if grid_variables is None:
+        grid_variables = []
     var_dims = var_obj.dimensions
     padding_summary = sgrid_obj._define_face_padding_summary()
     slice_indices = tuple()
     if method == 'center':
         for var_dim in var_dims:
             try:
-                if (sgrid_obj.edge_1_padding is None) and (sgrid_obj.edge_2_padding is None) and (var_grid_attr is not None):
+                if (sgrid_obj.edge_1_padding is None) and (sgrid_obj.edge_2_padding is None) and (variable in grid_variables):
                     # define padding for WRF or Deltares datasets
                     padding_info = next((info for info in padding_summary if info[1] == var_dim))  # search through padding to find the variables dimension
-                elif (sgrid_obj.edge_1_padding is None) and (sgrid_obj.edge_2_padding is None) and (var_grid_attr is None):
+                elif (sgrid_obj.edge_1_padding is None) and (sgrid_obj.edge_2_padding is None) and (variable in grid_variables):
                     padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 else:
                     # failing that, try ROMS
