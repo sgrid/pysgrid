@@ -310,28 +310,34 @@ class SGrid(object):
             grid_center_lat = nclocal.createVariable(center_lat, 'f4', center_lat_data[-1])
             grid_node_lon = nclocal.createVariable(node_lon, 'f4', node_lon_data[-1])
             grid_node_lat = nclocal.createVariable(node_lat, 'f4', node_lat_data[-1])
-            grid_var = nclocal.createVariable(grid_var, 'i2')
+            grid_vars = nclocal.createVariable(grid_var, 'i2')
             grid_time = nclocal.createVariable('time', 'f8', ('time',))
             grid_angle = nclocal.createVariable('angle', 'f8', center_lat_data[-1])
+            for dataset_variable in self._variables:
+                dataset_variable_name = dataset_variable[0]
+                if dataset_variable_name in self._grid_variables:
+                    dataset_variable_dims = dataset_variable[2]
+                    dataset_grid_var = nclocal.createVariable(dataset_variable_name, 'f4', dataset_variable_dims)
+                    dataset_grid_var.grid = grid_var
             # add attributes to the variables
-            grid_var.cf_role = 'grid_topology'
-            grid_var.topology_dimension = 2
-            grid_var.node_dimensions = self._node_dimensions
-            grid_var.face_dimensions = self._face_dimensions
+            grid_vars.cf_role = 'grid_topology'
+            grid_vars.topology_dimension = 2
+            grid_vars.node_dimensions = self._node_dimensions
+            grid_vars.face_dimensions = self._face_dimensions
             if self._edge_1_dimensions is not None:
-                grid_var.edge1_dimensions = self._edge_1_dimensions
+                grid_vars.edge1_dimensions = self._edge_1_dimensions
             if self._edge_2_dimensions is not None:
-                grid_var.edge2_dimensions = self._edge_2_dimensions
+                grid_vars.edge2_dimensions = self._edge_2_dimensions
             if self._vertical_dimensions is not None:
-                grid_var.vertical_dimensions = self._vertical_dimensions
+                grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
-                grid_var.face_coordinates = ' '.join(self._face_coordinates)
+                grid_vars.face_coordinates = ' '.join(self._face_coordinates)
             if self._node_coordinates is not None:
-                grid_var.node_coordinates = ' '.join(self._node_coordinates)
+                grid_vars.node_coordinates = ' '.join(self._node_coordinates)
             if self._edge_1_coordinates is not None:
-                grid_var.edge1_coordinates = ' '.join(self._edge_1_coordinates)
+                grid_vars.edge1_coordinates = ' '.join(self._edge_1_coordinates)
             if self._edge_2_coordinates is not None:
-                grid_var.edge2_coordinates = ' '.join(self._edge_2_coordinates)
+                grid_vars.edge2_coordinates = ' '.join(self._edge_2_coordinates)
             # populate variables with data
             grid_time[:] = self._grid_times[:]
             grid_center_lon[:, :] = self._centers[:, :, 0]
