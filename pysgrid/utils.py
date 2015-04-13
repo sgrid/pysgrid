@@ -99,17 +99,19 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     if method == 'center':
         for var_dim in var_dims:
             try:
-                if [(sgrid_obj.edge_1_padding is None) and 
+                if (
+                    (sgrid_obj.edge_1_padding is None) and 
                     (sgrid_obj.edge_2_padding is None) and 
                     (variable in grid_variables)
-                    ]:
+                    ):
                     # define padding for WRF or Deltares datasets
                     # search through padding to find the variables dimension
                     padding_info = next((info for info in padding_summary if info[1] == var_dim))
-                elif [(sgrid_obj.edge_1_padding is None) and 
+                elif (
+                      (sgrid_obj.edge_1_padding is None) and 
                       (sgrid_obj.edge_2_padding is None) and 
                       (variable in grid_variables)
-                      ]:
+                      ):
                     padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 else:
                     # failing that, try ROMS
