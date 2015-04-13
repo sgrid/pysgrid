@@ -114,14 +114,11 @@ class NetCDFDataset(object):
             try:
                 nc_var_location = nc_var_obj.location
                 if nc_var_location == location_str:
-                    print(nc_var)
                     nc_var_coordinates = nc_var_obj.coordinates
                     nc_var_coord_split = nc_var_coordinates.strip().split(' ')
-                    print(nc_var_coord_split)
                     x_coordinate = None
                     y_coordinate = None
                     for nc_var_coord in nc_var_coord_split:
-                        print(nc_var_coord)
                         var_coord = nc_vars[nc_var_coord]
                         try:
                             var_coord_standard_name = var_coord.standard_name
