@@ -117,7 +117,7 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
                     # deal with with variables not defined on the grid
                     padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 else:
-                    # failing that, try ROMS
+                    # failing that, treat dataset as a ROMS dataset
                     # search through padding to find the variables dimension
                     padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 padding_val = padding_info[-1]
