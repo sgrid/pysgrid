@@ -137,6 +137,8 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         grid.vertical_dimensions = 'z_center: z_node (padding: none)'
         zeta.location = 'faces'
         zeta.coordinates = 'time lat_center lon_center'
+        u.grid = 'some grid'
+        v.grid = 'some grid'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
