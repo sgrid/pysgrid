@@ -313,6 +313,7 @@ class SGrid(object):
             grid_vars = nclocal.createVariable(grid_var, 'i2')
             grid_time = nclocal.createVariable('time', 'f8', ('time',))
             grid_angle = nclocal.createVariable('angle', 'f8', center_lat_data[-1])
+            # save the grid variables with attributes
             for dataset_variable in self._variables:
                 dataset_variable_name = dataset_variable[0]
                 if dataset_variable_name in self._grid_variables:
