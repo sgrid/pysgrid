@@ -108,6 +108,11 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(node_coordinates, nc_expected)
         self.assertEqual(edge_1_coordinates, e1c_expected)
         self.assertEqual(edge_2_coordinates, e2c_expected)
+        
+    def test_grid_variables(self):
+        grid_variables = self.sg_obj.grid_variables
+        expected_grid_variables = ['u', 'v']
+        self.assertEqual(grid_variables, expected_grid_variables)
     
     @mock.patch('pysgrid.sgrid.nc4')
     def test_write_sgrid_to_netcdf(self, mock_nc):
@@ -152,3 +157,8 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         self.assertEqual(node_coordinates, nc_expected)
         self.assertIsNone(edge_1_coordinates)
         self.assertIsNone(edge_2_coordinates)
+        
+    def test_grid_variables(self):
+        grid_variables = self.sg_obj.grid_variables
+        expected_grid_variables = ['U1', 'V1']
+        self.assertEqual(grid_variables, expected_grid_variables)

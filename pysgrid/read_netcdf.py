@@ -114,14 +114,11 @@ class NetCDFDataset(object):
             try:
                 nc_var_location = nc_var_obj.location
                 if nc_var_location == location_str:
-                    print(nc_var)
                     nc_var_coordinates = nc_var_obj.coordinates
                     nc_var_coord_split = nc_var_coordinates.strip().split(' ')
-                    print(nc_var_coord_split)
                     x_coordinate = None
                     y_coordinate = None
                     for nc_var_coord in nc_var_coord_split:
-                        print(nc_var_coord)
                         var_coord = nc_vars[nc_var_coord]
                         try:
                             var_coord_standard_name = var_coord.standard_name
@@ -283,15 +280,23 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         nc_variables = nc_dataset.variables
         # provide a list of all variables in the netCDF dataset
         grid.grid_times = grid_time
+        dataset_variables = []
         grid_variables = []
         for nc_variable in nc_variables:
             nc_var = nc_variables[nc_variable]
             nc_var_name = nc_var.name
             nc_var_dtype = nc_var.dtype
             nc_var_dims = nc_var.dimensions
-            grid_var = (nc_var_name, nc_var_dtype, nc_var_dims)
-            grid_variables.append(grid_var)
-        grid.variables = grid_variables
+            ds_var = (nc_var_name, nc_var_dtype, nc_var_dims)
+            dataset_variables.append(ds_var)
+            try:
+                # figure out if a variable is defined on the grid
+                if nc_var.grid:
+                    grid_variables.append(nc_var_name)
+            except AttributeError:
+                continue
+        grid.variables = dataset_variables
+        grid.grid_variables = grid_variables
         # provide the angles
         try:
             grid_angles = nc_dataset.variables['angle'][:]
