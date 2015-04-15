@@ -7,7 +7,7 @@ import warnings
 import functools
 
 
-class CannotFindPadding(Exception):
+class CannotFindPaddingError(Exception):
     
     base_message = 'The netCDF file appears to have conform to SGRID conventions, but padding values cannot be found.'
         
@@ -15,7 +15,7 @@ class CannotFindPadding(Exception):
         return self.base_message
 
 
-class SGridNonCompliant(Exception):
+class SGridNonCompliantError(Exception):
     
     base_message = 'This netCDF object does not appear to be SGRID compliant: {0}.'
     
@@ -27,7 +27,7 @@ class SGridNonCompliant(Exception):
         return error_message
     
     
-class DimensionMismatch(Exception):
+class DimensionMismatchError(Exception):
     
     def __init__(self, *args):
         self.args = args
