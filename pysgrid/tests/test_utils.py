@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import unittest
 import numpy as np
 from ..utils import ParsePadding, pair_arrays, check_array_dims, check_element_equal
-from ..custom_exceptions import CannotFindPadding, DimensionMismatch
+from ..custom_exceptions import CannotFindPaddingError, DimensionMismatchError
 
 
 class TestCheckArrayDims(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestCheckArrayDims(unittest.TestCase):
         self.b = np.array([-1, -2])
         
     def test_exception_raised(self):
-        self.assertRaises(DimensionMismatch,
+        self.assertRaises(DimensionMismatchError,
                           check_array_dims,
                           self.a,
                           self.b
@@ -69,7 +69,7 @@ class TestParsePadding(unittest.TestCase):
         self.assertEqual(dim, expected_dim)
         
     def test_no_padding(self):
-        self.assertRaises(CannotFindPadding, 
+        self.assertRaises(CannotFindPaddingError, 
                           self.pp.parse_padding, 
                           padding_str=self.with_no_padding
                           )
