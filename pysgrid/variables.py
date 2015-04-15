@@ -32,12 +32,12 @@ class SGridVariable(object):
     
     """
     def __init__(self, variable=None, grid=None, 
-                 axis=None, slicing=None,
+                 axes=None, slicing=None,
                  dimensions=None, dtype=None,
                  location=None):
         self._variable = variable
         self._grid = grid
-        self._axis = axis
+        self._axes = axes
         self._slicing = slicing
         self._dimensions = dimensions
         self._dtype = dtype
@@ -64,6 +64,14 @@ class SGridVariable(object):
     @grid.setter
     def grid(self, grid_name):
         self._grid = grid_name
+        
+    @property
+    def axes(self):
+        return self._axes
+    
+    @axes.setter
+    def axes(self, variable_axes):
+        self._axes = variable_axes
         
     @property
     def slicing(self):
