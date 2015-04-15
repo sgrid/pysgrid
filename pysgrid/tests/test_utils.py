@@ -5,7 +5,8 @@ Created on Mar 23, 2015
 '''
 import unittest
 import numpy as np
-from ..utils import ParsePadding, pair_arrays, check_array_dims, check_element_equal
+from ..utils import (ParsePadding, pair_arrays, check_array_dims, 
+                     check_element_equal)
 from ..custom_exceptions import CannotFindPaddingError, DimensionMismatchError
 
 
