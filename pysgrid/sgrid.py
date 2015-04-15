@@ -301,24 +301,24 @@ class SGrid(object):
                 nclocal.createDimension(dim_name, dim_size)
             # create variables
             center_lon, center_lat = self._face_coordinates
-            center_lon_data = next((nc_var for nc_var in self._variables if nc_var[0] == center_lon))
-            center_lat_data = next((nc_var for nc_var in self._variables if nc_var[0] == center_lat))
+            center_lon_obj = getattr(self, center_lon)
+            center_lat_obj = getattr(self, center_lat)
             node_lon, node_lat = self._node_coordinates
-            node_lon_data = next((nc_var for nc_var in self._variables if nc_var[0] == node_lon))
-            node_lat_data = next((nc_var for nc_var in self._variables if nc_var[0] == node_lat))
-            grid_center_lon = nclocal.createVariable(center_lon, 'f4', center_lon_data[-1])
-            grid_center_lat = nclocal.createVariable(center_lat, 'f4', center_lat_data[-1])
-            grid_node_lon = nclocal.createVariable(node_lon, 'f4', node_lon_data[-1])
-            grid_node_lat = nclocal.createVariable(node_lat, 'f4', node_lat_data[-1])
+            node_lon_obj = getattr(self, node_lon)
+            node_lat_obj = getattr(self, node_lat)
+            grid_center_lon = nclocal.createVariable(center_lon, 'f4', center_lon_obj.dimensions)
+            grid_center_lat = nclocal.createVariable(center_lat, 'f4', center_lat_obj.dimensions)
+            grid_node_lon = nclocal.createVariable(node_lon, 'f4', node_lon_obj.dimensions)
+            grid_node_lat = nclocal.createVariable(node_lat, 'f4', node_lat_obj.dimensions)
             grid_vars = nclocal.createVariable(grid_var, 'i2')
             grid_time = nclocal.createVariable('time', 'f8', ('time',))
-            grid_angle = nclocal.createVariable('angle', 'f8', center_lat_data[-1])
+            grid_angle = nclocal.createVariable('angle', 'f8', center_lat_obj.dimensions)
             # save the grid variables with attributes
             for dataset_variable in self._variables:
-                dataset_variable_name = dataset_variable[0]
-                if dataset_variable_name in self._grid_variables:
-                    dataset_variable_dims = dataset_variable[2]
-                    dataset_grid_var = nclocal.createVariable(dataset_variable_name, 'f4', dataset_variable_dims)
+                dataset_var_obj = getattr(self, dataset_variable)
+                dataset_var_dims = dataset_var_obj.dimensions
+                if dataset_var_obj.grid is not None:
+                    dataset_grid_var = nclocal.createVariable(dataset_variable, 'f4', dataset_var_dims)
                     dataset_grid_var.grid = grid_var
             # add attributes to the variables
             grid_vars.cf_role = 'grid_topology'

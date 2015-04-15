@@ -9,7 +9,7 @@ import netCDF4 as nc4
 import numpy as np
 import mock
 from ..sgrid import SGrid
-from ..custom_exceptions import SGridNonCompliant
+from ..custom_exceptions import SGridNonCompliantError
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ class TestSGridCompliant(unittest.TestCase):
         self.sg = SGrid
         
     def test_exception_raised(self):
-        self.assertRaises(SGridNonCompliant, 
+        self.assertRaises(SGridNonCompliantError, 
                           self.sg.from_nc_file, 
                           self.sgrid_test_file
                           )
@@ -60,35 +60,35 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
-        expected_vars = [(u'z_center', np.dtype('int32'), (u'z_center',)), 
-                         (u'z_node', np.dtype('int32'), (u'z_node',)), 
-                         (u'time', np.dtype('float64'), (u'time',)), 
-                         (u'x_center', np.dtype('float32'), (u'x_center',)), 
-                         (u'y_center', np.dtype('float32'), (u'y_center',)), 
-                         (u'x_node', np.dtype('float32'), (u'x_node',)), 
-                         (u'y_node', np.dtype('float32'), (u'y_node',)), 
-                         (u'x_u', np.dtype('float32'), (u'x_u',)), 
-                         (u'y_u', np.dtype('float32'), (u'y_u',)), 
-                         (u'x_v', np.dtype('float32'), (u'x_v',)), 
-                         (u'y_v', np.dtype('float32'), (u'y_v',)), 
-                         (u'grid', np.dtype('int16'), ()), 
-                         (u'u', np.dtype('float32'), (u'time', u'z_center', u'y_u', u'x_u')), 
-                         (u'v', np.dtype('float32'), (u'time', u'z_center', u'y_v', u'x_v')), 
-                         (u'lon_center', np.dtype('float32'), (u'y_center', u'x_center')), 
-                         (u'lat_center', np.dtype('float32'), (u'y_center', u'x_center')), 
-                         (u'lon_node', np.dtype('float32'), (u'y_node', u'x_node')), 
-                         (u'lat_node', np.dtype('float32'), (u'y_node', u'x_node')), 
-                         (u'lat_u', np.dtype('float32'), (u'y_u', u'x_u')), 
-                         (u'lon_u', np.dtype('float32'), (u'y_u', u'x_u')), 
-                         (u'lat_v', np.dtype('float32'), (u'y_v', u'x_v')), 
-                         (u'lon_v', np.dtype('float32'), (u'y_v', u'x_v')),
-                         (u'zeta', np.dtype('float32'), (u'time', u'y_center', u'x_center')),
+        expected_vars = [u'z_center', 
+                         u'z_node', 
+                         u'time', 
+                         u'x_center', 
+                         u'y_center', 
+                         u'x_node', 
+                         u'y_node', 
+                         u'x_u', 
+                         u'y_u', 
+                         u'x_v', 
+                         u'y_v', 
+                         u'grid', 
+                         u'u', 
+                         u'v', 
+                         u'lon_center', 
+                         u'lat_center', 
+                         u'lon_node', 
+                         u'lat_node', 
+                         u'lat_u', 
+                         u'lon_u', 
+                         u'lat_v', 
+                         u'lon_v', 
+                         u'zeta'
                          ]
         self.assertEqual(dataset_vars, expected_vars)
 
     def test_variable_slicing(self):
-        u_slices = self.sg_obj.u_slice
-        v_slices = self.sg_obj.v_slice
+        u_slices = self.sg_obj.u.slicing
+        v_slices = self.sg_obj.v.slicing
         u_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
         self.assertEqual(u_slices, u_expected)
@@ -132,12 +132,12 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         self.assertEqual(centers_shape, expected_shape)
         
     def test_variable_slice(self):
-        u_slices = self.sg_obj.U1_slice
-        v_slices = self.sg_obj.V1_slice
+        u_slices = self.sg_obj.U1.slicing
+        v_slices = self.sg_obj.V1.slicing
         u_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
-        xz_slices = self.sg_obj.XZ_slice
-        xcor_slices = self.sg_obj.XCOR_slice
+        xz_slices = self.sg_obj.XZ.slicing
+        xcor_slices = self.sg_obj.XCOR.slicing
         xz_expected = (np.s_[1:], np.s_[1:])
         xcor_expected  = (np.s_[:], np.s_[:])
         self.assertEqual(u_slices, u_expected)
