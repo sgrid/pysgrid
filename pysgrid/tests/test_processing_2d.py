@@ -6,7 +6,7 @@ Created on Apr 3, 2015
 import unittest
 import numpy as np
 from ..processing_2d import vector_sum, rotate_vectors, avg_to_cell_center
-from ..custom_exceptions import DimensionMismatch
+from ..custom_exceptions import DimensionMismatchError
 
 
 class TestVectorSum(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestVectorSum(unittest.TestCase):
         np.testing.assert_almost_equal(sum_result, expected)
         
     def test_mismatch(self):
-        self.assertRaises(DimensionMismatch, vector_sum, 
+        self.assertRaises(DimensionMismatchError, vector_sum, 
                           self.x_vector, self.mismatch_vector
                           )
         
@@ -51,7 +51,7 @@ class TestRotateVectors(unittest.TestCase):
         np.testing.assert_almost_equal(rotated_y, expected_y, decimal=3)
         
     def test_mismatch(self):
-        self.assertRaises(DimensionMismatch, rotate_vectors,
+        self.assertRaises(DimensionMismatchError, rotate_vectors,
                           self.x_vector, self.y_vector, self.angles_mismatch)
         
 
