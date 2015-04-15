@@ -6,6 +6,16 @@ Created on Apr 15, 2015
 
 
 def load_variable(nc_var_obj, sgrid_var_obj):
+    """
+    Create a SGridVariable object from
+    a netCDF4.Dataset.variable object.
+    
+    :param netCDF4.variable nc_var_obj: a netCDF4 variable
+    :param SGridVariable sgrid_var_obj: the target SGridVariable object
+    :return: SGridVariable object with attributes from nc_var_obj
+    :rtype: SGridVariable
+    
+    """
     nc_var_name = nc_var_obj.name
     nc_var_dims = nc_var_obj.dimensions
     nc_var_dtype = nc_var_obj.dtype
