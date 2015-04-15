@@ -7,6 +7,63 @@ import netCDF4 as nc4
 from .read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
 
 
+class SGridVariable(object):
+    """
+    Object of variables found and inferred 
+    from an SGRID compliant dataset.
+    
+    """
+    def __init__(self, variable=None, grid=None, 
+                 axis=None, var_slice=None,
+                 dimensions=None, dtype=None):
+        self._variable = variable
+        self._grid = grid
+        self._axis = axis
+        self._var_slice = var_slice
+        self._dimensions = dimensions
+        self._dtype = dtype
+        
+    @property
+    def variable(self):
+        return self._variable
+    
+    @variable.setter
+    def variable(self, variable_name):
+        self._variable = variable_name
+        
+    @property
+    def grid(self):
+        return self._grid
+    
+    @grid.setter
+    def grid(self, grid_name):
+        self._grid = grid_name
+        
+    @property
+    def var_slice(self):
+        return self._var_slice
+    
+    @var_slice.setter
+    def var_slice(self, var_slice):
+        self._var_slice = var_slice
+        
+    @property
+    def dimensions(self):
+        return self._dimensions
+    
+    @dimensions.setter
+    def dimensions(self, variable_dimensions):
+        self._dimensions = variable_dimensions
+        
+    @property
+    def dtype(self):
+        return self._dtype
+    
+    @dtype.setter
+    def dtype(self, variable_dtype):
+        self._dtype = variable_dtype
+
+
 class SGrid(object):
     
     padding_slices = {'both': (1, -1),
