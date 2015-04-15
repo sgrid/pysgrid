@@ -87,8 +87,8 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(dataset_vars, expected_vars)
 
     def test_variable_slicing(self):
-        u_slices = self.sg_obj.u_slice
-        v_slices = self.sg_obj.v_slice
+        u_slices = self.sg_obj.u.slicing
+        v_slices = self.sg_obj.v.slicing
         u_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
         self.assertEqual(u_slices, u_expected)
@@ -132,12 +132,12 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         self.assertEqual(centers_shape, expected_shape)
         
     def test_variable_slice(self):
-        u_slices = self.sg_obj.U1_slice
-        v_slices = self.sg_obj.V1_slice
+        u_slices = self.sg_obj.U1.slicing
+        v_slices = self.sg_obj.V1.slicing
         u_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
         v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
-        xz_slices = self.sg_obj.XZ_slice
-        xcor_slices = self.sg_obj.XCOR_slice
+        xz_slices = self.sg_obj.XZ.slicing
+        xcor_slices = self.sg_obj.XCOR.slicing
         xz_expected = (np.s_[1:], np.s_[1:])
         xcor_expected  = (np.s_[:], np.s_[:])
         self.assertEqual(u_slices, u_expected)

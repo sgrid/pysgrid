@@ -4,8 +4,9 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliant, deprecated
+from .custom_exceptions import SGridNonCompliantError, deprecated
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
+from .variables import SGridVariable
 from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
                      LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
 
@@ -285,10 +286,8 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         for nc_variable in nc_variables:
             nc_var = nc_variables[nc_variable]
             nc_var_name = nc_var.name
-            nc_var_dtype = nc_var.dtype
-            nc_var_dims = nc_var.dimensions
-            ds_var = (nc_var_name, nc_var_dtype, nc_var_dims)
-            dataset_variables.append(ds_var)
+            # ds_var = (nc_var_name, nc_var_dtype, nc_var_dims)
+            dataset_variables.append(nc_var_name)
             try:
                 # figure out if a variable is defined on the grid
                 if nc_var.grid:
@@ -303,16 +302,13 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             grid.angles = grid_angles
         except KeyError:
             pass
-        # dynamically set variable slicing attributes
+        # dynamically set variable attributes
         for nc_variable in nc_variables:
-            # the slicing implied by the padding for each variable
-            # each dimension is sliced in the order they appear in ncdump
+            nc_var_obj = nc_variables[nc_variable]
+            sgrid_var = SGridVariable.create_variable(nc_var_obj)
             var_slicing = determine_variable_slicing(grid, nc_dataset, nc_variable)
-            slice_property_name = '{0}_slice'.format(nc_variable)
-            grid.add_property(slice_property_name, var_slicing)  # add slice property
-            dim_property_name = '{0}_dim'.format(nc_variable)
-            var_dims = nc_variables[nc_variable].dimensions
-            grid.add_property(dim_property_name, var_dims)  # add dimension property
+            sgrid_var.slicing = var_slicing
+            grid.add_property(sgrid_var.variable, sgrid_var)
         return grid
     else:
-        raise SGridNonCompliant(nc_dataset)
+        raise SGridNonCompliantError(nc_dataset)
