@@ -51,7 +51,7 @@ def pair_arrays(x_array, y_array):
     """
     check_array_dims(x_array, y_array)
     x_shape = x_array.shape
-    paired_array_shape = x_shape + (2, )
+    paired_array_shape = x_shape + (2,)
     slices = (np.s_[:],) * len(x_shape)
     x_slices = slices + (0,)
     y_slices = slices + (1,)
@@ -107,10 +107,10 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
             except StopIteration:
                 slice_index = np.s_[:]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
     else:
         pass
     return slice_indices
