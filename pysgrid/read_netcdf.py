@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliantError, deprecated
+from .custom_exceptions import SGridNonCompliantError, TopologyDimensionError, deprecated
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
 from .variables import SGridVariable
 from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
@@ -354,20 +354,28 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 grid.edge_2_coordinates = edge_2_coordinates_val
         if grid.topology_dimension == 2:
             grid_cell_center_lon_var, grid_cell_center_lat_var = grid.face_coordinates
+            grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = grid.node_coordinates
         elif grid.topology_dimension == 3:
             grid_cell_center_lon_var = grid.volume_coordinates[0]
             grid_cell_center_lat_var = grid.volume_coordinates[1]
+            # grid_cell_center_z = grid.volume_coordinates[2]
+        else:
+            raise TopologyDimensionError(grid.topology_dimension)
+        # create the arrays for the cell centers
         grid_cell_center_lat = nc_dataset.variables[grid_cell_center_lat_var][:]
         grid_cell_center_lon = nc_dataset.variables[grid_cell_center_lon_var][:]
         grid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
-        # get the variables names for the cell vertices
-        grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = grid.node_coordinates
-        grid_cell_nodes_lat = nc_dataset.variables[grid_cell_nodes_lat_var][:]
-        grid_cell_nodes_lon = nc_dataset.variables[grid_cell_nodes_lon_var][:]
-        grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        # create the arrays for the cell vertices
+        if grid.topology_dimension == 2:  # not sure how to deal with this in 3D yet
+            grid_cell_nodes_lat = nc_dataset.variables[grid_cell_nodes_lat_var][:]
+            grid_cell_nodes_lon = nc_dataset.variables[grid_cell_nodes_lon_var][:]
+            grid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
         grid.node_dimensions = nc_grid_topology_var.node_dimensions
         # get time data
-        grid_time = nc_dataset.variables['time'][:]
+        try:
+            grid_time = nc_dataset.variables['time'][:]
+        except KeyError:
+            grid_time = nc_dataset.variables['Times'][:]
         nc_variables = nc_dataset.variables
         # provide a list of all variables in the netCDF dataset
         grid.grid_times = grid_time

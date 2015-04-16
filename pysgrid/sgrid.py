@@ -315,7 +315,13 @@ class SGrid(object):
         self._grid_times = grid_times
         
     def _define_face_padding_summary(self):
-        all_padding = self._face_padding + self._vertical_padding
+        all_padding = []
+        if self._volume_padding is not None:
+            all_padding += self._volume_padding
+        if self._face_padding is not None:
+            all_padding += self._face_padding
+        if self._vertical_padding is not None:
+            all_padding += self._vertical_padding
         if self._edge_1_padding is not None:
             all_padding += self._edge_1_padding
         if self._edge_2_padding is not None:
@@ -407,9 +413,12 @@ class SGrid(object):
                     dataset_grid_var.grid = grid_var
             # add attributes to the variables
             grid_vars.cf_role = 'grid_topology'
-            grid_vars.topology_dimension = 2
+            grid_vars.topology_dimension = self._topology_dimension
             grid_vars.node_dimensions = self._node_dimensions
-            grid_vars.face_dimensions = self._face_dimensions
+            if self._face_dimensions is not None:
+                grid_vars.face_dimensions = self._face_dimensions
+            if self._volume_dimensions is not None:
+                grid_vars.volume_dimensions = self._volume_dimensions
             if self._edge_1_dimensions is not None:
                 grid_vars.edge1_dimensions = self._edge_1_dimensions
             if self._edge_2_dimensions is not None:
@@ -418,6 +427,8 @@ class SGrid(object):
                 grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self._face_coordinates)
+            if self._volume_coordinates is not None:
+                grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
             if self._node_coordinates is not None:
                 grid_vars.node_coordinates = ' '.join(self._node_coordinates)
             if self._edge_1_coordinates is not None:
