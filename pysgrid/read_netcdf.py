@@ -213,11 +213,19 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             topology_dim = nc_grid_topology_var.topology_dimension
             grid.topology_dimension = topology_dim
             try:
-                # this gets run through if topology_dimensions is 2
+                # this gets run through if topology_dimension is 2
                 face_dim = nc_grid_topology_var.face_dimensions
                 face_dim_padding = pp.parse_padding(face_dim)
                 grid.face_dimensions = face_dim
                 grid.face_padding = face_dim_padding  # set face padding
+            except AttributeError:
+                pass
+            try:
+                # this gets run through if topology_dimension is 3
+                vol_dim = nc_grid_topology_var.volume_dimensions
+                vol_dim_padding = pp.parse_padding(vol_dim)
+                grid.volume_dimensions = vol_dim
+                grid.volume_padding = vol_dim_padding
             except AttributeError:
                 pass
             try:
