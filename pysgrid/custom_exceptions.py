@@ -27,6 +27,18 @@ class SGridNonCompliantError(Exception):
         return error_message
     
     
+class TopologyDimensionError(Exception):
+    
+    base_message = 'A topology dimension of {0} is unsupported by this package.'
+    
+    def __init__(self, topology_dim):
+        self.topology_dim = topology_dim
+        
+    def __str__(self):
+        error_message = self.base_message.format(self.topology_dim)
+        return error_message
+    
+    
 class DimensionMismatchError(Exception):
     
     def __init__(self, *args):
