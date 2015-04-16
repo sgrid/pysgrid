@@ -13,6 +13,46 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
+def fake_dgrid(nc_filename='fake_dgrid.nc'):
+    file_name = os.path.join(TEST_FILES, nc_filename)
+    with nc4.Dataset(file_name, 'w') as rg:
+        # define dims
+        rg.createDimension('MMAXZ', 4)
+        rg.createDimension('NMAXZ', 4)
+        rg.createDimension('MMAX', 4)
+        rg.createDimension('NMAX', 4)
+        rg.createDimension('KMAX', 2)
+        rg.createDimension('KMAX1', 3)
+        rg.createDimension('time', 2)     
+        # define vars
+        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))
+        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))
+        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))
+        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))
+        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))  # dims T, Z, X, Y
+        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        times = rg.createVariable('time', 'f8', ('time',))
+        grid = rg.createVariable('grid', 'i4')
+        # define attributes
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 2
+        grid.node_dimensions = 'MMAX NMAX'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.node_coordinates = 'XCOR YCOR'
+        grid.face_coordinates = 'XZ YZ'
+        grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
+        u1.grid = 'some grid'
+        v1.grid = 'some grid'
+        # create variable data
+        xcor[:] = np.random.random((4, 4))
+        ycor[:] = np.random.random((4, 4))
+        xz[:] = np.random.random((4, 4))
+        yz[:] = np.random.random((4, 4))
+        u1[:] = np.random.random((2, 2, 4, 4))
+        v1[:] = np.random.random((2, 2, 4, 4))
+        times[:] = np.random.random((2,))
+        
+
 def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
     """
     Create a netCDF file that is structurally similar to
@@ -241,5 +281,5 @@ if __name__ == '__main__':
     deltares_like_sgrid()
     roms_like_sgrid()
     roms_like_non_compliant_sgrid()
-        
+    fake_dgrid()
         
