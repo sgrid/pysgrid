@@ -213,6 +213,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             topology_dim = nc_grid_topology_var.topology_dimension
             grid.topology_dimension = topology_dim
             try:
+                # this gets run through if topology_dimensions is 2
                 face_dim = nc_grid_topology_var.face_dimensions
                 face_dim_padding = pp.parse_padding(face_dim)
                 grid.face_dimensions = face_dim
