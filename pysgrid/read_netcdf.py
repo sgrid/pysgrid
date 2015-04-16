@@ -126,29 +126,41 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         vars_with_location = self.search_variables_by_location(location_str)
-        potential_coordinates = []
-        for var_with_location in vars_with_location:
-            location_var = nc_vars[var_with_location]
-            location_var_dims = location_var.dimensions
-            for nc_var in nc_vars.keys():
-                nc_var_obj = nc_vars[nc_var]
-                nc_var_dim_set = set(nc_var_obj.dimensions)
-                if (nc_var_dim_set.issubset(location_var_dims) and 
-                    nc_var != var_with_location and 
-                    len(nc_var_dim_set) > 0
-                    ):
-                    potential_coordinates.append(nc_var_obj)
         x_coordinate = None
         y_coordinate = None
         z_coordinate = None
-        for potential_coordinate in potential_coordinates:
-            pc_name = potential_coordinate.name
-            if 'lon' in pc_name.lower():
-                x_coordinate = pc_name
-            elif 'lat' in pc_name.lower():
-                y_coordinate = pc_name
-            else:
-                z_coordinate = pc_name
+        for var_with_location in vars_with_location:
+            location_var = nc_vars[var_with_location]
+            location_var_dims = location_var.dimensions
+            try:
+                location_var_coordinates = location_var.coordinates
+                lvc_split = location_var_coordinates.split(' ')
+                if len(lvc_split) == 2:
+                    x_coordinate, y_coordinate = lvc_split
+                elif len(lvc_split) == 3:
+                    x_coordinate, y_coordinate, z_coordinate = lvc_split
+                else:
+                    raise TopologyDimensionError(topology_dim)
+                break
+            except AttributeError:
+                # run through this if a location attributed is defined, but not coordinates
+                potential_coordinates = []
+                for nc_var in nc_vars.keys():
+                    nc_var_obj = nc_vars[nc_var]
+                    nc_var_dim_set = set(nc_var_obj.dimensions)
+                    if (nc_var_dim_set.issubset(location_var_dims) and 
+                        nc_var != var_with_location and 
+                        len(nc_var_dim_set) > 0
+                        ):
+                        potential_coordinates.append(nc_var_obj)
+                for potential_coordinate in potential_coordinates:
+                    pc_name = potential_coordinate.name
+                    if 'lon' in pc_name.lower():
+                        x_coordinate = pc_name
+                    elif 'lat' in pc_name.lower():
+                        y_coordinate = pc_name
+                    else:
+                        z_coordinate = pc_name  # this might not always work... 
         if topology_dim == 2:
             coordinates = (x_coordinate, y_coordinate)
         else:
