@@ -153,7 +153,11 @@ class NetCDFDataset(object):
             coordinates = (x_coordinate, y_coordinate)
         else:
             coordinates = (x_coordinate, y_coordinate, z_coordinate)
-        return coordinates
+        if all(coordinates):
+            coordinate_result = coordinates
+        else:
+            coordinate_result = None
+        return coordinate_result
     
     @deprecated
     def find_coordinations_by_location(self, location_str, topology_dim):
