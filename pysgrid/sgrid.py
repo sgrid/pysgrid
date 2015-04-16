@@ -15,17 +15,32 @@ class SGrid(object):
                       'high': (None, 1)
                       }
     
-    def __init__(self, nodes=None, centers=None, faces=None, 
-                 edges=None, node_padding=None, face_padding=None,
-                 edge_1_padding=None, edge_2_padding=None,
-                 vertical_padding=None, grid_topology_vars=None,
-                 grid_cell_center_vars=None, grid_times=None, 
-                 variables=None, dimensions=None, face_coordinates=None,
-                 node_coordinates=None, edge_1_coordinates=None,
-                 edge_2_coordinates=None, angles=None,
-                 node_dim=None, face_dim=None,
-                 vertical_dim=None, edge_1_dim=None,
-                 edge_2_dim=None, grid_variables=None):
+    def __init__(self, nodes=None, 
+                 centers=None, 
+                 faces=None, 
+                 edges=None, 
+                 node_padding=None, 
+                 face_padding=None,
+                 edge_1_padding=None, 
+                 edge_2_padding=None,
+                 vertical_padding=None, 
+                 grid_topology_vars=None, 
+                 topology_dimension=None, 
+                 grid_cell_center_vars=None, 
+                 grid_times=None, 
+                 variables=None, 
+                 dimensions=None, 
+                 face_coordinates=None,
+                 node_coordinates=None, 
+                 edge_1_coordinates=None,
+                 edge_2_coordinates=None, 
+                 angles=None,
+                 node_dim=None, 
+                 face_dim=None,
+                 vertical_dim=None, 
+                 edge_1_dim=None,
+                 edge_2_dim=None, 
+                 grid_variables=None):
         self._nodes = nodes
         self._centers = centers
         self._faces = faces
@@ -39,6 +54,7 @@ class SGrid(object):
         self._grid_times = grid_times
         self._variables = variables
         self._grid_variables = grid_variables
+        self._topology_dimension = topology_dimension
         self._dimensions = dimensions
         self._face_coordinates = face_coordinates
         self._node_coordinates = node_coordinates
@@ -100,6 +116,14 @@ class SGrid(object):
     @grid_variables.setter
     def grid_variables(self, dataset_grid_variables):
         self._grid_variables = dataset_grid_variables
+        
+    @property
+    def topology_dimension(self):
+        return self._topology_dimension
+    
+    @topology_dimension.setter
+    def topology_dimension(self, dataset_topology_dimension):
+        self._topology_dimension = dataset_topology_dimension
         
     @property
     def dimensions(self):

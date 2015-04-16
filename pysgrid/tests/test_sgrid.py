@@ -131,6 +131,11 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_shape = (4, 4, 2)
         self.assertEqual(centers_shape, expected_shape)
         
+    def test_topology_dimension(self):
+        topology_dim = self.sg_obj.topology_dimension
+        expected_dim = 2
+        self.assertEqual(topology_dim, expected_dim)
+        
     def test_variable_slice(self):
         u_center_slices = self.sg_obj.U1.center_slicing
         v_center_slices = self.sg_obj.V1.center_slicing
