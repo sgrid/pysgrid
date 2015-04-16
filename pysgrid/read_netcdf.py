@@ -111,7 +111,51 @@ class NetCDFDataset(object):
             except AttributeError:
                 continue
         return search_results
-                    
+    
+    def find_coordinates_by_location(self, location_str, topology_dim):
+        """
+        Find a grid coordinates variables with a location attribute equal
+        to location_str. This method can be used to infer edge, face, or
+        volume coordinates from the location attribute of a variable.
+        
+        Location is a required attribute per SGRID conventions.
+        
+        :param str location_str: the location value to search for
+        :param int topology_dim: the topology dimension of the grid
+        
+        """
+        nc_vars = self.ncd.variables
+        vars_with_location = self.search_variables_by_location(location_str)
+        potential_coordinates = []
+        for var_with_location in vars_with_location:
+            location_var = nc_vars[var_with_location]
+            location_var_dims = location_var.dimensions
+            for nc_var in nc_vars.keys():
+                nc_var_obj = nc_vars[nc_var]
+                nc_var_dim_set = set(nc_var_obj.dimensions)
+                if (nc_var_dim_set.issubset(location_var_dims) and 
+                    nc_var != var_with_location and 
+                    len(nc_var_dim_set) > 0
+                    ):
+                    potential_coordinates.append(nc_var_obj)
+        x_coordinate = None
+        y_coordinate = None
+        z_coordinate = None
+        for potential_coordinate in potential_coordinates:
+            pc_name = potential_coordinate.name
+            if 'lon' in pc_name.lower():
+                x_coordinate = pc_name
+            elif 'lat' in pc_name.lower():
+                y_coordinate = pc_name
+            else:
+                z_coordinate = pc_name
+        if topology_dim == 2:
+            coordinates = (x_coordinate, y_coordinate)
+        else:
+            coordinates = (x_coordinate, y_coordinate, z_coordinate)
+        return coordinates
+    
+    @deprecated
     def find_coordinations_by_location(self, location_str, topology_dim):
         """
         Find a variable with a location attribute equal
@@ -273,7 +317,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                     volume_coordinate_val = volume_coordinates.split(' ')
                     grid.volume_coordinates = volume_coordinate_val
                 except AttributeError:
-                    grid_cell_center_vars = ncd.find_coordinations_by_location('volume', topology_dim)
+                    grid_cell_center_vars = ncd.find_coordinates_by_location('volume', topology_dim)
                     grid.volume_coordinates = grid_cell_center_vars
             if topology_dim == 2:
                 try:
@@ -281,7 +325,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                     face_coordinate_val = face_coordinates.split(' ')
                     grid.face_coordinates = tuple(face_coordinate_val)
                 except AttributeError:
-                    grid_cell_center_vars = ncd.find_coordinations_by_location('face', topology_dim)
+                    grid_cell_center_vars = ncd.find_coordinates_by_location('face', topology_dim)
                     grid.face_coordinates = grid_cell_center_vars
             try:
                 node_coordinates = nc_grid_topology_var.node_coordinates
@@ -295,14 +339,14 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
                 edge_1_coordinates_val = edge_1_coordinates.split(' ')
                 grid.edge_1_coordinates = tuple(edge_1_coordinates_val)
             except AttributeError:
-                edge_1_coordinates_val = ncd.find_coordinations_by_location('edge1', topology_dim)
+                edge_1_coordinates_val = ncd.find_coordinates_by_location('edge1', topology_dim)
                 grid.edge_1_coordinates = edge_1_coordinates_val
             try:
                 edge_2_coordinates = nc_grid_topology_var.edge2_coordinates
                 edge_2_coordinates_val = edge_2_coordinates.split(' ')
                 grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
             except AttributeError:
-                edge_2_coordinates_val = ncd.find_coordinations_by_location('edge2', topology_dim)
+                edge_2_coordinates_val = ncd.find_coordinates_by_location('edge2', topology_dim)
                 grid.edge_2_coordinates = edge_2_coordinates_val
         if grid.topology_dimension == 2:
             grid_cell_center_lon_var, grid_cell_center_lat_var = grid.face_coordinates
