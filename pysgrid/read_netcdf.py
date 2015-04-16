@@ -95,7 +95,7 @@ class NetCDFDataset(object):
             except AttributeError:
                 cf_role = None
                 topology_dim = None
-            if cf_role == 'grid_topology' and topology_dim == 2:
+            if cf_role == 'grid_topology' and topology_dim >= 2:
                 grid_topology_vars.append(nc_var)
         return grid_topology_vars
     
@@ -206,10 +206,12 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             grid_topology_vars_attr = ncd.find_grid_topology_vars()
         else:
             grid_topology_vars_attr = grid_topology_vars
-        grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables 
+        grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables
         for topology_var in grid_topology_vars_attr:
             nc_grid_topology_var = nc_dataset.variables[topology_var]
             pp = ParsePadding(topology_var)
+            topology_dim = nc_grid_topology_var.topology_dimension
+            grid.topology_dimension = topology_dim
             try:
                 face_dim = nc_grid_topology_var.face_dimensions
                 face_dim_padding = pp.parse_padding(face_dim)
