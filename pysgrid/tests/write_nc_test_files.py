@@ -202,14 +202,14 @@ def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with  nc4.Dataset(file_name, 'w') as fg:
         # create dimensions
-        fg.createDimension('Time', 13)
-        fg.createDimension('DateStrLen', 19)
-        fg.createDimension('west_east', 73)
-        fg.createDimension('south_north', 60)
-        fg.createDimension('west_east_stag', 74)
-        fg.createDimension('bottom_top', 27)
-        fg.createDimension('south_north_stag', 61)
-        fg.createDimension('bottom_top_stag', 28)
+        fg.createDimension('Time', 2)
+        fg.createDimension('DateStrLen', 3)
+        fg.createDimension('west_east', 4)
+        fg.createDimension('south_north', 5)
+        fg.createDimension('west_east_stag', 5)
+        fg.createDimension('bottom_top', 3)
+        fg.createDimension('south_north_stag', 6)
+        fg.createDimension('bottom_top_stag', 4)
         # create variables
         times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
         us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
@@ -235,15 +235,15 @@ def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
         grid.volume_dimensions = 'west_east: west_east_stag (padding: none) south_north: south_north_stag (padding: none) bottom_top: bottom_top_stag (padding: none)'
         grid.volume_coordinates = 'XLONG XLAT ZNU'
         # create fake data
-        times[:] = np.random.random(size=(13, 19)).astype(str)
-        us[:, :, :, :] = np.random.random(size=(13, 27, 60, 74))
-        vs[:, :, :, :] = np.random.random(size=(13, 27, 61, 73))
-        ws[:, :, :, :] = np.random.random(size=(13, 28, 60, 73))
-        temps[:, :, :, :] = np.random.random(size=(13, 27, 60, 73))
-        xlats[:, :, :] = np.random.random(size=(13, 60, 73))
-        xlongs[:, :, :] = np.random.random(size=(13, 60, 73))
-        znus[:, :] = np.random.random(size=(13, 27))
-        znws[:, :] = np.random.random(size=(13, 28))
+        times[:] = np.random.random(size=(2, 3)).astype(str)
+        us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
+        vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
+        ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
+        temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
+        xlats[:, :, :] = np.random.random(size=(2, 5, 4))
+        xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
+        znus[:, :] = np.random.random(size=(2, 3))
+        znws[:, :] = np.random.random(size=(2, 4))
         
         
         
