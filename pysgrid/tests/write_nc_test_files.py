@@ -42,7 +42,7 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
         longitude = rg.createVariable('longitude', 'f4', ('MMAXZ', 'NMAXZ'))
         grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))
-        grid_longitude = rg.createVariable('grid_longituude', 'f4', ('MMAX', 'NMAX')) 
+        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX')) 
         # define variable attributes
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
