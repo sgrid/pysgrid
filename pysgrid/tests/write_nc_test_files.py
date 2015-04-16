@@ -6,7 +6,6 @@ Created on Apr 7, 2015
 import os
 import netCDF4 as nc4
 import numpy as np
-import string
 from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER_LONG_NAME,
                             LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
 
@@ -234,7 +233,7 @@ def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
         grid.topology_dimension = 3
         grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'
         grid.volume_dimensions = 'west_east: west_east_stag (padding: none) south_north: south_north_stag (padding: none) bottom_top: bottom_top_stag (padding: none)'
-        grid.volume_coordinates = 'XLONG XLAT, ZNU'
+        grid.volume_coordinates = 'XLONG XLAT ZNU'
         # create fake data
         times[:] = np.random.random(size=(13, 19)).astype(str)
         us[:, :, :, :] = np.random.random(size=(13, 27, 60, 74))
