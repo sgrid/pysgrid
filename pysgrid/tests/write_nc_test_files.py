@@ -6,6 +6,7 @@ Created on Apr 7, 2015
 import os
 import netCDF4 as nc4
 import numpy as np
+import string
 from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER_LONG_NAME,
                             LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
 
@@ -198,6 +199,55 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         lon_v[:] = np.random.random(size=(3, 4))
         
         
+def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
+    file_name = os.path.join(TEST_FILES, nc_filename)
+    with  nc4.Dataset(file_name, 'w') as fg:
+        # create dimensions
+        fg.createDimension('Time', 13)
+        fg.createDimension('DateStrLen', 19)
+        fg.createDimension('west_east', 73)
+        fg.createDimension('south_north', 60)
+        fg.createDimension('west_east_stag', 74)
+        fg.createDimension('bottom_top', 27)
+        fg.createDimension('south_north_stag', 61)
+        fg.createDimension('bottom_top_stag', 28)
+        # create variables
+        times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        us.grid = 'grid'
+        us.location = 'face1'
+        vs = fg.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        vs.grid = 'grid'
+        vs.location = 'face2'
+        ws = fg.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        ws.grid = 'grid'
+        ws.location = 'face3'
+        temps = fg.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        temps.grid = 'grid'
+        temps.location = 'volume'
+        xlats = fg.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
+        xlongs = fg.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        znus = fg.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
+        znws = fg.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+        grid = fg.createVariable('grid', 'i2')
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 3
+        grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'
+        grid.volume_dimensions = 'west_east: west_east_stag (padding: none) south_north: south_north_stag (padding: none) bottom_top: bottom_top_stag (padding: none)'
+        grid.volume_coordinates = 'XLONG XLAT, ZNU'
+        # create fake data
+        times[:] = np.random.random(size=(13, 19)).astype(str)
+        us[:, :, :, :] = np.random.random(size=(13, 27, 60, 74))
+        vs[:, :, :, :] = np.random.random(size=(13, 27, 61, 73))
+        ws[:, :, :, :] = np.random.random(size=(13, 28, 60, 73))
+        temps[:, :, :, :] = np.random.random(size=(13, 27, 60, 73))
+        xlats[:, :, :] = np.random.random(size=(13, 60, 73))
+        xlongs[:, :, :] = np.random.random(size=(13, 60, 73))
+        znus[:, :] = np.random.random(size=(13, 27))
+        znws[:, :] = np.random.random(size=(13, 28))
+        
+        
+        
 def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
     """
     Create a netCDF file that is structurally similar to
@@ -278,8 +328,9 @@ def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like
 
 if __name__ == '__main__':
     
-    deltares_like_sgrid()
-    roms_like_sgrid()
-    roms_like_non_compliant_sgrid()
+    # deltares_like_sgrid()
+    # roms_like_sgrid()
+    # roms_like_non_compliant_sgrid()
     # fake_dgrid()
+    wrf_like_sgrid()
         
