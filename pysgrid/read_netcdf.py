@@ -306,8 +306,10 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         for nc_variable in nc_variables:
             nc_var_obj = nc_variables[nc_variable]
             sgrid_var = SGridVariable.create_variable(nc_var_obj)
-            var_slicing = determine_variable_slicing(grid, nc_dataset, nc_variable)
-            sgrid_var.slicing = var_slicing
+            var_center_slicing = determine_variable_slicing(grid, nc_dataset, 
+                                                            nc_variable, method='center'
+                                                            )
+            sgrid_var.center_slicing = var_center_slicing
             grid.add_property(sgrid_var.variable, sgrid_var)
         return grid
     else:
