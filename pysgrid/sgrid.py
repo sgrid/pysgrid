@@ -21,6 +21,7 @@ class SGrid(object):
                  edges=None, 
                  node_padding=None, 
                  face_padding=None,
+                 volume_padding=None,
                  edge_1_padding=None, 
                  edge_2_padding=None,
                  vertical_padding=None, 
@@ -31,6 +32,7 @@ class SGrid(object):
                  variables=None, 
                  dimensions=None, 
                  face_coordinates=None,
+                 volume_coordinates=None,
                  node_coordinates=None, 
                  edge_1_coordinates=None,
                  edge_2_coordinates=None, 
@@ -48,6 +50,7 @@ class SGrid(object):
         self._edges = edges
         self._node_padding = node_padding
         self._face_padding = face_padding
+        self._volume_padding = volume_padding
         self._edge_1_padding = edge_1_padding
         self._edge_2_padding = edge_2_padding
         self._vertical_padding = vertical_padding
@@ -58,6 +61,7 @@ class SGrid(object):
         self._topology_dimension = topology_dimension
         self._dimensions = dimensions
         self._face_coordinates = face_coordinates
+        self._volume_coordinates = volume_coordinates
         self._node_coordinates = node_coordinates
         self._edge_1_coordinates = edge_1_coordinates
         self._edge_2_coordinates = edge_2_coordinates
@@ -242,12 +246,28 @@ class SGrid(object):
         self._edge_2_dimensions = e2_dim
         
     @property
+    def volume_padding(self):
+        return self._volume_padding
+    
+    @volume_padding.setter
+    def volume_padding(self, vol_padding):
+        self._volume_padding = vol_padding
+        
+    @property
     def volume_dimensions(self):
         return self._volume_dimensions
     
     @volume_dimensions.setter
     def volume_dimensions(self, volume_dims):
         self._volume_dimensions = volume_dims
+        
+    @property
+    def volume_coordinates(self):
+        return self._volume_coordinates
+    
+    @volume_coordinates.setter
+    def volume_coordinates(self, vol_coordinates):
+        self._volume_coordinates = vol_coordinates
         
     @property
     def angles(self):
