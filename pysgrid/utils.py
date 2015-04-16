@@ -52,9 +52,12 @@ def pair_arrays(x_array, y_array):
     check_array_dims(x_array, y_array)
     x_shape = x_array.shape
     paired_array_shape = x_shape + (2, )
+    slices = (np.s_[:],) * len(x_shape)
+    x_slices = slices + (0,)
+    y_slices = slices + (1,)
     paired_array = np.empty(paired_array_shape, dtype=np.float64)
-    paired_array[:, :, 0] = x_array[:]
-    paired_array[:, :, 1] = y_array[:]
+    paired_array[x_slices] = x_array[:]
+    paired_array[y_slices] = y_array[:]
     return paired_array
 
 
