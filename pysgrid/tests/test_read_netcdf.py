@@ -31,7 +31,7 @@ class TestNetCDFDataset(unittest.TestCase):
         self.assertEqual(result, expected)
         
     def test_find_coordinations_by_location(self):
-        result = self.nc_ds.find_coordinations_by_location('faces')
+        result = self.nc_ds.find_coordinations_by_location('faces', 2)
         expected = ('lon_center', 'lat_center')
         self.assertEqual(result, expected)
         
