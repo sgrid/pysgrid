@@ -37,6 +37,7 @@ class SGrid(object):
                  angles=None,
                  node_dim=None, 
                  face_dim=None,
+                 volume_dim=None,
                  vertical_dim=None, 
                  edge_1_dim=None,
                  edge_2_dim=None, 
@@ -64,6 +65,7 @@ class SGrid(object):
         # attributes for the verbatim padding text
         self._node_dimensions = node_dim
         self._face_dimensions = face_dim
+        self._volume_dimensions = volume_dim
         self._vertical_dimensions = vertical_dim
         self._edge_1_dimensions = edge_1_dim
         self._edge_2_dimensions = edge_2_dim
@@ -238,6 +240,14 @@ class SGrid(object):
     @edge_2_dimensions.setter
     def edge_2_dimensions(self, e2_dim):
         self._edge_2_dimensions = e2_dim
+        
+    @property
+    def volume_dimensions(self):
+        return self._volume_dimensions
+    
+    @volume_dimensions.setter
+    def volume_dimensions(self, volume_dims):
+        self._volume_dimensions = volume_dims
         
     @property
     def angles(self):
