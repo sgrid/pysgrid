@@ -80,6 +80,7 @@ class SGrid(object):
     def variables(self):
         """
         Return a list of variables
+        
         """
         return self._variables
     
@@ -92,6 +93,7 @@ class SGrid(object):
         """
         Return a list of variables
         with a grid attribute.
+        
         """
         return self._grid_variables
     
@@ -104,6 +106,7 @@ class SGrid(object):
         """
         Return list of tuples containing
         dimension name and size.
+        
         """
         return self._dimensions
     
@@ -140,6 +143,7 @@ class SGrid(object):
         """
         return the vertices of the grid as arrays 
         of lon, lat pairs.
+        
         """
         return self._nodes
         
@@ -240,6 +244,7 @@ class SGrid(object):
         """
         return the coordinates of the grid centers
         as arrays of lon, lat pairs.
+        
         """
         return self._centers
     

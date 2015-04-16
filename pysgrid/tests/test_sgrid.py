@@ -87,12 +87,12 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(dataset_vars, expected_vars)
 
     def test_variable_slicing(self):
-        u_slices = self.sg_obj.u.slicing
-        v_slices = self.sg_obj.v.slicing
-        u_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
-        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
-        self.assertEqual(u_slices, u_expected)
-        self.assertEqual(v_slices, v_expected)
+        u_center_slices = self.sg_obj.u.center_slicing
+        v_center_slices = self.sg_obj.v.center_slicing
+        u_center_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
+        v_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
+        self.assertEqual(u_center_slices, u_center_expected)
+        self.assertEqual(v_center_slices, v_center_expected)
         
     def test_optional_grid_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
@@ -132,18 +132,18 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         self.assertEqual(centers_shape, expected_shape)
         
     def test_variable_slice(self):
-        u_slices = self.sg_obj.U1.slicing
-        v_slices = self.sg_obj.V1.slicing
-        u_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
-        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
-        xz_slices = self.sg_obj.XZ.slicing
-        xcor_slices = self.sg_obj.XCOR.slicing
-        xz_expected = (np.s_[1:], np.s_[1:])
-        xcor_expected  = (np.s_[:], np.s_[:])
-        self.assertEqual(u_slices, u_expected)
-        self.assertEqual(v_slices, v_expected)
-        self.assertEqual(xz_slices, xz_expected)
-        self.assertEqual(xcor_slices, xcor_expected)
+        u_center_slices = self.sg_obj.U1.center_slicing
+        v_center_slices = self.sg_obj.V1.center_slicing
+        u_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
+        v_center_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
+        xz_center_slices = self.sg_obj.XZ.center_slicing
+        xcor_center_slices = self.sg_obj.XCOR.center_slicing
+        xz_center_expected = (np.s_[1:], np.s_[1:])
+        xcor_center_expected  = (np.s_[:], np.s_[:])
+        self.assertEqual(u_center_slices, u_center_expected)
+        self.assertEqual(v_center_slices, v_center_expected)
+        self.assertEqual(xz_center_slices, xz_center_expected)
+        self.assertEqual(xcor_center_slices, xcor_center_expected)
         
     def test_grid_optional_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
