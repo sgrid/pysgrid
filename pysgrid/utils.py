@@ -123,13 +123,7 @@ class ParsePadding(object):
     Parse out the padding types from
     variables with a cf_role of 'grid_topology'.
     
-    """
-    padding_slices = {'both': (1, -1),
-                      'none': (None, None),
-                      'low': (1, None),
-                      'high': (None, 1)
-                      }
-    
+    """    
     def __init__(self, mesh_topology_var=None):
         self.mesh_topology_var = mesh_topology_var
 

@@ -13,7 +13,7 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
-def fake_dgrid(nc_filename='fake_dgrid.nc'):
+def simulated_dgrid(nc_filename='fake_dgrid.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dims
@@ -53,7 +53,7 @@ def fake_dgrid(nc_filename='fake_dgrid.nc'):
         times[:] = np.random.random((2,))
         
 
-def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
+def deltares_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
@@ -111,7 +111,7 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         grid_longitude[:] = np.random.random((4, 4))
         
         
-def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
+def roms_sgrid(nc_filename='test_sgrid_roms_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -198,7 +198,7 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         lon_v[:] = np.random.random(size=(3, 4))
         
         
-def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
+def wrf_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with  nc4.Dataset(file_name, 'w') as fg:
         # create dimensions
@@ -249,7 +249,7 @@ def wrf_like_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
         
         
         
-def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
+def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -329,9 +329,9 @@ def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like
 
 if __name__ == '__main__':
     
-    # deltares_like_sgrid()
-    # roms_like_sgrid()
-    # roms_like_non_compliant_sgrid()
-    # fake_dgrid()
-    wrf_like_sgrid()
+    deltares_sgrid()
+    roms_sgrid()
+    roms_non_compliant_sgrid()
+    simulated_dgrid()
+    wrf_sgrid()
         
