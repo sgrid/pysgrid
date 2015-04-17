@@ -37,7 +37,7 @@ class TestNetCDFDataset(unittest.TestCase):
         
     def test_find_grid_topology(self):
         result = self.nc_ds.find_grid_topology_vars()
-        expected = ['grid']
+        expected = 'grid'
         self.assertEqual(result, expected)
         
     def test_sgrid_compliant_check(self):

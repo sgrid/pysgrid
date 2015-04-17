@@ -359,7 +359,7 @@ class SGrid(object):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            grid_var = self._grid_topology_vars[0]
+            grid_var = self._grid_topology_vars
             # create dimensions
             for grid_dim in self._dimensions:
                 dim_name, dim_size = grid_dim
