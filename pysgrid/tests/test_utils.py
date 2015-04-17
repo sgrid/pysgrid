@@ -5,23 +5,8 @@ Created on Mar 23, 2015
 '''
 import unittest
 import numpy as np
-from ..utils import (ParsePadding, pair_arrays, check_array_dims, 
-                     check_element_equal)
+from ..utils import ParsePadding, pair_arrays, check_element_equal
 from ..custom_exceptions import CannotFindPaddingError
-
-
-class TestCheckArrayDims(unittest.TestCase):
-    
-    def setUp(self):
-        self.a = np.array([1, 2, 3])
-        self.b = np.array([-1, -2])
-        
-    def test_exception_raised(self):
-        self.assertRaises(ValueError,
-                          check_array_dims,
-                          self.a,
-                          self.b
-                          )
 
 
 class TestParsePadding(unittest.TestCase):

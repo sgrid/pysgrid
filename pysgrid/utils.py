@@ -17,28 +17,6 @@ GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable co
                          )
 
 
-def check_array_dims(*args):
-    """
-    Given an unspecified number of
-    numpy arrays, make sure they all
-    have the same dimensions. A 
-    DimensionMismatch exception is raised
-    if there is a mismatch.
-    
-    """
-    array_shapes = [arr.shape for arr in args]
-    arrays_match = check_element_equal(array_shapes)
-    if not arrays_match:
-        error_message = ('The is a dimension mismatch between arrays with shapes: {0}. '
-                         'Arrays must have the same same to use this function.')
-        array_shapes_str = [str(arr) for arr in array_shapes]
-        shape_str = ', '.join(array_shapes_str)
-        message = error_message.format(shape_str)
-        raise ValueError(message)
-    else:
-        pass
-
-
 def pair_arrays(x_array, y_array):
     """
     Given two arrays to equal dimensions,
@@ -54,7 +32,6 @@ def pair_arrays(x_array, y_array):
     :rtype: np.array
     
     """
-    check_array_dims(x_array, y_array)
     x_shape = x_array.shape
     paired_array_shape = x_shape + (2,)
     paired_array = np.empty(paired_array_shape, dtype=np.float64)

@@ -13,17 +13,11 @@ class TestVectorSum(unittest.TestCase):
     def setUp(self):
         self.x_vector = np.array([3, 5, 9, 11])
         self.y_vector = np.array([4, 12, 40, 60])
-        self.mismatch_vector = np.array([17, 45])
         
     def test_vector_sum(self):
         sum_result = vector_sum(self.x_vector, self.y_vector)
         expected = np.array([5, 13, 41, 61])
         np.testing.assert_almost_equal(sum_result, expected)
-        
-    def test_mismatch(self):
-        self.assertRaises(ValueError, vector_sum, 
-                          self.x_vector, self.mismatch_vector
-                          )
         
 
 class TestRotateVectors(unittest.TestCase):
@@ -33,7 +27,6 @@ class TestRotateVectors(unittest.TestCase):
         self.y_vector = np.array([4, 12, 40, 60])
         self.angles_simple = np.array([0, np.pi/2, 0, np.pi/2])
         self.angles_complex = np.array([np.pi/6, np.pi/5, np.pi/4, np.pi/3])
-        self.angles_mismatch = np.array([np.pi/7])
         
     def test_vector_rotation_simple(self):
         rotated_x, rotated_y = rotate_vectors(self.x_vector, self.y_vector, self.angles_simple)
@@ -48,10 +41,6 @@ class TestRotateVectors(unittest.TestCase):
         expected_y = np.array([4.9641, 12.6471, 34.6482, 39.5263])
         np.testing.assert_almost_equal(rotated_x, expected_x, decimal=3)
         np.testing.assert_almost_equal(rotated_y, expected_y, decimal=3)
-        
-    def test_mismatch(self):
-        self.assertRaises(ValueError, rotate_vectors,
-                          self.x_vector, self.y_vector, self.angles_mismatch)
         
 
 class TestAvgToCellCenter(unittest.TestCase):
