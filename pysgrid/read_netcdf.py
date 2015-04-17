@@ -301,6 +301,7 @@ class SGridND(object):
         
     def set_sgrid_angles(self):
         try:
+            # remove hard coding of variable name moving forward
             grid_angles = self.nc_dataset.variables['angle'][:]
             self._sgrid.angles = grid_angles
         except KeyError:
@@ -308,6 +309,8 @@ class SGridND(object):
         
     def set_sgrid_time(self):
         try:
+            # hard coding the time variable is probably not the best way to go...
+            # change this in the future
             grid_time = self.nc_dataset.variables['time'][:]
         except KeyError:
             grid_time = self.nc_dataset.variables['Times'][:]
