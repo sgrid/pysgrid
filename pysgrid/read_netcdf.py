@@ -4,11 +4,10 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliantError, TopologyDimensionError, deprecated
+from .custom_exceptions import SGridNonCompliantError, TopologyDimensionError
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
 from .variables import SGridVariable
-from .lookup import (LAT_GRID_CELL_CENTER_LONG_NAME, LON_GRID_CELL_CENTER_LONG_NAME,
-                     LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME)
+from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
 
 
 def read_netcdf_file(dataset_url):
@@ -29,29 +28,6 @@ class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
         self.ncd = nc_dataset_obj
-    
-    @deprecated
-    def find_grid_cell_center_vars(self):
-        """
-        Find the variables for the grid
-        cell centers.
-        
-        """
-        nc_vars = self.ncd.variables
-        grid_cell_center_lon = None
-        grid_cell_center_lat = None
-        for nc_var in nc_vars.keys():
-            try:
-                nc_var_obj = nc_vars[nc_var]
-                # need to revisit this... long_name is not a required attribute
-                nc_var_long_name = nc_var_obj.long_name
-                if nc_var_long_name in LON_GRID_CELL_CENTER_LONG_NAME:
-                    grid_cell_center_lon = nc_var
-                if nc_var_long_name in LAT_GRID_CELL_CENTER_LONG_NAME:
-                    grid_cell_center_lat = nc_var
-            except AttributeError:
-                continue
-        return grid_cell_center_lon, grid_cell_center_lat
     
     def find_grid_cell_node_vars(self):
         """
@@ -138,13 +114,22 @@ class NetCDFDataset(object):
             location_var_dims = location_var.dimensions
             try:
                 location_var_coordinates = location_var.coordinates
-                lvc_split = location_var_coordinates.split(' ')
-                if len(lvc_split) == 2:
-                    x_coordinate, y_coordinate = lvc_split
-                elif len(lvc_split) == 3:
-                    x_coordinate, y_coordinate, z_coordinate = lvc_split
-                else:
-                    raise TopologyDimensionError(topology_dim)
+                lvc_split = location_var_coordinates.strip().split(' ')
+                for lvc in lvc_split:
+                    var_coord = nc_vars[lvc]
+                    try:
+                        var_coord_standard_name = var_coord.standard_name
+                        if var_coord_standard_name == 'longitude':
+                            x_coordinate = lvc
+                        elif var_coord_standard_name == 'latitude':
+                            y_coordinate = lvc
+                    except AttributeError:
+                        if 'lon' in var_coord.name.lower():
+                            x_coordinate = lvc
+                        elif 'lat' in var_coord.name.lower():
+                            y_coordinate = lvc
+                if len(lvc_split) == 3:
+                    z_coordinate = lvc_split[-1]
                 break
             except AttributeError:
                 # run through this if a location attributed is defined, but not coordinates
@@ -174,51 +159,6 @@ class NetCDFDataset(object):
         else:
             coordinate_result = None
         return coordinate_result
-    
-    @deprecated
-    def find_coordinations_by_location(self, location_str, topology_dim):
-        """
-        Find a variable with a location attribute equal
-        to location_str.
-        
-        Location is a required attribute per SGRID conventions.
-        
-        :param str location_str: the location value to search for
-        :param int topology_dim: the topology dimension of the grid
-        """
-        nc_vars = self.ncd.variables
-        vars_with_location = self.search_variables_by_location(location_str)
-        result = None
-        for nc_var in vars_with_location:
-            nc_var_obj = nc_vars[nc_var]
-            try:
-                nc_var_coordinates = nc_var_obj.coordinates
-                nc_var_coord_split = nc_var_coordinates.strip().split(' ')
-                x_coordinate = None
-                y_coordinate = None
-                z_coordinate = None
-                for nc_var_coord in nc_var_coord_split:
-                    var_coord = nc_vars[nc_var_coord]
-                    try:
-                        var_coord_standard_name = var_coord.standard_name
-                        if var_coord_standard_name == 'longitude':
-                            x_coordinate = nc_var_coord
-                        elif var_coord_standard_name == 'latitude':
-                            y_coordinate = nc_var_coord
-                    except AttributeError:
-                        continue
-                if topology_dim == 2:
-                    result = (x_coordinate, y_coordinate)
-                elif topology_dim == 3:
-                    # finding the z_coordinate isn't fully baked yet
-                    result = (x_coordinate, y_coordinate, z_coordinate)
-                else:
-                    raise Exception('I have no idea what to do....')
-                break
-            except AttributeError:
-                result = None
-                continue
-        return result
 
     def sgrid_compliant_file(self):
         """
