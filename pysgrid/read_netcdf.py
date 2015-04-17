@@ -97,7 +97,11 @@ class NetCDFDataset(object):
                 topology_dim = None
             if cf_role == 'grid_topology' and topology_dim >= 2:
                 grid_topology_vars.append(nc_var)
-        return grid_topology_vars
+        if len(grid_topology_vars) > 0:
+            grid_topology_var = grid_topology_vars[0]
+        else:
+            grid_topology_var = None
+        return grid_topology_var
     
     def search_variables_by_location(self, location_str):
         nc_vars = self.ncd.variables
@@ -228,12 +232,200 @@ class NetCDFDataset(object):
         
         """
         grid_vars = self.find_grid_topology_vars()
-        if len(grid_vars) > 0:
+        if grid_vars is not None:
             sgrid_compliant = True
         else:
             sgrid_compliant = False
         return sgrid_compliant
-
+    
+    
+class SGridND(object):
+    
+    topology_dim = None
+    
+    def __init__(self, sgrid, nc_dataset, topology_variable):
+        self._sgrid = sgrid
+        self.nc_dataset = nc_dataset
+        self.ncd = NetCDFDataset(self.nc_dataset)
+        self.topology_variable = topology_variable  # the netCDF variable with a cf_role of 'grid_topology'
+        self.topology_var = self.nc_dataset.variables[self.topology_variable]
+        self.pp = ParsePadding(self.topology_variable)
+        
+    @property
+    def sgrid(self):
+        return self._sgrid
+    
+    def set_edge1_dimensions(self):
+        try:
+            edge1_dim = self.topology_var.edge1_dimensions
+            edge1_dim_padding = self.pp.parse_padding(edge1_dim)
+            self._sgrid.edge_1_dimension = edge1_dim
+            self._sgrid.edge_1_padding = edge1_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_edge1_coordinates(self):
+        try:
+            edge1_coordinates = self.topology_var.edge1_coordinates
+            edge1_coordinates_val = edge1_coordinates.split(' ')
+            self._sgrid.edge_1_coordinates = tuple(edge1_coordinates_val)
+        except AttributeError:
+            pass
+        
+    def set_edge2_dimensions(self):
+        try:
+            edge2_dim = self.topology_var.edge2_dimensions
+            edge2_dim_padding = self.pp.parse_padding(edge2_dim)
+            self._sgrid.edge_2_dimension = edge2_dim
+            self._sgrid.edge_2_padding = edge2_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_edge2_coordinates(self):
+        try:
+            edge2_coordinates = self.topology_var.edge2_coordinates
+            edge2_coordinates_val = edge2_coordinates.split(' ')
+            self._sgrid.edge_2_padding = tuple(edge2_coordinates_val)
+        except AttributeError:
+            pass
+        
+    def set_all_edge_attributes(self):
+        self.set_edge1_dimensions()
+        self.set_edge1_coordinates()
+        self.set_edge2_dimensions()
+        self.set_edge2_coordinates()
+        
+    def set_sgrid_topology_dimension(self):
+        topology_dim = self.topology_var.topology_dimension
+        self._sgrid.topology_dimension = topology_dim
+        
+    def set_sgrid_vertical_dimensions(self):
+        try:
+            vertical_dim = self.topology_var.vertical_dimensions
+            vertical_dim_padding = self.pp.parse_padding(vertical_dim)
+            self._sgrid.vertical_dimensions = vertical_dim
+            self._sgrid.vertical_padding = vertical_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_sgrid_node_coordinates(self):
+        try:
+            node_coordinates = self.topology_var.node_coordinates
+            node_coordinate_val = node_coordinates.split(' ')
+            self._sgrid.node_coordinates = tuple(node_coordinate_val)
+        except AttributeError:
+            grid_cell_node_vars = self.ncd.find_grid_cell_node_vars()
+            self._sgrid.node_coordinates = grid_cell_node_vars
+            
+    def set_sgrid_variable_attributes(self):
+        dataset_variables = []
+        grid_variables = []
+        nc_variables = self.nc_dataset.variables
+        for nc_variable in nc_variables:
+            nc_var = nc_variables[nc_variable]
+            nc_var_name = nc_var.name
+            dataset_variables.append(nc_var_name)
+            sgrid_var = SGridVariable.create_variable(nc_var)
+            var_center_slicing = determine_variable_slicing(self._sgrid,
+                                                            self.nc_dataset,
+                                                            nc_variable,
+                                                            method='center')
+            sgrid_var.center_slicing = var_center_slicing
+            self._sgrid.add_property(sgrid_var.variable, sgrid_var)
+            try:
+                if nc_var.grid:
+                    grid_variables.append(nc_var_name)
+            except AttributeError:
+                continue
+        self._sgrid.variables = dataset_variables
+        self._sgrid.grid_variables = grid_variables
+        
+    def set_sgrid_angles(self):
+        try:
+            grid_angles = self.nc_dataset.variables['angle'][:]
+            self._sgrid.angles = grid_angles
+        except KeyError:
+            pass
+    
+    def set_sgrid_nd_attributes(self):
+        self.set_sgrid_topology_dimension()
+        # set vertical dimensions
+        self.set_sgrid_vertical_dimensions()
+        # set node coordinates
+        self.set_sgrid_node_coordinates()
+        # set variables
+        self.set_sgrid_variable_attributes()
+        # set the angles
+        self.set_sgrid_angles()
+        
+    def set_all_face_attributes(self):
+        raise NotImplementedError
+        
+        
+class SGrid2D(SGridND):
+    
+    topology_dim = 2
+    
+    def set_face_dimensions(self):
+        try:
+            face_dim = self.topology_var.face_dimensions
+            face_dim_padding = self.pp.parse_padding(face_dim)
+            self._sgrid.face_dimensions = face_dim
+            self._sgrid.face_padding = face_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_face_coordindates(self):
+        try:
+            face_coordinates = self.topology_var.face_coordinates
+            face_coordinate_val = face_coordinates.split(' ')
+            self._sgrid.face_coordinates = tuple(face_coordinate_val)
+        except AttributeError:
+            grid_cell_center_vars = self.ncd.find_coordinates_by_location('face', self.topology_dim)
+            self._sgrid.face_coordinates = grid_cell_center_vars
+            
+    def set_all_face_attributes(self):
+        self.set_face_dimensions()
+        self.set_face_coordindates()
+            
+            
+class SGrid3D(SGridND):
+    
+    topology_dim = 3
+    
+    def set_volume_dimensions(self):
+        try:
+            vol_dim = self.topology_var.volume_dimensions
+            vol_dim_padding = self.pp.parse_padding(vol_dim)
+            self._sgrid.volume_dimensions = vol_dim
+            self._sgrid.volume_padding = vol_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_volume_coordinates(self):
+        try:
+            volume_coordinates = self.topology_var.volume_coordinates
+            volume_coordinates_val = volume_coordinates.split(' ')
+            self._sgrid.volume_coordinates = tuple(volume_coordinates_val)
+        except AttributeError:
+            grid_cell_center_vars = self.ncd.find_coordinates_by_location('volume', self.topology_dim)
+            self._sgrid.volume_coordinates = grid_cell_center_vars
+            
+    def set_edge3_dimensions(self):
+        try:
+            edge3_dim = self.topology_var.edge3_dimensions
+            edge3_dim_padding = self.pp.parse_padding(edge3_dim)
+            self._sgrid.edge_3_dimension = edge3_dim
+            self._sgrid.edge_3_padding = edge3_dim_padding
+        except AttributeError:
+            pass
+        
+    def set_all_edge_attributes(self):
+        self.set_edge1_dimensions()
+        self.set_edge1_coordinates()
+        self.set_edge2_dimensions()
+        self.set_edge2_coordinates()
+        self.set_edge3_dimensions()
 
 def load_grid_from_nc_file(nc_path, grid, grid_topology_vars=None, load_data=True):
     """
@@ -285,85 +477,85 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
         else:
             grid_topology_vars_attr = grid_topology_vars
         grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables
-        for topology_var in grid_topology_vars_attr:
-            nc_grid_topology_var = nc_dataset.variables[topology_var]
-            pp = ParsePadding(topology_var)
-            topology_dim = nc_grid_topology_var.topology_dimension
-            grid.topology_dimension = topology_dim
+        topology_var = grid_topology_vars_attr
+        nc_grid_topology_var = nc_dataset.variables[topology_var]
+        pp = ParsePadding(topology_var)
+        topology_dim = nc_grid_topology_var.topology_dimension
+        grid.topology_dimension = topology_dim
+        try:
+            # this gets run through if topology_dimension is 2
+            face_dim = nc_grid_topology_var.face_dimensions
+            face_dim_padding = pp.parse_padding(face_dim)
+            grid.face_dimensions = face_dim
+            grid.face_padding = face_dim_padding  # set face padding
+        except AttributeError:
+            pass
+        try:
+            # this gets run through if topology_dimension is 3
+            vol_dim = nc_grid_topology_var.volume_dimensions
+            vol_dim_padding = pp.parse_padding(vol_dim)
+            grid.volume_dimensions = vol_dim
+            grid.volume_padding = vol_dim_padding
+        except AttributeError:
+            pass
+        try:
+            edge1_dim = nc_grid_topology_var.edge1_dimensions
+            edge1_dim_padding = pp.parse_padding(edge1_dim)
+            grid.edge_1_dimension = edge1_dim
+            grid.edge_1_padding = edge1_dim_padding  # set edge 1 padding
+        except AttributeError:
+            pass
+        try:
+            edge2_dim = nc_grid_topology_var.edge2_dimensions
+            edge2_dim_padding = pp.parse_padding(edge2_dim)
+            grid.edge_2_dimensions = edge2_dim
+            grid.edge_2_padding = edge2_dim_padding  # set edge 2 padding
+        except AttributeError:
+            pass
+        try:
+            vertical_dim = nc_grid_topology_var.vertical_dimensions
+            vertical_dim_padding = pp.parse_padding(vertical_dim)
+            grid.vertical_dimensions = vertical_dim
+            grid.vertical_padding = vertical_dim_padding  # set vertical padding
+        except AttributeError:
+            pass
+        if topology_dim == 3:
             try:
-                # this gets run through if topology_dimension is 2
-                face_dim = nc_grid_topology_var.face_dimensions
-                face_dim_padding = pp.parse_padding(face_dim)
-                grid.face_dimensions = face_dim
-                grid.face_padding = face_dim_padding  # set face padding
+                volume_coordinates = nc_grid_topology_var.volume_coordinates
+                volume_coordinate_val = volume_coordinates.split(' ')
+                grid.volume_coordinates = volume_coordinate_val
             except AttributeError:
-                pass
+                grid_cell_center_vars = ncd.find_coordinates_by_location('volume', topology_dim)
+                grid.volume_coordinates = grid_cell_center_vars
+        if topology_dim == 2:
             try:
-                # this gets run through if topology_dimension is 3
-                vol_dim = nc_grid_topology_var.volume_dimensions
-                vol_dim_padding = pp.parse_padding(vol_dim)
-                grid.volume_dimensions = vol_dim
-                grid.volume_padding = vol_dim_padding
+                face_coordinates = nc_grid_topology_var.face_coordinates
+                face_coordinate_val = face_coordinates.split(' ')
+                grid.face_coordinates = tuple(face_coordinate_val)
             except AttributeError:
-                pass
-            try:
-                edge1_dim = nc_grid_topology_var.edge1_dimensions
-                edge1_dim_padding = pp.parse_padding(edge1_dim)
-                grid.edge_1_dimension = edge1_dim
-                grid.edge_1_padding = edge1_dim_padding  # set edge 1 padding
-            except AttributeError:
-                pass
-            try:
-                edge2_dim = nc_grid_topology_var.edge2_dimensions
-                edge2_dim_padding = pp.parse_padding(edge2_dim)
-                grid.edge_2_dimensions = edge2_dim
-                grid.edge_2_padding = edge2_dim_padding  # set edge 2 padding
-            except AttributeError:
-                pass
-            try:
-                vertical_dim = nc_grid_topology_var.vertical_dimensions
-                vertical_dim_padding = pp.parse_padding(vertical_dim)
-                grid.vertical_dimensions = vertical_dim
-                grid.vertical_padding = vertical_dim_padding  # set vertical padding
-            except AttributeError:
-                pass
-            if topology_dim == 3:
-                try:
-                    volume_coordinates = nc_grid_topology_var.volume_coordinates
-                    volume_coordinate_val = volume_coordinates.split(' ')
-                    grid.volume_coordinates = volume_coordinate_val
-                except AttributeError:
-                    grid_cell_center_vars = ncd.find_coordinates_by_location('volume', topology_dim)
-                    grid.volume_coordinates = grid_cell_center_vars
-            if topology_dim == 2:
-                try:
-                    face_coordinates = nc_grid_topology_var.face_coordinates
-                    face_coordinate_val = face_coordinates.split(' ')
-                    grid.face_coordinates = tuple(face_coordinate_val)
-                except AttributeError:
-                    grid_cell_center_vars = ncd.find_coordinates_by_location('face', topology_dim)
-                    grid.face_coordinates = grid_cell_center_vars
-            try:
-                node_coordinates = nc_grid_topology_var.node_coordinates
-                node_coordinate_val = node_coordinates.split(' ')
-                grid.node_coordinates = tuple(node_coordinate_val)
-            except AttributeError:
-                grid_cell_node_vars = ncd.find_grid_cell_node_vars()
-                grid.node_coordinates = grid_cell_node_vars
-            try:
-                edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
-                edge_1_coordinates_val = edge_1_coordinates.split(' ')
-                grid.edge_1_coordinates = tuple(edge_1_coordinates_val)
-            except AttributeError:
-                edge_1_coordinates_val = ncd.find_coordinates_by_location('edge1', topology_dim)
-                grid.edge_1_coordinates = edge_1_coordinates_val
-            try:
-                edge_2_coordinates = nc_grid_topology_var.edge2_coordinates
-                edge_2_coordinates_val = edge_2_coordinates.split(' ')
-                grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
-            except AttributeError:
-                edge_2_coordinates_val = ncd.find_coordinates_by_location('edge2', topology_dim)
-                grid.edge_2_coordinates = edge_2_coordinates_val
+                grid_cell_center_vars = ncd.find_coordinates_by_location('face', topology_dim)
+                grid.face_coordinates = grid_cell_center_vars
+        try:
+            node_coordinates = nc_grid_topology_var.node_coordinates
+            node_coordinate_val = node_coordinates.split(' ')
+            grid.node_coordinates = tuple(node_coordinate_val)
+        except AttributeError:
+            grid_cell_node_vars = ncd.find_grid_cell_node_vars()
+            grid.node_coordinates = grid_cell_node_vars
+        try:
+            edge_1_coordinates = nc_grid_topology_var.edge1_coordinates
+            edge_1_coordinates_val = edge_1_coordinates.split(' ')
+            grid.edge_1_coordinates = tuple(edge_1_coordinates_val)
+        except AttributeError:
+            edge_1_coordinates_val = ncd.find_coordinates_by_location('edge1', topology_dim)
+            grid.edge_1_coordinates = edge_1_coordinates_val
+        try:
+            edge_2_coordinates = nc_grid_topology_var.edge2_coordinates
+            edge_2_coordinates_val = edge_2_coordinates.split(' ')
+            grid.edge_2_coordinates = tuple(edge_2_coordinates_val)
+        except AttributeError:
+            edge_2_coordinates_val = ncd.find_coordinates_by_location('edge2', topology_dim)
+            grid.edge_2_coordinates = edge_2_coordinates_val
         if grid.topology_dimension == 2:
             grid_cell_center_lon_var, grid_cell_center_lat_var = grid.face_coordinates
             grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = grid.node_coordinates
