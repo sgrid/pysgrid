@@ -42,13 +42,14 @@ class SGridVariable(object):
     
     """
     def __init__(self, variable=None, grid=None, 
-                 axes=None, slicing=None,
-                 dimensions=None, dtype=None,
-                 location=None):
+                 axes=None, center_slicing=None,
+                 node_slicing=None, dimensions=None, 
+                 dtype=None, location=None):
         self._variable = variable
         self._grid = grid
         self._axes = axes
-        self._slicing = slicing
+        self._center_slicing = center_slicing
+        self._node_slicing = node_slicing
         self._dimensions = dimensions
         self._dtype = dtype
         self._location = location
@@ -84,12 +85,31 @@ class SGridVariable(object):
         self._axes = variable_axes
         
     @property
-    def slicing(self):
-        return self._slicing
+    def center_slicing(self):
+        """
+        Get the slicing necessary
+        when averaging to grid cell
+        centers.
+        
+        """
+        return self._center_slicing
     
-    @slicing.setter
-    def slicing(self, variable_slicing):
-        self._slicing = variable_slicing
+    @center_slicing.setter
+    def center_slicing(self, variable_face_center_slicing):
+        self._center_slicing = variable_face_center_slicing
+        
+    @property
+    def node_slicing(self):
+        """
+        Get the slicing necessary
+        when averaging to grid nodes
+        
+        """
+        return self._node_slicing
+    
+    @node_slicing.setter
+    def node_slicing(self, variable_grid_node_slicing):
+        self._node_slicing = variable_grid_node_slicing
         
     @property
     def dimensions(self):

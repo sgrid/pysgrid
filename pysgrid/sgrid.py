@@ -15,42 +15,36 @@ class SGrid(object):
                       'high': (None, 1)
                       }
     
-    def __init__(self, nodes=None, centers=None, faces=None, 
-                 edges=None, node_padding=None, face_padding=None,
-                 edge_1_padding=None, edge_2_padding=None,
-                 vertical_padding=None, grid_topology_vars=None,
-                 grid_cell_center_vars=None, grid_times=None, 
-                 variables=None, dimensions=None, face_coordinates=None,
-                 node_coordinates=None, edge_1_coordinates=None,
-                 edge_2_coordinates=None, angles=None,
-                 node_dim=None, face_dim=None,
-                 vertical_dim=None, edge_1_dim=None,
-                 edge_2_dim=None, grid_variables=None):
-        self._nodes = nodes
-        self._centers = centers
-        self._faces = faces
-        self._edges = edges
-        self._node_padding = node_padding
-        self._face_padding = face_padding
-        self._edge_1_padding = edge_1_padding
-        self._edge_2_padding = edge_2_padding
-        self._vertical_padding = vertical_padding
-        self._grid_topology_vars = grid_topology_vars
-        self._grid_times = grid_times
-        self._variables = variables
-        self._grid_variables = grid_variables
-        self._dimensions = dimensions
-        self._face_coordinates = face_coordinates
-        self._node_coordinates = node_coordinates
-        self._edge_1_coordinates = edge_1_coordinates
-        self._edge_2_coordinates = edge_2_coordinates
-        self._angles = angles
+    def __init__(self):
+        self._nodes = None
+        self._centers = None
+        self._faces = None
+        self._edges = None
+        self._node_padding = None
+        self._face_padding = None
+        self._volume_padding = None
+        self._edge_1_padding = None
+        self._edge_2_padding = None
+        self._vertical_padding = None
+        self._grid_topology_vars = None
+        self._grid_times = None
+        self._variables = None
+        self._grid_variables = None
+        self._topology_dimension = None
+        self._dimensions = None
+        self._face_coordinates = None
+        self._volume_coordinates = None
+        self._node_coordinates = None
+        self._edge_1_coordinates = None
+        self._edge_2_coordinates = None
+        self._angles = None
         # attributes for the verbatim padding text
-        self._node_dimensions = node_dim
-        self._face_dimensions = face_dim
-        self._vertical_dimensions = vertical_dim
-        self._edge_1_dimensions = edge_1_dim
-        self._edge_2_dimensions = edge_2_dim
+        self._node_dimensions = None
+        self._face_dimensions = None
+        self._volume_dimensions = None
+        self._vertical_dimensions = None
+        self._edge_1_dimensions = None
+        self._edge_2_dimensions = None
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -80,6 +74,7 @@ class SGrid(object):
     def variables(self):
         """
         Return a list of variables
+        
         """
         return self._variables
     
@@ -92,6 +87,7 @@ class SGrid(object):
         """
         Return a list of variables
         with a grid attribute.
+        
         """
         return self._grid_variables
     
@@ -100,10 +96,19 @@ class SGrid(object):
         self._grid_variables = dataset_grid_variables
         
     @property
+    def topology_dimension(self):
+        return self._topology_dimension
+    
+    @topology_dimension.setter
+    def topology_dimension(self, dataset_topology_dimension):
+        self._topology_dimension = dataset_topology_dimension
+        
+    @property
     def dimensions(self):
         """
         Return list of tuples containing
         dimension name and size.
+        
         """
         return self._dimensions
     
@@ -140,6 +145,7 @@ class SGrid(object):
         """
         return the vertices of the grid as arrays 
         of lon, lat pairs.
+        
         """
         return self._nodes
         
@@ -212,6 +218,30 @@ class SGrid(object):
         self._edge_2_dimensions = e2_dim
         
     @property
+    def volume_padding(self):
+        return self._volume_padding
+    
+    @volume_padding.setter
+    def volume_padding(self, vol_padding):
+        self._volume_padding = vol_padding
+        
+    @property
+    def volume_dimensions(self):
+        return self._volume_dimensions
+    
+    @volume_dimensions.setter
+    def volume_dimensions(self, volume_dims):
+        self._volume_dimensions = volume_dims
+        
+    @property
+    def volume_coordinates(self):
+        return self._volume_coordinates
+    
+    @volume_coordinates.setter
+    def volume_coordinates(self, vol_coordinates):
+        self._volume_coordinates = vol_coordinates
+        
+    @property
     def angles(self):
         return self._angles
     
@@ -240,6 +270,7 @@ class SGrid(object):
         """
         return the coordinates of the grid centers
         as arrays of lon, lat pairs.
+        
         """
         return self._centers
     
@@ -256,7 +287,13 @@ class SGrid(object):
         self._grid_times = grid_times
         
     def _define_face_padding_summary(self):
-        all_padding = self._face_padding + self._vertical_padding
+        all_padding = []
+        if self._volume_padding is not None:
+            all_padding += self._volume_padding
+        if self._face_padding is not None:
+            all_padding += self._face_padding
+        if self._vertical_padding is not None:
+            all_padding += self._vertical_padding
         if self._edge_1_padding is not None:
             all_padding += self._edge_1_padding
         if self._edge_2_padding is not None:
@@ -294,7 +331,7 @@ class SGrid(object):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            grid_var = self._grid_topology_vars[0]
+            grid_var = self._grid_topology_vars
             # create dimensions
             for grid_dim in self._dimensions:
                 dim_name, dim_size = grid_dim
@@ -348,9 +385,12 @@ class SGrid(object):
                     dataset_grid_var.grid = grid_var
             # add attributes to the variables
             grid_vars.cf_role = 'grid_topology'
-            grid_vars.topology_dimension = 2
+            grid_vars.topology_dimension = self._topology_dimension
             grid_vars.node_dimensions = self._node_dimensions
-            grid_vars.face_dimensions = self._face_dimensions
+            if self._face_dimensions is not None:
+                grid_vars.face_dimensions = self._face_dimensions
+            if self._volume_dimensions is not None:
+                grid_vars.volume_dimensions = self._volume_dimensions
             if self._edge_1_dimensions is not None:
                 grid_vars.edge1_dimensions = self._edge_1_dimensions
             if self._edge_2_dimensions is not None:
@@ -359,6 +399,8 @@ class SGrid(object):
                 grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self._face_coordinates)
+            if self._volume_coordinates is not None:
+                grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
             if self._node_coordinates is not None:
                 grid_vars.node_coordinates = ' '.join(self._node_coordinates)
             if self._edge_1_coordinates is not None:

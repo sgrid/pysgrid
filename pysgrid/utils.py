@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from .custom_exceptions import CannotFindPaddingError, DimensionMismatchError
+from .custom_exceptions import CannotFindPaddingError
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
@@ -29,7 +29,12 @@ def check_array_dims(*args):
     array_shapes = [arr.shape for arr in args]
     arrays_match = check_element_equal(array_shapes)
     if not arrays_match:
-        raise DimensionMismatchError(*array_shapes)
+        error_message = ('The is a dimension mismatch between arrays with shapes: {0}. '
+                         'Arrays must have the same same to use this function.')
+        array_shapes_str = [str(arr) for arr in array_shapes]
+        shape_str = ', '.join(array_shapes_str)
+        message = error_message.format(shape_str)
+        raise ValueError(message)
     else:
         pass
 
@@ -51,10 +56,10 @@ def pair_arrays(x_array, y_array):
     """
     check_array_dims(x_array, y_array)
     x_shape = x_array.shape
-    paired_array_shape = x_shape + (2, )
+    paired_array_shape = x_shape + (2,)
     paired_array = np.empty(paired_array_shape, dtype=np.float64)
-    paired_array[:, :, 0] = x_array[:]
-    paired_array[:, :, 1] = y_array[:]
+    paired_array[..., 0] = x_array[:]
+    paired_array[..., 1] = y_array[:]
     return paired_array
 
 
@@ -99,35 +104,15 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     if method == 'center':
         for var_dim in var_dims:
             try:
-                if (
-                    (sgrid_obj.edge_1_padding is None) and 
-                    (sgrid_obj.edge_2_padding is None) and 
-                    (variable in grid_variables)
-                    ):
-                    # define padding for WRF or Deltares datasets
-                    # deal with variables defined on the grid
-                    # search through padding to find the variables dimension
-                    padding_info = next((info for info in padding_summary if info[1] == var_dim))
-                elif (
-                      (sgrid_obj.edge_1_padding is None) and 
-                      (sgrid_obj.edge_2_padding is None) and 
-                      (variable not in grid_variables)
-                      ):
-                    # define padding for WRF or Deltares datasets
-                    # deal with with variables not defined on the grid
-                    padding_info = next((info for info in padding_summary if info[0] == var_dim))
-                else:
-                    # failing that, treat dataset as a ROMS dataset
-                    # search through padding to find the variables dimension
-                    padding_info = next((info for info in padding_summary if info[0] == var_dim))
+                padding_info = next((info for info in padding_summary if info[0] == var_dim))
                 padding_val = padding_info[-1]
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
             except StopIteration:
                 slice_index = np.s_[:]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
     else:
         pass
     return slice_indices
@@ -138,13 +123,7 @@ class ParsePadding(object):
     Parse out the padding types from
     variables with a cf_role of 'grid_topology'.
     
-    """
-    padding_slices = {'both': (1, -1),
-                      'none': (None, None),
-                      'low': (1, None),
-                      'high': (None, 1)
-                      }
-    
+    """    
     def __init__(self, mesh_topology_var=None):
         self.mesh_topology_var = mesh_topology_var
 
