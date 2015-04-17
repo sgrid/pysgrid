@@ -4,7 +4,6 @@ Created on Apr 2, 2015
 @author: ayan
 '''
 import numpy as np
-from .utils import check_array_dims
 
 
 def vector_sum(x_arr, y_arr):
@@ -20,7 +19,6 @@ def vector_sum(x_arr, y_arr):
     :rtype: numpy.array
     
     """
-    check_array_dims(x_arr, y_arr)
     vector_sum = np.sqrt(x_arr**2 + y_arr**2)
     return vector_sum
 
@@ -43,7 +41,6 @@ def rotate_vectors(x_arr, y_arr, angle_arr):
     :rtype: tuple
     
     """
-    check_array_dims(x_arr, y_arr, angle_arr)
     x_rot = x_arr*np.cos(angle_arr) - y_arr*np.sin(angle_arr)
     y_rot = x_arr*np.sin(angle_arr) + y_arr*np.cos(angle_arr)
     return x_rot, y_rot
