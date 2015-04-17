@@ -15,64 +15,36 @@ class SGrid(object):
                       'high': (None, 1)
                       }
     
-    def __init__(self, nodes=None, 
-                 centers=None, 
-                 faces=None, 
-                 edges=None, 
-                 node_padding=None, 
-                 face_padding=None,
-                 volume_padding=None,
-                 edge_1_padding=None, 
-                 edge_2_padding=None,
-                 vertical_padding=None, 
-                 grid_topology_vars=None, 
-                 topology_dimension=None, 
-                 grid_cell_center_vars=None, 
-                 grid_times=None, 
-                 variables=None, 
-                 dimensions=None, 
-                 face_coordinates=None,
-                 volume_coordinates=None,
-                 node_coordinates=None, 
-                 edge_1_coordinates=None,
-                 edge_2_coordinates=None, 
-                 angles=None,
-                 node_dim=None, 
-                 face_dim=None,
-                 volume_dim=None,
-                 vertical_dim=None, 
-                 edge_1_dim=None,
-                 edge_2_dim=None, 
-                 grid_variables=None):
-        self._nodes = nodes
-        self._centers = centers
-        self._faces = faces
-        self._edges = edges
-        self._node_padding = node_padding
-        self._face_padding = face_padding
-        self._volume_padding = volume_padding
-        self._edge_1_padding = edge_1_padding
-        self._edge_2_padding = edge_2_padding
-        self._vertical_padding = vertical_padding
-        self._grid_topology_vars = grid_topology_vars
-        self._grid_times = grid_times
-        self._variables = variables
-        self._grid_variables = grid_variables
-        self._topology_dimension = topology_dimension
-        self._dimensions = dimensions
-        self._face_coordinates = face_coordinates
-        self._volume_coordinates = volume_coordinates
-        self._node_coordinates = node_coordinates
-        self._edge_1_coordinates = edge_1_coordinates
-        self._edge_2_coordinates = edge_2_coordinates
-        self._angles = angles
+    def __init__(self):
+        self._nodes = None
+        self._centers = None
+        self._faces = None
+        self._edges = None
+        self._node_padding = None
+        self._face_padding = None
+        self._volume_padding = None
+        self._edge_1_padding = None
+        self._edge_2_padding = None
+        self._vertical_padding = None
+        self._grid_topology_vars = None
+        self._grid_times = None
+        self._variables = None
+        self._grid_variables = None
+        self._topology_dimension = None
+        self._dimensions = None
+        self._face_coordinates = None
+        self._volume_coordinates = None
+        self._node_coordinates = None
+        self._edge_1_coordinates = None
+        self._edge_2_coordinates = None
+        self._angles = None
         # attributes for the verbatim padding text
-        self._node_dimensions = node_dim
-        self._face_dimensions = face_dim
-        self._volume_dimensions = volume_dim
-        self._vertical_dimensions = vertical_dim
-        self._edge_1_dimensions = edge_1_dim
-        self._edge_2_dimensions = edge_2_dim
+        self._node_dimensions = None
+        self._face_dimensions = None
+        self._volume_dimensions = None
+        self._vertical_dimensions = None
+        self._edge_1_dimensions = None
+        self._edge_2_dimensions = None
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
