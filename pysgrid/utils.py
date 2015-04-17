@@ -6,7 +6,7 @@ Created on Mar 23, 2015
 import re
 from collections import namedtuple
 import numpy as np
-from .custom_exceptions import CannotFindPaddingError, DimensionMismatchError
+from .custom_exceptions import CannotFindPaddingError
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
@@ -29,7 +29,12 @@ def check_array_dims(*args):
     array_shapes = [arr.shape for arr in args]
     arrays_match = check_element_equal(array_shapes)
     if not arrays_match:
-        raise DimensionMismatchError(*array_shapes)
+        error_message = ('The is a dimension mismatch between arrays with shapes: {0}. '
+                         'Arrays must have the same same to use this function.')
+        array_shapes_str = [str(arr) for arr in array_shapes]
+        shape_str = ', '.join(array_shapes_str)
+        message = error_message.format(shape_str)
+        raise ValueError(message)
     else:
         pass
 

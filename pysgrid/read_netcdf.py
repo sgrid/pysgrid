@@ -4,7 +4,7 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 import netCDF4 as nc4
-from .custom_exceptions import SGridNonCompliantError, TopologyDimensionError
+from .custom_exceptions import SGridNonCompliantError
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
 from .variables import SGridVariable
 from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
@@ -501,7 +501,7 @@ def load_grid_from_nc_dataset(nc_dataset, grid,
             sg3.set_sgrid_variable_attributes()
             result_sgrid = sg3.sgrid
         else:
-            raise TopologyDimensionError(nc_grid_topology_var.topology_dimension)
+            raise ValueError('A topology dimension of {0} is unsupported'.format(nc_grid_topology_var.topology_dimension))
         return result_sgrid
     else:
         raise SGridNonCompliantError(nc_dataset)

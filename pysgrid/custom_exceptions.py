@@ -27,37 +27,6 @@ class SGridNonCompliantError(Exception):
         return error_message
     
     
-class TopologyDimensionError(Exception):
-    
-    base_message = 'A topology dimension of {0} is unsupported by this package.'
-    
-    def __init__(self, topology_dim):
-        self.topology_dim = topology_dim
-        
-    def __str__(self):
-        error_message = self.base_message.format(self.topology_dim)
-        return error_message
-    
-    
-class DimensionMismatchError(Exception):
-    
-    def __init__(self, *args):
-        self.args = args
-        
-    def __str__(self):
-        error_message = ('The is a dimension mismatch between arrays with shapes {0}. '
-                         'Arrays must have the same same to use this function.')
-        array_shapes = [str(arr.shape) for arr in self.args]
-        array_shapes_count = len(array_shapes)
-        if array_shapes_count == 2:
-            shape_str = 'and '.join(array_shapes)
-        else:
-            shape_str_intermediate = ', '.join(array_shapes).rsplit(',', 1)
-            shape_str = ', and'.join(shape_str_intermediate)
-        filled_message = error_message.format(shape_str)
-        return filled_message
-    
-    
 def deprecated(deprecated_function):
     @functools.wraps(deprecated_function)
     def new_func(*args, **kwargs):
