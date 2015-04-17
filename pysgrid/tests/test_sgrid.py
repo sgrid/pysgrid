@@ -208,5 +208,10 @@ class Test3DimensionalSGrid(unittest.TestCase):
         centers_shape = self.sg_obj.centers.shape
         expected_shape = (2, 5, 4, 2)
         self.assertEqual(centers_shape, expected_shape)
+        
+    def test_topology_dimension(self):
+        topology_dim = self.sg_obj.topology_dimension
+        expected_topology_dim = 3
+        self.assertEqual(topology_dim, expected_topology_dim)
 
     
