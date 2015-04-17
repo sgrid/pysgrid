@@ -23,7 +23,7 @@ class SGridNonCompliantError(Exception):
         self.dataset_obj = dataset_obj
         
     def __str__(self):
-        error_message = self.base_message.format(self.dataset_obj)
+        error_message = self.base_message.format(self.dataset_obj.filepath())
         return error_message
     
     
