@@ -39,15 +39,16 @@ class NetCDFDataset(object):
         grid_cell_node_lon = None
         grid_cell_node_lat = None
         for nc_var in nc_vars.keys():
+            nc_var_obj = nc_vars[nc_var]
             try:
-                nc_var_obj = nc_vars[nc_var]
                 nc_var_long_name = nc_var_obj.long_name
+            except AttributeError:
+                continue
+            else:
                 if nc_var_long_name in LON_GRID_CELL_NODE_LONG_NAME:
                     grid_cell_node_lon = nc_var
                 if nc_var_long_name in LAT_GRID_CELL_NODE_LONG_NAME:
                     grid_cell_node_lat = nc_var
-            except AttributeError:
-                continue
         return grid_cell_node_lon, grid_cell_node_lat
         
     def find_grid_topology_vars(self):
@@ -67,10 +68,11 @@ class NetCDFDataset(object):
             nc_var_obj = nc_vars[nc_var]
             try:
                 cf_role = nc_var_obj.cf_role.strip()
-                topology_dim = nc_var_obj.topology_dimension
             except AttributeError:
                 cf_role = None
                 topology_dim = None
+            else:
+                topology_dim = nc_var_obj.topology_dimension
             if cf_role == 'grid_topology' and topology_dim >= 2:
                 grid_topology_vars.append(nc_var)
         if len(grid_topology_vars) > 0:
@@ -86,10 +88,11 @@ class NetCDFDataset(object):
             nc_var_obj = nc_vars[nc_var]
             try:
                 nc_var_location = nc_var_obj.location
-                if nc_var_location == location_str:
-                    search_results.append(nc_var)
             except AttributeError:
                 continue
+            else:
+                if nc_var_location == location_str:
+                    search_results.append(nc_var)
         return search_results
     
     def find_coordinates_by_location(self, location_str, topology_dim):
@@ -114,23 +117,6 @@ class NetCDFDataset(object):
             location_var_dims = location_var.dimensions
             try:
                 location_var_coordinates = location_var.coordinates
-                lvc_split = location_var_coordinates.strip().split(' ')
-                for lvc in lvc_split:
-                    var_coord = nc_vars[lvc]
-                    try:
-                        var_coord_standard_name = var_coord.standard_name
-                        if var_coord_standard_name == 'longitude':
-                            x_coordinate = lvc
-                        elif var_coord_standard_name == 'latitude':
-                            y_coordinate = lvc
-                    except AttributeError:
-                        if 'lon' in var_coord.name.lower():
-                            x_coordinate = lvc
-                        elif 'lat' in var_coord.name.lower():
-                            y_coordinate = lvc
-                if len(lvc_split) == 3:
-                    z_coordinate = lvc_split[-1]
-                break
             except AttributeError:
                 # run through this if a location attributed is defined, but not coordinates
                 potential_coordinates = []
@@ -149,7 +135,26 @@ class NetCDFDataset(object):
                     elif 'lat' in pc_name.lower():
                         y_coordinate = pc_name
                     else:
-                        z_coordinate = pc_name  # this might not always work... 
+                        z_coordinate = pc_name  # this might not always work...
+            else:
+                lvc_split = location_var_coordinates.strip().split(' ')
+                for lvc in lvc_split:
+                    var_coord = nc_vars[lvc]
+                    try:
+                        var_coord_standard_name = var_coord.standard_name
+                    except AttributeError:
+                        if 'lon' in var_coord.name.lower():
+                            x_coordinate = lvc
+                        elif 'lat' in var_coord.name.lower():
+                            y_coordinate = lvc
+                    else:
+                        if var_coord_standard_name == 'longitude':
+                            x_coordinate = lvc
+                        elif var_coord_standard_name == 'latitude':
+                            y_coordinate = lvc
+                if len(lvc_split) == 3:
+                    z_coordinate = lvc_split[-1]
+                break 
         if topology_dim == 2:
             coordinates = (x_coordinate, y_coordinate)
         else:
@@ -206,36 +211,40 @@ class SGridND(object):
     def set_edge1_dimensions(self):
         try:
             edge1_dim = self.topology_var.edge1_dimensions
+        except AttributeError:
+            pass
+        else:
             edge1_dim_padding = self.pp.parse_padding(edge1_dim)
             self._sgrid.edge_1_dimension = edge1_dim
             self._sgrid.edge_1_padding = edge1_dim_padding
-        except AttributeError:
-            pass
         
     def set_edge1_coordinates(self):
         try:
             edge1_coordinates = self.topology_var.edge1_coordinates
-            edge1_coordinates_val = edge1_coordinates.split(' ')
-            self._sgrid.edge_1_coordinates = tuple(edge1_coordinates_val)
         except AttributeError:
             pass
+        else:
+            edge1_coordinates_val = edge1_coordinates.split(' ')
+            self._sgrid.edge_1_coordinates = tuple(edge1_coordinates_val)
         
     def set_edge2_dimensions(self):
         try:
             edge2_dim = self.topology_var.edge2_dimensions
+        except AttributeError:
+            pass
+        else:
             edge2_dim_padding = self.pp.parse_padding(edge2_dim)
             self._sgrid.edge_2_dimension = edge2_dim
             self._sgrid.edge_2_padding = edge2_dim_padding
-        except AttributeError:
-            pass
         
     def set_edge2_coordinates(self):
         try:
             edge2_coordinates = self.topology_var.edge2_coordinates
-            edge2_coordinates_val = edge2_coordinates.split(' ')
-            self._sgrid.edge_2_coordinates = tuple(edge2_coordinates_val)
         except AttributeError:
             pass
+        else:
+            edge2_coordinates_val = edge2_coordinates.split(' ')
+            self._sgrid.edge_2_coordinates = tuple(edge2_coordinates_val)
         
     def set_all_edge_attributes(self):
         self.set_edge1_dimensions()
@@ -250,20 +259,22 @@ class SGridND(object):
     def set_sgrid_vertical_dimensions(self):
         try:
             vertical_dim = self.topology_var.vertical_dimensions
+        except AttributeError:
+            pass
+        else:
             vertical_dim_padding = self.pp.parse_padding(vertical_dim)
             self._sgrid.vertical_dimensions = vertical_dim
             self._sgrid.vertical_padding = vertical_dim_padding
-        except AttributeError:
-            pass
         
     def set_sgrid_node_coordinates(self):
         try:
             node_coordinates = self.topology_var.node_coordinates
-            node_coordinate_val = node_coordinates.split(' ')
-            self._sgrid.node_coordinates = tuple(node_coordinate_val)
         except AttributeError:
             grid_cell_node_vars = self.ncd.find_grid_cell_node_vars()
             self._sgrid.node_coordinates = grid_cell_node_vars
+        else:
+            node_coordinate_val = node_coordinates.split(' ')
+            self._sgrid.node_coordinates = tuple(node_coordinate_val)
             
     def set_sgrid_variable_attributes(self):
         dataset_variables = []
@@ -332,20 +343,22 @@ class SGrid2D(SGridND):
     def set_face_dimensions(self):
         try:
             face_dim = self.topology_var.face_dimensions
+        except AttributeError:
+            pass
+        else:
             face_dim_padding = self.pp.parse_padding(face_dim)
             self._sgrid.face_dimensions = face_dim
             self._sgrid.face_padding = face_dim_padding
-        except AttributeError:
-            pass
         
     def set_face_coordindates(self):
         try:
             face_coordinates = self.topology_var.face_coordinates
-            face_coordinate_val = face_coordinates.split(' ')
-            self._sgrid.face_coordinates = tuple(face_coordinate_val)
         except AttributeError:
             grid_cell_center_vars = self.ncd.find_coordinates_by_location('face', self.topology_dim)
             self._sgrid.face_coordinates = grid_cell_center_vars
+        else:
+            face_coordinate_val = face_coordinates.split(' ')
+            self._sgrid.face_coordinates = tuple(face_coordinate_val)
             
     def set_all_face_attributes(self):
         self.set_face_dimensions()
@@ -371,29 +384,32 @@ class SGrid3D(SGridND):
     def set_volume_dimensions(self):
         try:
             vol_dim = self.topology_var.volume_dimensions
+        except AttributeError:
+            pass
+        else:
             vol_dim_padding = self.pp.parse_padding(vol_dim)
             self._sgrid.volume_dimensions = vol_dim
             self._sgrid.volume_padding = vol_dim_padding
-        except AttributeError:
-            pass
         
     def set_volume_coordinates(self):
         try:
             volume_coordinates = self.topology_var.volume_coordinates
-            volume_coordinates_val = volume_coordinates.split(' ')
-            self._sgrid.volume_coordinates = tuple(volume_coordinates_val)
         except AttributeError:
             grid_cell_center_vars = self.ncd.find_coordinates_by_location('volume', self.topology_dim)
             self._sgrid.volume_coordinates = grid_cell_center_vars
+        else:
+            volume_coordinates_val = volume_coordinates.split(' ')
+            self._sgrid.volume_coordinates = tuple(volume_coordinates_val)
             
     def set_edge3_dimensions(self):
         try:
             edge3_dim = self.topology_var.edge3_dimensions
+        except AttributeError:
+            pass
+        else:
             edge3_dim_padding = self.pp.parse_padding(edge3_dim)
             self._sgrid.edge_3_dimension = edge3_dim
             self._sgrid.edge_3_padding = edge3_dim_padding
-        except AttributeError:
-            pass
         
     def set_all_edge_attributes(self):
         self.set_edge1_dimensions()
