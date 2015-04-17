@@ -20,24 +20,19 @@ class TestNetCDFDataset(unittest.TestCase):
         self.ds = nc4.Dataset(self.sgrid_test_file)
         self.nc_ds = NetCDFDataset(self.ds)
         
-    def test_finding_center_variables(self):
-        result = self.nc_ds.find_grid_cell_center_vars()
-        expected = ('lon_center', 'lat_center')
-        self.assertEqual(result, expected)
-        
     def test_finding_node_variables(self):
         result = self.nc_ds.find_grid_cell_node_vars()
         expected = ('lon_node', 'lat_node')
         self.assertEqual(result, expected)
         
-    def test_find_coordinations_by_location(self):
-        result = self.nc_ds.find_coordinations_by_location('faces')
+    def test_find_coordinatates_by_location(self):
+        result = self.nc_ds.find_coordinates_by_location('faces', 2)
         expected = ('lon_center', 'lat_center')
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):
         result = self.nc_ds.find_grid_topology_vars()
-        expected = ['grid']
+        expected = 'grid'
         self.assertEqual(result, expected)
         
     def test_sgrid_compliant_check(self):

@@ -9,6 +9,7 @@ import netCDF4 as nc4
 import numpy as np
 import mock
 from ..sgrid import SGrid
+from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
 
 
@@ -87,12 +88,12 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(dataset_vars, expected_vars)
 
     def test_variable_slicing(self):
-        u_slices = self.sg_obj.u.slicing
-        v_slices = self.sg_obj.v.slicing
-        u_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
-        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
-        self.assertEqual(u_slices, u_expected)
-        self.assertEqual(v_slices, v_expected)
+        u_center_slices = self.sg_obj.u.center_slicing
+        v_center_slices = self.sg_obj.v.center_slicing
+        u_center_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
+        v_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
+        self.assertEqual(u_center_slices, u_center_expected)
+        self.assertEqual(v_center_slices, v_center_expected)
         
     def test_optional_grid_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
@@ -131,19 +132,24 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_shape = (4, 4, 2)
         self.assertEqual(centers_shape, expected_shape)
         
+    def test_topology_dimension(self):
+        topology_dim = self.sg_obj.topology_dimension
+        expected_dim = 2
+        self.assertEqual(topology_dim, expected_dim)
+        
     def test_variable_slice(self):
-        u_slices = self.sg_obj.U1.slicing
-        v_slices = self.sg_obj.V1.slicing
-        u_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
-        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
-        xz_slices = self.sg_obj.XZ.slicing
-        xcor_slices = self.sg_obj.XCOR.slicing
-        xz_expected = (np.s_[1:], np.s_[1:])
-        xcor_expected  = (np.s_[:], np.s_[:])
-        self.assertEqual(u_slices, u_expected)
-        self.assertEqual(v_slices, v_expected)
-        self.assertEqual(xz_slices, xz_expected)
-        self.assertEqual(xcor_slices, xcor_expected)
+        u_center_slices = self.sg_obj.U1.center_slicing
+        v_center_slices = self.sg_obj.V1.center_slicing
+        u_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
+        v_center_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
+        xz_center_slices = self.sg_obj.XZ.center_slicing
+        xcor_center_slices = self.sg_obj.XCOR.center_slicing
+        xz_center_expected = (np.s_[1:], np.s_[1:])
+        xcor_center_expected  = (np.s_[:], np.s_[:])
+        self.assertEqual(u_center_slices, u_center_expected)
+        self.assertEqual(v_center_slices, v_center_expected)
+        self.assertEqual(xz_center_slices, xz_center_expected)
+        self.assertEqual(xcor_center_slices, xcor_center_expected)
         
     def test_grid_optional_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
@@ -161,3 +167,51 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         grid_variables = self.sg_obj.grid_variables
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
+        
+        
+class Test3DimensionalSGrid(unittest.TestCase):
+    
+    def setUp(self):
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf_like.nc')
+        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        
+    def test_sgrid_instance(self):
+        self.assertIsInstance(self.sg_obj, SGrid)
+        
+    def test_variables(self):
+        sg_vars = self.sg_obj.variables
+        sg_vars_expected = [u'Times', u'U', u'V', u'W', 
+                            u'T', u'XLAT', u'XLONG', 
+                            u'ZNU', u'ZNW', u'grid'
+                            ]
+        self.assertEqual(sg_vars, sg_vars_expected)
+        
+    def test_volume_padding(self):
+        volume_padding = self.sg_obj.volume_padding
+        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', dim=u'west_east', sub_dim=u'west_east_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', dim=u'south_north', sub_dim=u'south_north_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', dim=u'bottom_top', sub_dim=u'bottom_top_stag', padding=u'none')
+                                   ]
+        self.assertEqual(volume_padding, volume_padding_expected)
+        
+    def test_volume_coordinates(self):
+        volume_coordinates = self.sg_obj.volume_coordinates
+        volume_coordinates_expected = (u'XLONG', u'XLAT', u'ZNU')
+        self.assertEqual(volume_coordinates, volume_coordinates_expected)
+        
+    def test_slicing_assignment(self):
+        u_center_slice = self.sg_obj.U.center_slicing
+        u_center_slice_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
+        self.assertEqual(u_center_slice, u_center_slice_expected)
+        
+    def test_sgrid_centers(self):
+        centers_shape = self.sg_obj.centers.shape
+        expected_shape = (2, 5, 4, 2)
+        self.assertEqual(centers_shape, expected_shape)
+        
+    def test_topology_dimension(self):
+        topology_dim = self.sg_obj.topology_dimension
+        expected_topology_dim = 3
+        self.assertEqual(topology_dim, expected_topology_dim)
+
+    
