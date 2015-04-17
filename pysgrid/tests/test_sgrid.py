@@ -196,7 +196,7 @@ class Test3DimensionalSGrid(unittest.TestCase):
         
     def test_volume_coordinates(self):
         volume_coordinates = self.sg_obj.volume_coordinates
-        volume_coordinates_expected = [u'XLONG', u'XLAT', u'ZNU']
+        volume_coordinates_expected = (u'XLONG', u'XLAT', u'ZNU')
         self.assertEqual(volume_coordinates, volume_coordinates_expected)
         
     def test_slicing_assignment(self):
