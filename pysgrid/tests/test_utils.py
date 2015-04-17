@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 from ..utils import (ParsePadding, pair_arrays, check_array_dims, 
                      check_element_equal)
-from ..custom_exceptions import CannotFindPaddingError, DimensionMismatchError
+from ..custom_exceptions import CannotFindPaddingError
 
 
 class TestCheckArrayDims(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestCheckArrayDims(unittest.TestCase):
         self.b = np.array([-1, -2])
         
     def test_exception_raised(self):
-        self.assertRaises(DimensionMismatchError,
+        self.assertRaises(ValueError,
                           check_array_dims,
                           self.a,
                           self.b

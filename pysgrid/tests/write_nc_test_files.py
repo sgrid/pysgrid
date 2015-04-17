@@ -13,7 +13,47 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
-def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
+def simulated_dgrid(nc_filename='fake_dgrid.nc'):
+    file_name = os.path.join(TEST_FILES, nc_filename)
+    with nc4.Dataset(file_name, 'w') as rg:
+        # define dims
+        rg.createDimension('MMAXZ', 4)
+        rg.createDimension('NMAXZ', 4)
+        rg.createDimension('MMAX', 4)
+        rg.createDimension('NMAX', 4)
+        rg.createDimension('KMAX', 2)
+        rg.createDimension('KMAX1', 3)
+        rg.createDimension('time', 2)     
+        # define vars
+        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))
+        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))
+        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))
+        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))
+        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))  # dims T, Z, X, Y
+        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        times = rg.createVariable('time', 'f8', ('time',))
+        grid = rg.createVariable('grid', 'i4')
+        # define attributes
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 2
+        grid.node_dimensions = 'MMAX NMAX'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.node_coordinates = 'XCOR YCOR'
+        grid.face_coordinates = 'XZ YZ'
+        grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
+        u1.grid = 'some grid'
+        v1.grid = 'some grid'
+        # create variable data
+        xcor[:] = np.random.random((4, 4))
+        ycor[:] = np.random.random((4, 4))
+        xz[:] = np.random.random((4, 4))
+        yz[:] = np.random.random((4, 4))
+        u1[:] = np.random.random((2, 2, 4, 4))
+        v1[:] = np.random.random((2, 2, 4, 4))
+        times[:] = np.random.random((2,))
+        
+
+def deltares_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
@@ -42,7 +82,7 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
         longitude = rg.createVariable('longitude', 'f4', ('MMAXZ', 'NMAXZ'))
         grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))
-        grid_longitude = rg.createVariable('grid_longituude', 'f4', ('MMAX', 'NMAX')) 
+        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX')) 
         # define variable attributes
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
@@ -71,7 +111,7 @@ def deltares_like_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         grid_longitude[:] = np.random.random((4, 4))
         
         
-def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
+def roms_sgrid(nc_filename='test_sgrid_roms_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -158,7 +198,58 @@ def roms_like_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         lon_v[:] = np.random.random(size=(3, 4))
         
         
-def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
+def wrf_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
+    file_name = os.path.join(TEST_FILES, nc_filename)
+    with  nc4.Dataset(file_name, 'w') as fg:
+        # create dimensions
+        fg.createDimension('Time', 2)
+        fg.createDimension('DateStrLen', 3)
+        fg.createDimension('west_east', 4)
+        fg.createDimension('south_north', 5)
+        fg.createDimension('west_east_stag', 5)
+        fg.createDimension('bottom_top', 3)
+        fg.createDimension('south_north_stag', 6)
+        fg.createDimension('bottom_top_stag', 4)
+        # create variables
+        times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        us.grid = 'grid'
+        us.location = 'face1'
+        vs = fg.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        vs.grid = 'grid'
+        vs.location = 'face2'
+        ws = fg.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        ws.grid = 'grid'
+        ws.location = 'face3'
+        temps = fg.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        temps.grid = 'grid'
+        temps.location = 'volume'
+        xlats = fg.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
+        xlongs = fg.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        znus = fg.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
+        znws = fg.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+        grid = fg.createVariable('grid', 'i2')
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 3
+        grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'
+        grid.volume_dimensions = ('west_east: west_east_stag (padding: none) '
+                                  'south_north: south_north_stag (padding: none) '
+                                  'bottom_top: bottom_top_stag (padding: none)')
+        grid.volume_coordinates = 'XLONG XLAT ZNU'
+        # create fake data
+        times[:] = np.random.random(size=(2, 3)).astype(str)
+        us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
+        vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
+        ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
+        temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
+        xlats[:, :, :] = np.random.random(size=(2, 5, 4))
+        xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
+        znus[:, :] = np.random.random(size=(2, 3))
+        znws[:, :] = np.random.random(size=(2, 4))
+        
+        
+        
+def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -238,8 +329,9 @@ def roms_like_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like
 
 if __name__ == '__main__':
     
-    deltares_like_sgrid()
-    roms_like_sgrid()
-    roms_like_non_compliant_sgrid()
-        
+    deltares_sgrid()
+    roms_sgrid()
+    roms_non_compliant_sgrid()
+    simulated_dgrid()
+    wrf_sgrid()
         
