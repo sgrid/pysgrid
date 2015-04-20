@@ -168,6 +168,29 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
         
+    def test_no_3d_attributes(self):
+        self.assertFalse(hasattr(self.sg_obj, 'volume_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'volume_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'volume_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'face3_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face3_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_dimensions'))
+        
+    def test_2d_attributes(self):
+        self.assertTrue(hasattr(self.sg_obj, 'face_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'vertical_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'vertical_dimensions'))
+
 
 class TestSGridSave(unittest.TestCase):
     """
@@ -265,5 +288,26 @@ class Test3DimensionalSGrid(unittest.TestCase):
         topology_dim = self.sg_obj.topology_dimension
         expected_topology_dim = 3
         self.assertEqual(topology_dim, expected_topology_dim)
-
-    
+        
+    def test_no_2d_attributes(self):
+        self.assertFalse(hasattr(self.sg_obj, 'face_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'vertical_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'vertical_dimensions'))
+        
+    def test_3d_attributes(self):
+        self.assertTrue(hasattr(self.sg_obj, 'volume_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'volume_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'volume_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'face3_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face3_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_dimensions'))
