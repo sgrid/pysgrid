@@ -82,13 +82,14 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
         for var_dim in var_dims:
             try:
                 padding_info = next((info for info in padding_summary if info[0] == var_dim))
+            except StopIteration:
+                slice_index = np.s_[:]
+                slice_indices += (slice_index,)
+            else:
                 padding_val = padding_info[-1]
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index,)
-            except StopIteration:
-                slice_index = np.s_[:]
                 slice_indices += (slice_index,)
     else:
         pass
