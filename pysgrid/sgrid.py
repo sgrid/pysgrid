@@ -361,19 +361,22 @@ class SGrid(object):
                                                    )
             grid_var_obj = getattr(self, grid_var)
             grid_vars = nclocal.createVariable(grid_var, grid_var_obj.dtype)
+            # not the most robust here... time and angle are hard-coded
+            # need to address this
             time_obj = getattr(self, 'time')
             grid_time = nclocal.createVariable('time', 
                                                time_obj.dtype, 
                                                time_obj.dimensions
                                                )
-            try:
-                angle_obj = getattr(self, 'angles')
-                grid_angle = nclocal.createVariable('angles', 
+            
+            if hasattr(self, 'angle'):
+                angle_obj = getattr(self, 'angle', None)
+                grid_angle = nclocal.createVariable('angle', 
                                                     angle_obj.dtype, 
                                                     angle_obj.dimensions
                                                     )
-            except AttributeError:
-                pass
+                if self._angles is not None:
+                    grid_angle[:] = self._angles[:]
             # save the grid variables with attributes
             for dataset_variable in self._variables:
                 dataset_var_obj = getattr(self, dataset_variable)
@@ -413,5 +416,3 @@ class SGrid(object):
             grid_center_lat[:, :] = self._centers[:, :, 1] 
             grid_node_lon[:, :] = self._nodes[:, :, 0]
             grid_node_lat[:, :] = self._nodes[:, :, 1]
-            if self._angles is not None:
-                grid_angle[:] = self._angles[:]
