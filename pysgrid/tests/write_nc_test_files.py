@@ -53,7 +53,7 @@ def simulated_dgrid(nc_filename='fake_dgrid.nc'):
         times[:] = np.random.random((2,))
         
 
-def deltares_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
+def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
@@ -111,7 +111,7 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares_like.nc'):
         grid_longitude[:] = np.random.random((4, 4))
         
         
-def roms_sgrid(nc_filename='test_sgrid_roms_like.nc'):
+def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -198,7 +198,7 @@ def roms_sgrid(nc_filename='test_sgrid_roms_like.nc'):
         lon_v[:] = np.random.random(size=(3, 4))
         
         
-def wrf_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
+def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with  nc4.Dataset(file_name, 'w') as fg:
         # create dimensions
@@ -249,7 +249,7 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf_like.nc'):
         
         
         
-def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms_like.nc'):
+def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ

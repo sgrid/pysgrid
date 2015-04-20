@@ -17,7 +17,7 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 class TestSGridVariable(unittest.TestCase):
     
     def setUp(self):
-        self.test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
+        self.test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.dataset = nc4.Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']
