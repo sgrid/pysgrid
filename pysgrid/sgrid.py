@@ -141,6 +141,10 @@ class SGrid(object):
     def face_padding(self, f_padding):
         self._face_padding = f_padding
         
+    @face_padding.deleter
+    def face_padding(self):
+        del self._face_padding
+        
     @property
     def face_coordinates(self):
         return self._face_coordinates
@@ -148,6 +152,10 @@ class SGrid(object):
     @face_coordinates.setter
     def face_coordinates(self, dataset_face_coordinates):
         self._face_coordinates = dataset_face_coordinates
+        
+    @face_coordinates.deleter
+    def face_coordinates(self):
+        del self._face_coordinates
         
     @property
     def face_dimensions(self):
@@ -157,6 +165,10 @@ class SGrid(object):
     def face_dimensions(self, face_dim):
         self._face_dimensions = face_dim
         
+    @face_dimensions.deleter
+    def face_dimensions(self):
+        del self._face_dimensions
+        
     @property
     def vertical_padding(self):
         return self._vertical_padding
@@ -165,6 +177,10 @@ class SGrid(object):
     def vertical_padding(self, vert_padding):
         self._vertical_padding = vert_padding
         
+    @vertical_padding.deleter
+    def vertical_padding(self):
+        del self._vertical_padding
+        
     @property
     def vertical_dimensions(self):
         return self._vertical_dimensions
@@ -172,6 +188,10 @@ class SGrid(object):
     @vertical_dimensions.setter
     def vertical_dimensions(self, vertical_dim):
         self._vertical_dimensions = vertical_dim
+        
+    @vertical_dimensions.deleter
+    def vertical_dimensions(self):
+        del self._vertical_dimensions
     # end topology_dimension = 2
     
     # start topology_dimension = 3
@@ -183,6 +203,10 @@ class SGrid(object):
     def volume_padding(self, vol_padding):
         self._volume_padding = vol_padding
         
+    @volume_padding.deleter
+    def volume_padding(self):
+        del self._volume_padding
+        
     @property
     def volume_dimensions(self):
         return self._volume_dimensions
@@ -191,6 +215,10 @@ class SGrid(object):
     def volume_dimensions(self, volume_dims):
         self._volume_dimensions = volume_dims
         
+    @volume_dimensions.deleter
+    def volume_dimensions(self):
+        del self._volume_dimensions
+        
     @property
     def volume_coordinates(self):
         return self._volume_coordinates
@@ -198,6 +226,10 @@ class SGrid(object):
     @volume_coordinates.setter
     def volume_coordinates(self, vol_coordinates):
         self._volume_coordinates = vol_coordinates
+        
+    @volume_coordinates.deleter
+    def volume_coordinates(self):
+        del self._volume_coordinates
         
     @property
     def face1_padding(self):
@@ -456,12 +488,20 @@ class SGrid(object):
             all_padding += self._volume_padding
         if self._face_padding is not None:
             all_padding += self._face_padding
+        if self._face1_padding is not None:
+            all_padding += self._face1_padding
+        if self._face2_padding is not None:
+            all_padding += self._face2_padding
+        if self._face3_padding is not None:
+            all_padding += self._face3_padding
         if self._vertical_padding is not None:
             all_padding += self._vertical_padding
         if self._edge1_padding is not None:
             all_padding += self._edge1_padding
         if self._edge2_padding is not None:
             all_padding += self._edge2_padding
+        if self._edge3_padding is not None:
+            all_padding += self._edge3_padding
         padding_summary = []
         for padding_datum in all_padding:
             dim = padding_datum.dim
@@ -556,7 +596,7 @@ class SGrid(object):
             grid_vars.node_dimensions = self._node_dimensions
             if self._face_dimensions is not None:
                 grid_vars.face_dimensions = self._face_dimensions
-            if self._volume_dimensions is not None:
+            if hasattr(self, 'volume_dimensions') and self._volume_dimensions is not None:
                 grid_vars.volume_dimensions = self._volume_dimensions
             if self._edge1_dimensions is not None:
                 grid_vars.edge1_dimensions = self._edge1_dimensions
@@ -566,7 +606,7 @@ class SGrid(object):
                 grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self._face_coordinates)
-            if self._volume_coordinates is not None:
+            if hasattr(self, 'volume_coordinates') and self._volume_coordinates is not None:
                 grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
             if self._node_coordinates is not None:
                 grid_vars.node_coordinates = ' '.join(self._node_coordinates)
