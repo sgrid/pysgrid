@@ -3,6 +3,7 @@ Created on Mar 19, 2015
 
 @author: ayan
 '''
+import abc
 import netCDF4 as nc4
 from .custom_exceptions import SGridNonCompliantError
 from .utils import ParsePadding, pair_arrays, determine_variable_slicing
@@ -186,6 +187,8 @@ class NetCDFDataset(object):
     
 class SGridND(object):
     
+    __metaclass__ = abc.ABCMeta
+    
     topology_dim = None
     
     def __init__(self, sgrid, nc_dataset, topology_variable):
@@ -325,15 +328,18 @@ class SGridND(object):
         self.set_sgrid_angles()
         # set time
         self.set_sgrid_time()
-        
+    
+    @abc.abstractmethod
     def set_all_face_attributes(self):
-        raise NotImplementedError
+        return
     
+    @abc.abstractmethod
     def set_cell_center_lat_lon(self):
-        raise NotImplementedError
+        return
     
+    @abc.abstractmethod
     def set_cell_node_lat_lon(self):
-        raise NotImplementedError
+        return
         
         
 class SGrid2D(SGridND):
@@ -417,7 +423,7 @@ class SGrid3D(SGridND):
         self.set_edge2_dimensions()
         self.set_edge2_coordinates()
         self.set_edge3_dimensions()
-        
+     
     def set_all_face_attributes(self):
         pass
         
