@@ -16,35 +16,51 @@ class SGrid(object):
                       }
     
     def __init__(self):
+        # general attributes
         self._nodes = None
         self._centers = None
-        self._faces = None
         self._edges = None
         self._node_padding = None
-        self._face_padding = None
-        self._volume_padding = None
         self._edge1_padding = None
         self._edge2_padding = None
-        self._vertical_padding = None
         self._grid_topology_vars = None
         self._grid_times = None
         self._variables = None
         self._grid_variables = None
         self._topology_dimension = None
         self._dimensions = None
-        self._face_coordinates = None
-        self._volume_coordinates = None
         self._node_coordinates = None
         self._edge1_coordinates = None
         self._edge2_coordinates = None
         self._angles = None
+        # attributes specific to topology_dimension 2
+        self._faces = None
+        self._face_padding = None
+        self._face_coordinates = None
+        self._vertical_padding = None
+        # attributes specific to topology_dimension 3
+        self._volume_padding = None
+        self._volume_coordinates = None
+        self._edge3_padding = None
+        self._edge3_coordinates = None
+        self._face1_padding = None
+        self._face1_coordinates = None
+        self._face2_padding = None
+        self._face2_coordinates = None
+        self._face3_padding = None
+        self._face3_coordinates = None
         # attributes for the verbatim padding text
+        # used for saving SGrid as a netCDF file
         self._node_dimensions = None
         self._face_dimensions = None
         self._volume_dimensions = None
         self._vertical_dimensions = None
         self._edge1_dimensions = None
         self._edge2_dimensions = None
+        self._edge3_dimensions = None
+        self._face1_dimensions = None
+        self._face2_dimensions = None
+        self._face3_dimensions = None
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -115,7 +131,8 @@ class SGrid(object):
     @dimensions.setter
     def dimensions(self, dataset_dims):
         self._dimensions = dataset_dims
-        
+    
+    # start topology_dimension = 2   
     @property
     def face_padding(self):
         return self._face_padding
@@ -139,6 +156,193 @@ class SGrid(object):
     @face_dimensions.setter
     def face_dimensions(self, face_dim):
         self._face_dimensions = face_dim
+        
+    @property
+    def vertical_padding(self):
+        return self._vertical_padding
+    
+    @vertical_padding.setter
+    def vertical_padding(self, vert_padding):
+        self._vertical_padding = vert_padding
+        
+    @property
+    def vertical_dimensions(self):
+        return self._vertical_dimensions
+    
+    @vertical_dimensions.setter
+    def vertical_dimensions(self, vertical_dim):
+        self._vertical_dimensions = vertical_dim
+    # end topology_dimension = 2
+    
+    # start topology_dimension = 3
+    @property
+    def volume_padding(self):
+        return self._volume_padding
+    
+    @volume_padding.setter
+    def volume_padding(self, vol_padding):
+        self._volume_padding = vol_padding
+        
+    @property
+    def volume_dimensions(self):
+        return self._volume_dimensions
+    
+    @volume_dimensions.setter
+    def volume_dimensions(self, volume_dims):
+        self._volume_dimensions = volume_dims
+        
+    @property
+    def volume_coordinates(self):
+        return self._volume_coordinates
+    
+    @volume_coordinates.setter
+    def volume_coordinates(self, vol_coordinates):
+        self._volume_coordinates = vol_coordinates
+        
+    @property
+    def face1_padding(self):
+        return self._face1_padding
+    
+    @face1_padding.setter
+    def face1_padding(self, f1_padding):
+        self._face1_padding = f1_padding
+        
+    @face1_padding.deleter
+    def face1_padding(self):
+        del self._face1_padding
+        
+    @property
+    def face1_coordinates(self):
+        return self._face1_coordinates
+    
+    @face1_coordinates.setter
+    def face1_coordinates(self, f1_coordinates):
+        self._face1_coordinates = f1_coordinates
+        
+    @face1_coordinates.deleter
+    def face1_coordinates(self):
+        del self._face1_coordinates
+        
+    @property
+    def face1_dimensions(self):
+        return self._face1_dimensions
+    
+    @face1_dimensions.setter
+    def face1_dimensions(self, f1_dims):
+        self._face1_dimensions = f1_dims
+        
+    @face1_dimensions.deleter
+    def face1_dimensions(self):
+        del self._face1_dimensions
+        
+    @property
+    def face2_padding(self):
+        return self._face2_padding
+    
+    @face2_padding.setter
+    def face2_padding(self, f2_padding):
+        self._face2_padding = f2_padding
+        
+    @face2_padding.deleter
+    def face2_padding(self):
+        del self._face2_padding
+        
+    @property
+    def face2_coordinates(self):
+        return self._face2_coordinates
+    
+    @face2_coordinates.setter
+    def face2_coordinates(self, f2_coordinates):
+        self._face2_coordinates = f2_coordinates
+        
+    @face2_coordinates.deleter
+    def face2_coordinates(self):
+        del self._face2_coordinates
+    
+    @property    
+    def face2_dimensions(self):
+        return self._face2_dimensions
+    
+    @face2_dimensions.setter
+    def face2_dimensions(self, f2_dims):
+        self._face2_dimensions = f2_dims
+        
+    @face2_dimensions.deleter
+    def face2_dimensions(self):
+        del self._face2_dimensions
+        
+    @property
+    def face3_padding(self):
+        return self._face3_padding
+    
+    @face3_padding.setter
+    def face3_padding(self, f3_padding):
+        self._face3_padding = f3_padding
+        
+    @face3_padding.deleter
+    def face3_padding(self):
+        del self._face3_padding
+        
+    @property
+    def face3_coordinates(self):
+        return self._face3_coordinates
+    
+    @face3_coordinates.setter
+    def face3_coordinates(self, f3_coordinates):
+        self._face3_coordinates = f3_coordinates
+        
+    @face3_coordinates.deleter
+    def face3_coordinates(self):
+        del self._face3_coordinates
+        
+    @property
+    def face3_dimensions(self):
+        return self._face3_dimensions
+    
+    @face3_dimensions.setter
+    def face3_dimensions(self, f3_dims):
+        self._face3_dimensions = f3_dims
+        
+    @face3_dimensions.deleter
+    def face3_dimensions(self):
+        del self._face3_dimensions
+        
+    @property
+    def edge3_padding(self):
+        return self._edge3_padding
+    
+    @edge3_padding.setter
+    def edge3_padding(self, e3_padding):
+        self._edge3_padding = e3_padding
+        
+    @edge3_padding.deleter
+    def edge3_padding(self):
+        del self._edge3_padding
+    
+    @property
+    def edge3_coordinates(self):
+        return self._edge3_coordinates
+    
+    @edge3_coordinates.setter
+    def edge3_coordinates(self, e3_coordinates):
+        self._edge3_coordinates = e3_coordinates
+        
+    @edge3_coordinates.deleter
+    def edge3_coordinates(self):
+        del self._edge3_coordinates
+        
+    @property
+    def edge3_dimensions(self):
+        return self._edge3_dimensions
+    
+    @edge3_dimensions.setter
+    def edge3_dimensions(self, e3_dims):
+        self._edge3_dimensions = e3_dims
+        
+    @edge3_dimensions.deleter
+    def edge3_dimensions(self):
+        del self._edge3_dimensions
+    # end topology_dimension = 3
         
     @property
     def nodes(self):
@@ -218,52 +422,12 @@ class SGrid(object):
         self._edge2_dimensions = e2_dim
         
     @property
-    def volume_padding(self):
-        return self._volume_padding
-    
-    @volume_padding.setter
-    def volume_padding(self, vol_padding):
-        self._volume_padding = vol_padding
-        
-    @property
-    def volume_dimensions(self):
-        return self._volume_dimensions
-    
-    @volume_dimensions.setter
-    def volume_dimensions(self, volume_dims):
-        self._volume_dimensions = volume_dims
-        
-    @property
-    def volume_coordinates(self):
-        return self._volume_coordinates
-    
-    @volume_coordinates.setter
-    def volume_coordinates(self, vol_coordinates):
-        self._volume_coordinates = vol_coordinates
-        
-    @property
     def angles(self):
         return self._angles
     
     @angles.setter
     def angles(self, dataset_angles):
         self._angles = dataset_angles
-    
-    @property
-    def vertical_padding(self):
-        return self._vertical_padding
-    
-    @vertical_padding.setter
-    def vertical_padding(self, vert_padding):
-        self._vertical_padding = vert_padding
-        
-    @property
-    def vertical_dimensions(self):
-        return self._vertical_dimensions
-    
-    @vertical_dimensions.setter
-    def vertical_dimensions(self, vertical_dim):
-        self._vertical_dimensions = vertical_dim
         
     @property
     def centers(self):
