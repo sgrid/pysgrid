@@ -309,7 +309,7 @@ class SGridND(object):
         
     def set_sgrid_time(self):
         try:
-            # hard coding the time variable is probably not the best way to go...
+            # hard coding the time variable is not the best way to go...
             # change this in the future
             grid_time = self.nc_dataset.variables['time'][:]
         except KeyError:
