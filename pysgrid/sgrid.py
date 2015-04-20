@@ -23,8 +23,8 @@ class SGrid(object):
         self._node_padding = None
         self._face_padding = None
         self._volume_padding = None
-        self._edge_1_padding = None
-        self._edge_2_padding = None
+        self._edge1_padding = None
+        self._edge2_padding = None
         self._vertical_padding = None
         self._grid_topology_vars = None
         self._grid_times = None
@@ -35,16 +35,16 @@ class SGrid(object):
         self._face_coordinates = None
         self._volume_coordinates = None
         self._node_coordinates = None
-        self._edge_1_coordinates = None
-        self._edge_2_coordinates = None
+        self._edge1_coordinates = None
+        self._edge2_coordinates = None
         self._angles = None
         # attributes for the verbatim padding text
         self._node_dimensions = None
         self._face_dimensions = None
         self._volume_dimensions = None
         self._vertical_dimensions = None
-        self._edge_1_dimensions = None
-        self._edge_2_dimensions = None
+        self._edge1_dimensions = None
+        self._edge2_dimensions = None
         
     @classmethod
     def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
@@ -170,52 +170,52 @@ class SGrid(object):
         self._node_coordinates = dataset_node_coordinates
         
     @property
-    def edge_1_coordinates(self):
-        return self._edge_1_coordinates
+    def edge1_coordinates(self):
+        return self._edge1_coordinates
     
-    @edge_1_coordinates.setter
-    def edge_1_coordinates(self, dataset_edge_1_coordinates):
-        self._edge_1_coordinates = dataset_edge_1_coordinates
+    @edge1_coordinates.setter
+    def edge1_coordinates(self, dataset_edge1_coordinates):
+        self._edge1_coordinates = dataset_edge1_coordinates
         
     @property
-    def edge_1_padding(self):
-        return self._edge_1_padding
+    def edge1_padding(self):
+        return self._edge1_padding
     
-    @edge_1_padding.setter
-    def edge_1_padding(self, e1_padding):
-        self._edge_1_padding = e1_padding
+    @edge1_padding.setter
+    def edge1_padding(self, e1_padding):
+        self._edge1_padding = e1_padding
         
     @property
-    def edge_1_dimension(self):
-        return self._edge_1_dimensions
+    def edge1_dimension(self):
+        return self._edge1_dimensions
     
-    @edge_1_dimension.setter
-    def edge_1_dimension(self, e1_dim):
-        self._edge_1_dimensions = e1_dim
+    @edge1_dimension.setter
+    def edge1_dimension(self, e1_dim):
+        self._edge1_dimensions = e1_dim
         
     @property
-    def edge_2_coordinates(self):
-        return self._edge_2_coordinates
+    def edge2_coordinates(self):
+        return self._edge2_coordinates
     
-    @edge_2_coordinates.setter
-    def edge_2_coordinates(self, dataset_edge_2_coordinates):
-        self._edge_2_coordinates = dataset_edge_2_coordinates
+    @edge2_coordinates.setter
+    def edge2_coordinates(self, dataset_edge2_coordinates):
+        self._edge2_coordinates = dataset_edge2_coordinates
         
     @property
-    def edge_2_padding(self):
-        return self._edge_2_padding
+    def edge2_padding(self):
+        return self._edge2_padding
     
-    @edge_2_padding.setter
-    def edge_2_padding(self, e2_padding):
-        self._edge_2_padding = e2_padding
+    @edge2_padding.setter
+    def edge2_padding(self, e2_padding):
+        self._edge2_padding = e2_padding
         
     @property
-    def edge_2_dimensions(self):
-        return self._edge_2_dimensions
+    def edge2_dimensions(self):
+        return self._edge2_dimensions
     
-    @edge_2_dimensions.setter
-    def edge_2_dimensions(self, e2_dim):
-        self._edge_2_dimensions = e2_dim
+    @edge2_dimensions.setter
+    def edge2_dimensions(self, e2_dim):
+        self._edge2_dimensions = e2_dim
         
     @property
     def volume_padding(self):
@@ -294,10 +294,10 @@ class SGrid(object):
             all_padding += self._face_padding
         if self._vertical_padding is not None:
             all_padding += self._vertical_padding
-        if self._edge_1_padding is not None:
-            all_padding += self._edge_1_padding
-        if self._edge_2_padding is not None:
-            all_padding += self._edge_2_padding
+        if self._edge1_padding is not None:
+            all_padding += self._edge1_padding
+        if self._edge2_padding is not None:
+            all_padding += self._edge2_padding
         padding_summary = []
         for padding_datum in all_padding:
             dim = padding_datum.dim
@@ -391,10 +391,10 @@ class SGrid(object):
                 grid_vars.face_dimensions = self._face_dimensions
             if self._volume_dimensions is not None:
                 grid_vars.volume_dimensions = self._volume_dimensions
-            if self._edge_1_dimensions is not None:
-                grid_vars.edge1_dimensions = self._edge_1_dimensions
-            if self._edge_2_dimensions is not None:
-                grid_vars.edge2_dimensions = self._edge_2_dimensions
+            if self._edge1_dimensions is not None:
+                grid_vars.edge1_dimensions = self._edge1_dimensions
+            if self._edge2_dimensions is not None:
+                grid_vars.edge2_dimensions = self._edge2_dimensions
             if self._vertical_dimensions is not None:
                 grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
@@ -403,10 +403,10 @@ class SGrid(object):
                 grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
             if self._node_coordinates is not None:
                 grid_vars.node_coordinates = ' '.join(self._node_coordinates)
-            if self._edge_1_coordinates is not None:
-                grid_vars.edge1_coordinates = ' '.join(self._edge_1_coordinates)
-            if self._edge_2_coordinates is not None:
-                grid_vars.edge2_coordinates = ' '.join(self._edge_2_coordinates)
+            if self._edge1_coordinates is not None:
+                grid_vars.edge1_coordinates = ' '.join(self._edge1_coordinates)
+            if self._edge2_coordinates is not None:
+                grid_vars.edge2_coordinates = ' '.join(self._edge2_coordinates)
             # populate variables with data
             grid_time[:] = self._grid_times[:]
             grid_center_lon[:, :] = self._centers[:, :, 0]

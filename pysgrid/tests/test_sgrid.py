@@ -20,7 +20,7 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 class TestSGridCompliant(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms.nc')
         self.sg = SGrid
         
     def test_exception_raised(self):
@@ -33,7 +33,7 @@ class TestSGridCompliant(unittest.TestCase):
 class TestSGridCreate(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.sg = SGrid
   
     def test_load_from_file(self):
@@ -49,7 +49,7 @@ class TestSGridCreate(unittest.TestCase):
 class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
@@ -98,16 +98,16 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     def test_optional_grid_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
         node_coordinates = self.sg_obj.node_coordinates
-        edge_1_coordinates = self.sg_obj.edge_1_coordinates
-        edge_2_coordinates = self.sg_obj.edge_2_coordinates
+        edge1_coordinates = self.sg_obj.edge1_coordinates
+        edge2_coordinates = self.sg_obj.edge2_coordinates
         fc_expected = ('lon_center', 'lat_center')
         nc_expected = ('lon_node', 'lat_node')
         e1c_expected = ('lon_u', 'lat_u')
         e2c_expected = ('lon_v', 'lat_v')
         self.assertEqual(face_coordinates, fc_expected)
         self.assertEqual(node_coordinates, nc_expected)
-        self.assertEqual(edge_1_coordinates, e1c_expected)
-        self.assertEqual(edge_2_coordinates, e2c_expected)
+        self.assertEqual(edge1_coordinates, e1c_expected)
+        self.assertEqual(edge2_coordinates, e2c_expected)
         
     def test_grid_variables(self):
         grid_variables = self.sg_obj.grid_variables
@@ -123,7 +123,7 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares.nc')
         self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):
@@ -154,14 +154,14 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     def test_grid_optional_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
         node_coordinates = self.sg_obj.node_coordinates
-        edge_1_coordinates = self.sg_obj.edge_1_coordinates
-        edge_2_coordinates = self.sg_obj.edge_2_coordinates
+        edge1_coordinates = self.sg_obj.edge1_coordinates
+        edge2_coordinates = self.sg_obj.edge2_coordinates
         fc_expected = ('XZ', 'YZ')
         nc_expected = ('XCOR', 'YCOR')
         self.assertEqual(face_coordinates, fc_expected)
         self.assertEqual(node_coordinates, nc_expected)
-        self.assertIsNone(edge_1_coordinates)
-        self.assertIsNone(edge_2_coordinates)
+        self.assertIsNone(edge1_coordinates)
+        self.assertIsNone(edge2_coordinates)
         
     def test_grid_variables(self):
         grid_variables = self.sg_obj.grid_variables
@@ -172,7 +172,7 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
 class Test3DimensionalSGrid(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf.nc')
         self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
         
     def test_sgrid_instance(self):
