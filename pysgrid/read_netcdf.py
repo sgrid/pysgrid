@@ -291,11 +291,8 @@ class SGridND(object):
                                                             method='center')
             sgrid_var.center_slicing = var_center_slicing
             self._sgrid.add_property(sgrid_var.variable, sgrid_var)
-            try:
-                if nc_var.grid:
-                    grid_variables.append(nc_var_name)
-            except AttributeError:
-                continue
+            if hasattr(nc_var, 'grid'):
+                grid_variables.append(nc_var_name)
         self._sgrid.variables = dataset_variables
         self._sgrid.grid_variables = grid_variables
         
