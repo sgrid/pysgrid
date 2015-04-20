@@ -168,6 +168,58 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
         
+
+class TestSGridSave(unittest.TestCase):
+    """
+    Test that SGrid.save_as_netcdf is saving
+    content correctly.
+    
+    There maybe a better way to do this using
+    mocks, but this will do for now.
+    """
+    
+    def setUp(self):
+        self.sgrid_test_file = os.path.join(TEST_FILES,'test_sgrid_deltares.nc' )
+        self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
+        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        
+    def test_save_as_netcdf(self):
+        self.sg_obj.save_as_netcdf(self.sgrid_target)
+        target = SGrid.from_nc_file(self.sgrid_target)
+        target_dims = target.dimensions
+        expected_target_dims = [(u'MMAXZ', 4), 
+                                (u'NMAXZ', 4), 
+                                (u'MMAX', 4), 
+                                (u'NMAX', 4), 
+                                (u'KMAX', 2), 
+                                (u'KMAX1', 3), 
+                                (u'time', 2)
+                                ]
+        target_vars = target.variables
+        expected_target_vars = [u'XZ', 
+                                u'YZ', 
+                                u'XCOR', 
+                                u'YCOR', 
+                                u'grid', 
+                                u'time', 
+                                u'U1', 
+                                u'V1'
+                                ]
+        target_grid_vars = target.grid_variables
+        expected_target_grid_vars = [u'U1', 
+                                     u'V1'
+                                     ]
+        target_face_coordinates = target.face_coordinates
+        expected_target_face_coordinates = (u'XZ', u'YZ')
+        self.assertIsInstance(target, SGrid)
+        self.assertEqual(target_dims, expected_target_dims)
+        self.assertEqual(target_vars, expected_target_vars)
+        self.assertEqual(target_grid_vars, expected_target_grid_vars)
+        self.assertEqual(target_face_coordinates, expected_target_face_coordinates)      
+      
+    def tearDown(self):
+        os.remove(self.sgrid_target)
+        
         
 class Test3DimensionalSGrid(unittest.TestCase):
     
