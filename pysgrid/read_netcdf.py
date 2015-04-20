@@ -218,8 +218,8 @@ class SGridND(object):
             pass
         else:
             edge1_dim_padding = self.pp.parse_padding(edge1_dim)
-            self._sgrid.edge_1_dimension = edge1_dim
-            self._sgrid.edge_1_padding = edge1_dim_padding
+            self._sgrid.edge1_dimension = edge1_dim
+            self._sgrid.edge1_padding = edge1_dim_padding
         
     def set_edge1_coordinates(self):
         try:
@@ -228,7 +228,7 @@ class SGridND(object):
             pass
         else:
             edge1_coordinates_val = edge1_coordinates.split(' ')
-            self._sgrid.edge_1_coordinates = tuple(edge1_coordinates_val)
+            self._sgrid.edge1_coordinates = tuple(edge1_coordinates_val)
         
     def set_edge2_dimensions(self):
         try:
@@ -237,8 +237,8 @@ class SGridND(object):
             pass
         else:
             edge2_dim_padding = self.pp.parse_padding(edge2_dim)
-            self._sgrid.edge_2_dimension = edge2_dim
-            self._sgrid.edge_2_padding = edge2_dim_padding
+            self._sgrid.edge2_dimension = edge2_dim
+            self._sgrid.edge2_padding = edge2_dim_padding
         
     def set_edge2_coordinates(self):
         try:
@@ -247,7 +247,7 @@ class SGridND(object):
             pass
         else:
             edge2_coordinates_val = edge2_coordinates.split(' ')
-            self._sgrid.edge_2_coordinates = tuple(edge2_coordinates_val)
+            self._sgrid.edge2_coordinates = tuple(edge2_coordinates_val)
         
     def set_all_edge_attributes(self):
         self.set_edge1_dimensions()
@@ -414,8 +414,8 @@ class SGrid3D(SGridND):
             pass
         else:
             edge3_dim_padding = self.pp.parse_padding(edge3_dim)
-            self._sgrid.edge_3_dimension = edge3_dim
-            self._sgrid.edge_3_padding = edge3_dim_padding
+            self._sgrid.edge3_dimension = edge3_dim
+            self._sgrid.edge3_padding = edge3_dim_padding
         
     def set_all_edge_attributes(self):
         self.set_edge1_dimensions()
