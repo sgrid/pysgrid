@@ -377,7 +377,7 @@ class SGrid2D(SGridND):
         self._sgrid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
         
     def set_cell_node_lat_lon(self):
-        grid_cell_nodes_lat_var, grid_cell_nodes_lon_var = self._sgrid.node_coordinates
+        grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self._sgrid.node_coordinates
         grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
         grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
         self._sgrid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
