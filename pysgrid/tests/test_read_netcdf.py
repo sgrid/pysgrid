@@ -16,7 +16,7 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 class TestNetCDFDataset(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms_like.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.ds = nc4.Dataset(self.sgrid_test_file)
         self.nc_ds = NetCDFDataset(self.ds)
         
