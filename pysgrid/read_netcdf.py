@@ -270,6 +270,8 @@ class SGridND(object):
             self._sgrid.vertical_padding = vertical_dim_padding
         
     def set_sgrid_node_coordinates(self):
+        node_dims = self.topology_var.node_dimensions
+        self._sgrid.node_dimensions = node_dims
         try:
             node_coordinates = self.topology_var.node_coordinates
         except AttributeError:
