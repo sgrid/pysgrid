@@ -1,1 +1,1 @@
-from .sgrid import SGrid
+from pysgrid.sgrid import SGrid
