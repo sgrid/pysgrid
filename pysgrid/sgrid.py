@@ -4,10 +4,12 @@ Created on Apr 20, 2015
 @author: ayan
 '''
 import abc
+
 import netCDF4 as nc4
+
 from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset
-from .utils import ParsePadding, pair_arrays, determine_variable_slicing
+from .utils import parse_padding, pair_arrays, determine_variable_slicing
 from .variables import SGridVariable
 
 
@@ -20,6 +22,7 @@ class SGridND(object):
                       'low': (1, None),
                       'high': (None, 1)
                       }
+    topology_dimensions = None
     
     def __init__(self, 
                  nodes=None,
@@ -32,7 +35,6 @@ class SGridND(object):
                  grid_times=None,
                  variables=None,
                  grid_variables=None,
-                 topology_dimensions=None,
                  dimensions=None,
                  node_dimensions=None,
                  node_coordinates=None,
@@ -52,9 +54,8 @@ class SGridND(object):
         self._grid_times = grid_times
         self._variables = variables
         self._grid_variables = grid_variables
-        self._topology_dimension = topology_dimensions
         self._dimensions = dimensions
-        self._node_dimensions = None
+        self._node_dimensions = node_dimensions
         self._node_coordinates = node_coordinates
         self._edge1_coordinates = edge1_coordinates
         self._edge2_coordinates = edge2_coordinates
@@ -94,14 +95,6 @@ class SGridND(object):
     @grid_variables.setter
     def grid_variables(self, dataset_grid_variables):
         self._grid_variables = dataset_grid_variables
-        
-    @property
-    def topology_dimension(self):
-        return self._topology_dimension
-    
-    @topology_dimension.setter
-    def topology_dimension(self, dataset_topology_dimension):
-        self._topology_dimension = dataset_topology_dimension
         
     @property
     def dimensions(self):
@@ -255,6 +248,8 @@ class SGridND(object):
 
 class SGrid2D(SGridND):
     
+    topology_dimension = 2
+    
     def __init__(self,
                  faces=None,
                  face_padding=None,
@@ -388,7 +383,7 @@ class SGrid2D(SGridND):
                     dataset_grid_var.grid = grid_var
             # add attributes to the variables
             grid_vars.cf_role = 'grid_topology'
-            grid_vars.topology_dimension = self._topology_dimension
+            grid_vars.topology_dimension = self.topology_dimension
             grid_vars.node_dimensions = self._node_dimensions
             if self._face_dimensions is not None:
                 grid_vars.face_dimensions = self._face_dimensions
@@ -415,6 +410,8 @@ class SGrid2D(SGridND):
         
         
 class SGrid3D(SGridND):
+    
+    topology_dimension = 3
     
     def __init__(self,
                  volume_padding=None,
@@ -660,7 +657,7 @@ class SGrid3D(SGridND):
                     dataset_grid_var.grid = grid_var
             # add attributes to the variables
             grid_vars.cf_role = 'grid_topology'
-            grid_vars.topology_dimension = self._topology_dimension
+            grid_vars.topology_dimension = self.topology_dimension
             grid_vars.node_dimensions = self._node_dimensions
             grid_vars.volume_dimensions = self._volume_dimensions
             if self._volume_coordinates is not None:
@@ -707,7 +704,6 @@ class SGridNDContainer(object):
         self.ncd = NetCDFDataset(self.nc_dataset)
         self.topology_variable = topology_variable  # the netCDF variable with a cf_role of 'grid_topology'
         self.topology_var = self.nc_dataset.variables[self.topology_variable]
-        self.pp = ParsePadding(self.topology_variable)
         
     @property
     def sgrid(self):
@@ -728,7 +724,7 @@ class SGridNDContainer(object):
         except AttributeError:
             pass
         else:
-            edge1_dim_padding = self.pp.parse_padding(edge1_dim)
+            edge1_dim_padding = parse_padding(edge1_dim, self.topology_variable)
             self._sgrid.edge1_dimension = edge1_dim
             self._sgrid.edge1_padding = edge1_dim_padding
         
@@ -747,7 +743,7 @@ class SGridNDContainer(object):
         except AttributeError:
             pass
         else:
-            edge2_dim_padding = self.pp.parse_padding(edge2_dim)
+            edge2_dim_padding = parse_padding(edge2_dim, self.topology_variable)
             self._sgrid.edge2_dimension = edge2_dim
             self._sgrid.edge2_padding = edge2_dim_padding
         
@@ -845,7 +841,7 @@ class SGrid2DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            face_dim_padding = self.pp.parse_padding(face_dim)
+            face_dim_padding = parse_padding(face_dim, self.topology_variable)
             self._sgrid.face_dimensions = face_dim
             self._sgrid.face_padding = face_dim_padding
             
@@ -855,7 +851,7 @@ class SGrid2DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            vertical_dim_padding = self.pp.parse_padding(vertical_dim)
+            vertical_dim_padding = parse_padding(vertical_dim, self.topology_variable)
             self._sgrid.vertical_dimensions = vertical_dim
             self._sgrid.vertical_padding = vertical_dim_padding
         
@@ -888,7 +884,6 @@ class SGrid2DContainer(SGridNDContainer):
     def set_grid(self):
         self.set_dimensions()
         self.set_grid_topology_vars()
-        self.set_sgrid_topology()
         self.set_sgrid_vertical_dimensions()
         self.set_sgrid_node_coordinates()
         self.set_all_edge_attributes()
@@ -910,7 +905,7 @@ class SGrid3DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            vol_dim_padding = self.pp.parse_padding(vol_dim)
+            vol_dim_padding = parse_padding(vol_dim, self.topology_variable)
             self._sgrid.volume_dimensions = vol_dim
             self._sgrid.volume_padding = vol_dim_padding
         
@@ -930,7 +925,7 @@ class SGrid3DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            edge3_dim_padding = self.pp.parse_padding(edge3_dim)
+            edge3_dim_padding = parse_padding(edge3_dim, self.topology_variable)
             self._sgrid.edge3_dimension = edge3_dim
             self._sgrid.edge3_padding = edge3_dim_padding
             
@@ -957,7 +952,7 @@ class SGrid3DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            face1_dim_padding = self.pp.parse_padding(face1_dim)
+            face1_dim_padding = parse_padding(face1_dim, self.topology_variable)
             self._sgrid.face1_dimensions = face1_dim
             self._sgrid.face1_padding = face1_dim_padding
             
@@ -976,7 +971,7 @@ class SGrid3DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            face2_dim_padding = self.pp.parse_padding(face2_dim)
+            face2_dim_padding = parse_padding(face2_dim, self.topology_variable)
             self._sgrid.face2_dimensions = face2_dim
             self._sgrid.face2_padding = face2_dim_padding
             
@@ -995,7 +990,7 @@ class SGrid3DContainer(SGridNDContainer):
         except AttributeError:
             pass
         else:
-            face3_dim_padding = self.pp.parse_padding(face3_dim)
+            face3_dim_padding = parse_padding(face3_dim, self.topology_variable)
             self._sgrid.face3_dimensions = face3_dim
             self._sgrid.face3_padding = face3_dim_padding
             
@@ -1029,7 +1024,6 @@ class SGrid3DContainer(SGridNDContainer):
     def set_grid(self):
         self.set_dimensions()
         self.set_grid_topology_vars()
-        self.set_sgrid_topology()
         self.set_sgrid_node_coordinates()
         self.set_all_edge_attributes()
         self.set_all_face_attributes()
