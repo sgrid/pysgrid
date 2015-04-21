@@ -6,7 +6,7 @@ Created on Apr 7, 2015
 import os
 import unittest
 import netCDF4 as nc4
-from ..read_netcdf import NetCDFDataset
+from pysgrid.read_netcdf import NetCDFDataset
 
 
 CURRENT_DIR = os.path.dirname(__file__)
