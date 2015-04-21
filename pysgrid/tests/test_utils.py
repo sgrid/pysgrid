@@ -5,7 +5,7 @@ Created on Mar 23, 2015
 '''
 import unittest
 import numpy as np
-from ..utils import ParsePadding, pair_arrays, check_element_equal
+from ..utils import parse_padding, pair_arrays, check_element_equal
 from ..custom_exceptions import CannotFindPaddingError
 
 
@@ -13,19 +13,18 @@ class TestParsePadding(unittest.TestCase):
     
     def setUp(self):
         self.grid_topology = 'some_grid'
-        self.pp = ParsePadding(self.grid_topology)
         self.with_two_padding = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: low)'
         self.with_one_padding = 'xi_v: xi_psi (padding: high) eta_v: eta_psi'
         self.with_no_padding = 'MMAXZ: MMAX NMAXZ: NMAX'
         
     def test_mesh_name(self):
-        result = self.pp.parse_padding(padding_str=self.with_one_padding)
+        result = parse_padding(self.with_one_padding, self.grid_topology)
         mesh_topology = result[0].mesh_topology_var
         expected = 'some_grid'
         self.assertEqual(mesh_topology, expected)
     
     def test_two_padding_types(self):
-        result = self.pp.parse_padding(padding_str=self.with_two_padding)
+        result = parse_padding(self.with_two_padding, self.grid_topology)
         expected_len = 2
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
@@ -40,7 +39,7 @@ class TestParsePadding(unittest.TestCase):
         self.assertEqual(dim, expected_dim)
         
     def test_one_padding_type(self):
-        result = self.pp.parse_padding(padding_str=self.with_one_padding)
+        result = parse_padding(self.with_one_padding, self.grid_topology)
         expected_len = 1
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
@@ -56,8 +55,9 @@ class TestParsePadding(unittest.TestCase):
         
     def test_no_padding(self):
         self.assertRaises(CannotFindPaddingError, 
-                          self.pp.parse_padding, 
-                          padding_str=self.with_no_padding
+                          parse_padding, 
+                          padding_str=self.with_no_padding,
+                          mesh_topology_var=self.grid_topology
                           )
         
 
