@@ -1,82 +1,66 @@
 '''
-Created on Mar 19, 2015
+Created on Apr 20, 2015
 
 @author: ayan
 '''
+import abc
 import netCDF4 as nc4
-from .read_netcdf import load_grid_from_nc_dataset, load_grid_from_nc_file
+from .custom_exceptions import SGridNonCompliantError
+from .read_netcdf import NetCDFDataset
+from .utils import ParsePadding, pair_arrays, determine_variable_slicing
+from .variables import SGridVariable
 
 
-class SGrid(object):
+class SGridND(object):
     
+    __metaclass__ = abc.ABCMeta
+
     padding_slices = {'both': (1, -1),
                       'none': (None, None),
                       'low': (1, None),
                       'high': (None, 1)
                       }
     
-    def __init__(self):
+    def __init__(self, 
+                 nodes=None,
+                 centers=None,
+                 edges=None,
+                 node_padding=None,
+                 edge1_padding=None,
+                 edge2_padding=None,
+                 grid_topology_vars=None,
+                 grid_times=None,
+                 variables=None,
+                 grid_variables=None,
+                 topology_dimensions=None,
+                 dimensions=None,
+                 node_dimensions=None,
+                 node_coordinates=None,
+                 edge1_coordinates=None,
+                 edge2_coordinates=None,
+                 angles=None,
+                 edge1_dimensions=None,
+                 edge2_dimensions=None):
         # general attributes
-        self._nodes = None
-        self._centers = None
-        self._edges = None
-        self._node_padding = None
-        self._edge1_padding = None
-        self._edge2_padding = None
-        self._grid_topology_vars = None
-        self._grid_times = None
-        self._variables = None
-        self._grid_variables = None
-        self._topology_dimension = None
-        self._dimensions = None
-        self._node_coordinates = None
-        self._edge1_coordinates = None
-        self._edge2_coordinates = None
-        self._angles = None
-        # attributes specific to topology_dimension 2
-        self._faces = None
-        self._face_padding = None
-        self._face_coordinates = None
-        self._vertical_padding = None
-        # attributes specific to topology_dimension 3
-        self._volume_padding = None
-        self._volume_coordinates = None
-        self._edge3_padding = None
-        self._edge3_coordinates = None
-        self._face1_padding = None
-        self._face1_coordinates = None
-        self._face2_padding = None
-        self._face2_coordinates = None
-        self._face3_padding = None
-        self._face3_coordinates = None
-        # attributes for the verbatim padding text
-        # used for saving SGrid as a netCDF file
+        self._nodes = nodes
+        self._centers = centers
+        self._edges = edges
+        self._node_padding = node_padding
+        self._edge1_padding = edge1_padding
+        self._edge2_padding = edge2_padding
+        self._grid_topology_vars = grid_topology_vars
+        self._grid_times = grid_times
+        self._variables = variables
+        self._grid_variables = grid_variables
+        self._topology_dimension = topology_dimensions
+        self._dimensions = dimensions
         self._node_dimensions = None
-        self._face_dimensions = None
-        self._volume_dimensions = None
-        self._vertical_dimensions = None
-        self._edge1_dimensions = None
-        self._edge2_dimensions = None
-        self._edge3_dimensions = None
-        self._face1_dimensions = None
-        self._face2_dimensions = None
-        self._face3_dimensions = None
-        
-    @classmethod
-    def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
-        grid = cls()
-        load_grid_from_nc_file(nc_url, grid, 
-                               grid_topology_vars, load_data
-                               )
-        return grid
-    
-    @classmethod
-    def from_nc_dataset(cls, nc_dataset, grid_topology_vars=None, load_data=False):
-        grid = cls()
-        load_grid_from_nc_dataset(nc_dataset, grid, 
-                                  grid_topology_vars, load_data
-                                  )
-        return grid
+        self._node_coordinates = node_coordinates
+        self._edge1_coordinates = edge1_coordinates
+        self._edge2_coordinates = edge2_coordinates
+        self._angles = angles
+        self._edge1_dimensions = edge1_dimensions
+        self._edge2_dimensions = edge2_dimensions
     
     @property
     def grid_topology_vars(self):
@@ -131,250 +115,6 @@ class SGrid(object):
     @dimensions.setter
     def dimensions(self, dataset_dims):
         self._dimensions = dataset_dims
-    
-    # start topology_dimension = 2   
-    @property
-    def face_padding(self):
-        return self._face_padding
-    
-    @face_padding.setter
-    def face_padding(self, f_padding):
-        self._face_padding = f_padding
-        
-    @face_padding.deleter
-    def face_padding(self):
-        del self._face_padding
-        
-    @property
-    def face_coordinates(self):
-        return self._face_coordinates
-    
-    @face_coordinates.setter
-    def face_coordinates(self, dataset_face_coordinates):
-        self._face_coordinates = dataset_face_coordinates
-        
-    @face_coordinates.deleter
-    def face_coordinates(self):
-        del self._face_coordinates
-        
-    @property
-    def face_dimensions(self):
-        return self._face_dimensions
-    
-    @face_dimensions.setter
-    def face_dimensions(self, face_dim):
-        self._face_dimensions = face_dim
-        
-    @face_dimensions.deleter
-    def face_dimensions(self):
-        del self._face_dimensions
-        
-    @property
-    def vertical_padding(self):
-        return self._vertical_padding
-    
-    @vertical_padding.setter
-    def vertical_padding(self, vert_padding):
-        self._vertical_padding = vert_padding
-        
-    @vertical_padding.deleter
-    def vertical_padding(self):
-        del self._vertical_padding
-        
-    @property
-    def vertical_dimensions(self):
-        return self._vertical_dimensions
-    
-    @vertical_dimensions.setter
-    def vertical_dimensions(self, vertical_dim):
-        self._vertical_dimensions = vertical_dim
-        
-    @vertical_dimensions.deleter
-    def vertical_dimensions(self):
-        del self._vertical_dimensions
-    # end topology_dimension = 2
-    
-    # start topology_dimension = 3
-    @property
-    def volume_padding(self):
-        return self._volume_padding
-    
-    @volume_padding.setter
-    def volume_padding(self, vol_padding):
-        self._volume_padding = vol_padding
-        
-    @volume_padding.deleter
-    def volume_padding(self):
-        del self._volume_padding
-        
-    @property
-    def volume_dimensions(self):
-        return self._volume_dimensions
-    
-    @volume_dimensions.setter
-    def volume_dimensions(self, volume_dims):
-        self._volume_dimensions = volume_dims
-        
-    @volume_dimensions.deleter
-    def volume_dimensions(self):
-        del self._volume_dimensions
-        
-    @property
-    def volume_coordinates(self):
-        return self._volume_coordinates
-    
-    @volume_coordinates.setter
-    def volume_coordinates(self, vol_coordinates):
-        self._volume_coordinates = vol_coordinates
-        
-    @volume_coordinates.deleter
-    def volume_coordinates(self):
-        del self._volume_coordinates
-        
-    @property
-    def face1_padding(self):
-        return self._face1_padding
-    
-    @face1_padding.setter
-    def face1_padding(self, f1_padding):
-        self._face1_padding = f1_padding
-        
-    @face1_padding.deleter
-    def face1_padding(self):
-        del self._face1_padding
-        
-    @property
-    def face1_coordinates(self):
-        return self._face1_coordinates
-    
-    @face1_coordinates.setter
-    def face1_coordinates(self, f1_coordinates):
-        self._face1_coordinates = f1_coordinates
-        
-    @face1_coordinates.deleter
-    def face1_coordinates(self):
-        del self._face1_coordinates
-        
-    @property
-    def face1_dimensions(self):
-        return self._face1_dimensions
-    
-    @face1_dimensions.setter
-    def face1_dimensions(self, f1_dims):
-        self._face1_dimensions = f1_dims
-        
-    @face1_dimensions.deleter
-    def face1_dimensions(self):
-        del self._face1_dimensions
-        
-    @property
-    def face2_padding(self):
-        return self._face2_padding
-    
-    @face2_padding.setter
-    def face2_padding(self, f2_padding):
-        self._face2_padding = f2_padding
-        
-    @face2_padding.deleter
-    def face2_padding(self):
-        del self._face2_padding
-        
-    @property
-    def face2_coordinates(self):
-        return self._face2_coordinates
-    
-    @face2_coordinates.setter
-    def face2_coordinates(self, f2_coordinates):
-        self._face2_coordinates = f2_coordinates
-        
-    @face2_coordinates.deleter
-    def face2_coordinates(self):
-        del self._face2_coordinates
-    
-    @property    
-    def face2_dimensions(self):
-        return self._face2_dimensions
-    
-    @face2_dimensions.setter
-    def face2_dimensions(self, f2_dims):
-        self._face2_dimensions = f2_dims
-        
-    @face2_dimensions.deleter
-    def face2_dimensions(self):
-        del self._face2_dimensions
-        
-    @property
-    def face3_padding(self):
-        return self._face3_padding
-    
-    @face3_padding.setter
-    def face3_padding(self, f3_padding):
-        self._face3_padding = f3_padding
-        
-    @face3_padding.deleter
-    def face3_padding(self):
-        del self._face3_padding
-        
-    @property
-    def face3_coordinates(self):
-        return self._face3_coordinates
-    
-    @face3_coordinates.setter
-    def face3_coordinates(self, f3_coordinates):
-        self._face3_coordinates = f3_coordinates
-        
-    @face3_coordinates.deleter
-    def face3_coordinates(self):
-        del self._face3_coordinates
-        
-    @property
-    def face3_dimensions(self):
-        return self._face3_dimensions
-    
-    @face3_dimensions.setter
-    def face3_dimensions(self, f3_dims):
-        self._face3_dimensions = f3_dims
-        
-    @face3_dimensions.deleter
-    def face3_dimensions(self):
-        del self._face3_dimensions
-        
-    @property
-    def edge3_padding(self):
-        return self._edge3_padding
-    
-    @edge3_padding.setter
-    def edge3_padding(self, e3_padding):
-        self._edge3_padding = e3_padding
-        
-    @edge3_padding.deleter
-    def edge3_padding(self):
-        del self._edge3_padding
-    
-    @property
-    def edge3_coordinates(self):
-        return self._edge3_coordinates
-    
-    @edge3_coordinates.setter
-    def edge3_coordinates(self, e3_coordinates):
-        self._edge3_coordinates = e3_coordinates
-        
-    @edge3_coordinates.deleter
-    def edge3_coordinates(self):
-        del self._edge3_coordinates
-        
-    @property
-    def edge3_dimensions(self):
-        return self._edge3_dimensions
-    
-    @edge3_dimensions.setter
-    def edge3_dimensions(self, e3_dims):
-        self._edge3_dimensions = e3_dims
-        
-    @edge3_dimensions.deleter
-    def edge3_dimensions(self):
-        del self._edge3_dimensions
-    # end topology_dimension = 3
         
     @property
     def nodes(self):
@@ -481,35 +221,6 @@ class SGrid(object):
     @grid_times.setter
     def grid_times(self, grid_times):
         self._grid_times = grid_times
-        
-    def _define_face_padding_summary(self):
-        all_padding = []
-        if self._volume_padding is not None:
-            all_padding += self._volume_padding
-        if self._face_padding is not None:
-            all_padding += self._face_padding
-        if self._face1_padding is not None:
-            all_padding += self._face1_padding
-        if self._face2_padding is not None:
-            all_padding += self._face2_padding
-        if self._face3_padding is not None:
-            all_padding += self._face3_padding
-        if self._vertical_padding is not None:
-            all_padding += self._vertical_padding
-        if self._edge1_padding is not None:
-            all_padding += self._edge1_padding
-        if self._edge2_padding is not None:
-            all_padding += self._edge2_padding
-        if self._edge3_padding is not None:
-            all_padding += self._edge3_padding
-        padding_summary = []
-        for padding_datum in all_padding:
-            dim = padding_datum.dim
-            sub_dim = padding_datum.sub_dim
-            padding_val = padding_datum.padding
-            pad_short = (dim, sub_dim, padding_val)
-            padding_summary.append(pad_short)
-        return padding_summary
     
     def _set_property(self, name, value):
         prop_name = '_{0}'.format(name)
@@ -532,6 +243,91 @@ class SGrid(object):
         prop_name = '_{0}'.format(name)
         # set the value of the property that was just created
         setattr(self, prop_name, value)
+        
+    @abc.abstractmethod
+    def _define_face_padding_summary(self):
+        return
+    
+    @abc.abstractmethod
+    def save_as_netcdf(self):
+        return
+
+
+class SGrid2D(SGridND):
+    
+    def __init__(self,
+                 faces=None,
+                 face_padding=None,
+                 face_coordinates=None,
+                 face_dimensions=None,
+                 vertical_padding = None,
+                 *args,
+                 **kwargs):
+        self._faces = None
+        self._face_padding = None
+        self._face_coordinates = None
+        self._face_dimensions = None
+        self._vertical_padding = None
+        super(SGrid2D, self).__init__(*args, **kwargs)
+        
+    @property
+    def face_padding(self):
+        return self._face_padding
+    
+    @face_padding.setter
+    def face_padding(self, f_padding):
+        self._face_padding = f_padding
+        
+    @property
+    def face_coordinates(self):
+        return self._face_coordinates
+    
+    @face_coordinates.setter
+    def face_coordinates(self, dataset_face_coordinates):
+        self._face_coordinates = dataset_face_coordinates
+        
+    @property
+    def face_dimensions(self):
+        return self._face_dimensions
+    
+    @face_dimensions.setter
+    def face_dimensions(self, face_dim):
+        self._face_dimensions = face_dim
+        
+    @property
+    def vertical_padding(self):
+        return self._vertical_padding
+    
+    @vertical_padding.setter
+    def vertical_padding(self, vert_padding):
+        self._vertical_padding = vert_padding
+        
+    @property
+    def vertical_dimensions(self):
+        return self._vertical_dimensions
+    
+    @vertical_dimensions.setter
+    def vertical_dimensions(self, vertical_dim):
+        self._vertical_dimensions = vertical_dim
+        
+    def _define_face_padding_summary(self):
+        all_padding = []
+        if self._face_padding is not None:
+            all_padding += self._face_padding
+        if self._vertical_padding is not None:
+            all_padding += self._vertical_padding
+        if self._edge1_padding is not None:
+            all_padding += self._edge1_padding
+        if self._edge2_padding is not None:
+            all_padding += self._edge2_padding
+        padding_summary = []
+        for padding_datum in all_padding:
+            dim = padding_datum.dim
+            sub_dim = padding_datum.sub_dim
+            padding_val = padding_datum.padding
+            pad_short = (dim, sub_dim, padding_val)
+            padding_summary.append(pad_short)
+        return padding_summary
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
@@ -596,8 +392,6 @@ class SGrid(object):
             grid_vars.node_dimensions = self._node_dimensions
             if self._face_dimensions is not None:
                 grid_vars.face_dimensions = self._face_dimensions
-            if hasattr(self, 'volume_dimensions') and self._volume_dimensions is not None:
-                grid_vars.volume_dimensions = self._volume_dimensions
             if self._edge1_dimensions is not None:
                 grid_vars.edge1_dimensions = self._edge1_dimensions
             if self._edge2_dimensions is not None:
@@ -606,8 +400,6 @@ class SGrid(object):
                 grid_vars.vertical_dimensions = self._vertical_dimensions
             if self._face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self._face_coordinates)
-            if hasattr(self, 'volume_coordinates') and self._volume_coordinates is not None:
-                grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
             if self._node_coordinates is not None:
                 grid_vars.node_coordinates = ' '.join(self._node_coordinates)
             if self._edge1_coordinates is not None:
@@ -620,3 +412,709 @@ class SGrid(object):
             grid_center_lat[:, :] = self._centers[:, :, 1] 
             grid_node_lon[:, :] = self._nodes[:, :, 0]
             grid_node_lat[:, :] = self._nodes[:, :, 1]
+        
+        
+class SGrid3D(SGridND):
+    
+    def __init__(self,
+                 volume_padding=None,
+                 volume_coordinates=None,
+                 edge3_padding=None,
+                 edge3_coordinates=None,
+                 face1_padding=None,
+                 face1_coordinates=None,
+                 face2_padding=None,
+                 face2_coordinates=None,
+                 face3_padding=None,
+                 face3_coordinates=None,
+                 volume_dimensions=None,
+                 edge1_dimensions=None,
+                 edge2_dimensions=None,
+                 edge3_dimensions=None,
+                 face1_dimensions=None,
+                 face2_dimensions=None,
+                 face3_dimensions=None,
+                 *args,
+                 **kwargs):
+        # attributes specific to topology_dimension 3
+        self._volume_padding = volume_padding
+        self._volume_coordinates = volume_coordinates
+        self._edge3_padding = edge3_padding
+        self._edge3_coordinates = edge3_coordinates
+        self._face1_padding = face1_padding
+        self._face1_coordinates = face1_coordinates
+        self._face2_padding = face2_padding
+        self._face2_coordinates = face2_coordinates
+        self._face3_padding = face3_padding
+        self._face3_coordinates = face3_coordinates
+        self._volume_dimensions = volume_dimensions
+        self._edge1_dimensions = edge1_dimensions
+        self._edge2_dimensions = edge2_dimensions
+        self._edge3_dimensions = edge3_dimensions
+        self._face1_dimensions = face1_dimensions
+        self._face2_dimensions = face2_dimensions
+        self._face3_dimensions = face3_dimensions
+        super(SGrid3D, self).__init__(*args, **kwargs)
+        
+    @property
+    def volume_padding(self):
+        return self._volume_padding
+    
+    @volume_padding.setter
+    def volume_padding(self, vol_padding):
+        self._volume_padding = vol_padding
+
+    @property
+    def volume_dimensions(self):
+        return self._volume_dimensions
+    
+    @volume_dimensions.setter
+    def volume_dimensions(self, volume_dims):
+        self._volume_dimensions = volume_dims
+        
+    @property
+    def volume_coordinates(self):
+        return self._volume_coordinates
+    
+    @volume_coordinates.setter
+    def volume_coordinates(self, vol_coordinates):
+        self._volume_coordinates = vol_coordinates
+        
+    @property
+    def face1_padding(self):
+        return self._face1_padding
+    
+    @face1_padding.setter
+    def face1_padding(self, f1_padding):
+        self._face1_padding = f1_padding
+        
+    @property
+    def face1_coordinates(self):
+        return self._face1_coordinates
+    
+    @face1_coordinates.setter
+    def face1_coordinates(self, f1_coordinates):
+        self._face1_coordinates = f1_coordinates
+        
+    @property
+    def face1_dimensions(self):
+        return self._face1_dimensions
+    
+    @face1_dimensions.setter
+    def face1_dimensions(self, f1_dims):
+        self._face1_dimensions = f1_dims
+        
+    @property
+    def face2_padding(self):
+        return self._face2_padding
+    
+    @face2_padding.setter
+    def face2_padding(self, f2_padding):
+        self._face2_padding = f2_padding
+        
+    @property
+    def face2_coordinates(self):
+        return self._face2_coordinates
+    
+    @face2_coordinates.setter
+    def face2_coordinates(self, f2_coordinates):
+        self._face2_coordinates = f2_coordinates
+    
+    @property    
+    def face2_dimensions(self):
+        return self._face2_dimensions
+    
+    @face2_dimensions.setter
+    def face2_dimensions(self, f2_dims):
+        self._face2_dimensions = f2_dims
+        
+    @property
+    def face3_padding(self):
+        return self._face3_padding
+    
+    @face3_padding.setter
+    def face3_padding(self, f3_padding):
+        self._face3_padding = f3_padding
+        
+    @property
+    def face3_coordinates(self):
+        return self._face3_coordinates
+    
+    @face3_coordinates.setter
+    def face3_coordinates(self, f3_coordinates):
+        self._face3_coordinates = f3_coordinates
+        
+    @property
+    def face3_dimensions(self):
+        return self._face3_dimensions
+    
+    @face3_dimensions.setter
+    def face3_dimensions(self, f3_dims):
+        self._face3_dimensions = f3_dims
+        
+    @property
+    def edge3_padding(self):
+        return self._edge3_padding
+    
+    @edge3_padding.setter
+    def edge3_padding(self, e3_padding):
+        self._edge3_padding = e3_padding
+    
+    @property
+    def edge3_coordinates(self):
+        return self._edge3_coordinates
+    
+    @edge3_coordinates.setter
+    def edge3_coordinates(self, e3_coordinates):
+        self._edge3_coordinates = e3_coordinates
+        
+    @property
+    def edge3_dimensions(self):
+        return self._edge3_dimensions
+    
+    @edge3_dimensions.setter
+    def edge3_dimensions(self, e3_dims):
+        self._edge3_dimensions = e3_dims
+        
+    def _define_face_padding_summary(self):
+        all_padding = []
+        if self._volume_padding is not None:
+            all_padding += self._volume_padding
+        if self._face1_padding is not None:
+            all_padding += self._face1_padding
+        if self._face2_padding is not None:
+            all_padding += self._face2_padding
+        if self._face3_padding is not None:
+            all_padding += self._face3_padding
+        if self._edge1_padding is not None:
+            all_padding += self._edge1_padding
+        if self._edge2_padding is not None:
+            all_padding += self._edge2_padding
+        if self._edge3_padding is not None:
+            all_padding += self._edge3_padding
+        padding_summary = []
+        for padding_datum in all_padding:
+            dim = padding_datum.dim
+            sub_dim = padding_datum.sub_dim
+            padding_val = padding_datum.padding
+            pad_short = (dim, sub_dim, padding_val)
+            padding_summary.append(pad_short)
+        return padding_summary
+        
+    def save_as_netcdf(self, filepath):
+        with nc4.Dataset(filepath, 'w') as nclocal:
+            grid_var = self._grid_topology_vars
+            # create dimensions
+            for grid_dim in self._dimensions:
+                dim_name, dim_size = grid_dim
+                nclocal.createDimension(dim_name, dim_size)
+            # create variables
+            center_lon, center_lat = self._face_coordinates
+            center_lon_obj = getattr(self, center_lon)
+            center_lat_obj = getattr(self, center_lat)
+            node_lon, node_lat = self._node_coordinates
+            node_lon_obj = getattr(self, node_lon)
+            node_lat_obj = getattr(self, node_lat)
+            grid_center_lon = nclocal.createVariable(center_lon, 
+                                                     center_lon_obj.dtype, 
+                                                     center_lon_obj.dimensions
+                                                     )
+            grid_center_lat = nclocal.createVariable(center_lat, 
+                                                     center_lat_obj.dtype, 
+                                                     center_lat_obj.dimensions
+                                                     )
+            grid_node_lon = nclocal.createVariable(node_lon, 
+                                                   node_lon_obj.dtype, 
+                                                   node_lon_obj.dimensions
+                                                   )
+            grid_node_lat = nclocal.createVariable(node_lat, 
+                                                   node_lat_obj.dtype, 
+                                                   node_lat_obj.dimensions
+                                                   )
+            grid_var_obj = getattr(self, grid_var)
+            grid_vars = nclocal.createVariable(grid_var, grid_var_obj.dtype)
+            # not the most robust here... time and angle are hard-coded
+            # need to address this
+            time_obj = getattr(self, 'time')
+            grid_time = nclocal.createVariable('time', 
+                                               time_obj.dtype, 
+                                               time_obj.dimensions
+                                               )
+            
+            if hasattr(self, 'angle'):
+                angle_obj = getattr(self, 'angle', None)
+                grid_angle = nclocal.createVariable('angle', 
+                                                    angle_obj.dtype, 
+                                                    angle_obj.dimensions
+                                                    )
+                if self._angles is not None:
+                    grid_angle[:] = self._angles[:]
+            # save the grid variables with attributes
+            for dataset_variable in self._variables:
+                dataset_var_obj = getattr(self, dataset_variable)
+                if dataset_var_obj.grid is not None:
+                    dataset_grid_var = nclocal.createVariable(dataset_variable, 
+                                                              dataset_var_obj.dtype, 
+                                                              dataset_var_obj.dimensions
+                                                              )
+                    dataset_grid_var.grid = grid_var
+            # add attributes to the variables
+            grid_vars.cf_role = 'grid_topology'
+            grid_vars.topology_dimension = self._topology_dimension
+            grid_vars.node_dimensions = self._node_dimensions
+            grid_vars.volume_dimensions = self._volume_dimensions
+            if self._volume_coordinates is not None:
+                grid_vars.volume_coordinates = ' '.join(self._volume_coordinates)
+            if self._node_coordinates is not None:
+                grid_vars.node_coordinates = ' '.join(self._node_coordinates)
+            if self._face_dimensions is not None:
+                grid_vars.face_dimensions = self._face_dimensions
+            if self._face1_coordinates is not None:
+                grid_vars.face1_coordinates = ' '.join(self._face1_coordinates)
+            if self._face2_coordinates is not None:
+                grid_vars.face2_coordinates = self._face2_coordinates
+            if self._face3_coordinates is not None:
+                grid_vars.face3_coordinates = self._face3_coordinates
+            if self._edge1_dimensions is not None:
+                grid_vars.edge1_dimensions = self._edge1_dimensions
+            if self._edge2_dimensions is not None:
+                grid_vars.edge2_dimensions = self._edge2_dimensions
+            if self._edge3_dimensions is not None:
+                grid_vars.edge3_dimensions = self._edge3_dimensions
+            if self._edge1_coordinates is not None:
+                grid_vars.edge1_coordinates = ' '.join(self._edge1_coordinates)
+            if self._edge2_coordinates is not None:
+                grid_vars.edge2_coordinates = ' '.join(self._edge2_coordinates)
+            if self._edge3_coordinates is not None:
+                grid_vars.edge3_coordinates = ' '.join(self._edge3_coordinates)
+            # populate variables with data
+            grid_time[:] = self._grid_times[:]
+            grid_center_lon[:] = self._centers[..., 0]
+            grid_center_lat[:] = self._centers[..., 1] 
+            grid_node_lon[:] = self._nodes[..., 0]
+            grid_node_lat[:] = self._nodes[..., 1]
+    
+
+class SGridNDContainer(object):
+    
+    __metaclass__ = abc.ABCMeta
+    
+    topology_dim = None
+    
+    def __init__(self, nc_dataset, grid, topology_variable):
+        self.nc_dataset = nc_dataset
+        self._sgrid = grid
+        self.ncd = NetCDFDataset(self.nc_dataset)
+        self.topology_variable = topology_variable  # the netCDF variable with a cf_role of 'grid_topology'
+        self.topology_var = self.nc_dataset.variables[self.topology_variable]
+        self.pp = ParsePadding(self.topology_variable)
+        
+    @property
+    def sgrid(self):
+        return self._sgrid
+    
+    def set_dimensions(self):
+        ds_dims = self.nc_dataset.dimensions
+        grid_dims = [(ds_dim, len(ds_dims[ds_dim])) for ds_dim in ds_dims]
+        self._sgrid.dimensions = grid_dims
+        
+    def set_grid_topology_vars(self):
+        grid_topology_vars = self.ncd.find_grid_topology_vars()
+        self._sgrid.grid_topology_vars = grid_topology_vars
+    
+    def set_edge1_dimensions(self):
+        try:
+            edge1_dim = self.topology_var.edge1_dimensions
+        except AttributeError:
+            pass
+        else:
+            edge1_dim_padding = self.pp.parse_padding(edge1_dim)
+            self._sgrid.edge1_dimension = edge1_dim
+            self._sgrid.edge1_padding = edge1_dim_padding
+        
+    def set_edge1_coordinates(self):
+        try:
+            edge1_coordinates = self.topology_var.edge1_coordinates
+        except AttributeError:
+            pass
+        else:
+            edge1_coordinates_val = edge1_coordinates.split(' ')
+            self._sgrid.edge1_coordinates = tuple(edge1_coordinates_val)
+        
+    def set_edge2_dimensions(self):
+        try:
+            edge2_dim = self.topology_var.edge2_dimensions
+        except AttributeError:
+            pass
+        else:
+            edge2_dim_padding = self.pp.parse_padding(edge2_dim)
+            self._sgrid.edge2_dimension = edge2_dim
+            self._sgrid.edge2_padding = edge2_dim_padding
+        
+    def set_edge2_coordinates(self):
+        try:
+            edge2_coordinates = self.topology_var.edge2_coordinates
+        except AttributeError:
+            pass
+        else:
+            edge2_coordinates_val = edge2_coordinates.split(' ')
+            self._sgrid.edge2_coordinates = tuple(edge2_coordinates_val)
+        
+    def set_all_edge_attributes(self):
+        self.set_edge1_dimensions()
+        self.set_edge1_coordinates()
+        self.set_edge2_dimensions()
+        self.set_edge2_coordinates()
+        
+    def set_sgrid_topology(self):
+        self._sgrid.topology_dimension = self.topology_dim
+        
+    def set_sgrid_node_coordinates(self):
+        node_dims = self.topology_var.node_dimensions
+        self._sgrid.node_dimensions = node_dims
+        try:
+            node_coordinates = self.topology_var.node_coordinates
+        except AttributeError:
+            grid_cell_node_vars = self.ncd.find_grid_cell_node_vars()
+            self._sgrid.node_coordinates = grid_cell_node_vars
+        else:
+            node_coordinate_val = node_coordinates.split(' ')
+            self._sgrid.node_coordinates = tuple(node_coordinate_val)
+            
+    def set_sgrid_variable_attributes(self):
+        dataset_variables = []
+        grid_variables = []
+        nc_variables = self.nc_dataset.variables
+        for nc_variable in nc_variables:
+            nc_var = nc_variables[nc_variable]
+            nc_var_name = nc_var.name
+            dataset_variables.append(nc_var_name)
+            sgrid_var = SGridVariable.create_variable(nc_var)
+            var_center_slicing = determine_variable_slicing(self._sgrid,
+                                                            self.nc_dataset,
+                                                            nc_variable,
+                                                            method='center')
+            sgrid_var.center_slicing = var_center_slicing
+            self._sgrid.add_property(sgrid_var.variable, sgrid_var)
+            if hasattr(nc_var, 'grid'):
+                grid_variables.append(nc_var_name)
+        self._sgrid.variables = dataset_variables
+        self._sgrid.grid_variables = grid_variables
+        
+    def set_sgrid_angles(self):
+        try:
+            # remove hard coding of variable name moving forward
+            grid_angles = self.nc_dataset.variables['angle'][:]
+            self._sgrid.angles = grid_angles
+        except KeyError:
+            self._sgrid.angles = None
+        
+    def set_sgrid_time(self):
+        try:
+            # hard coding the time variable is not the best way to go...
+            # change this in the future
+            grid_time = self.nc_dataset.variables['time'][:]
+        except KeyError:
+            grid_time = self.nc_dataset.variables['Times'][:]
+        self._sgrid.grid_times = grid_time
+    
+    @abc.abstractmethod
+    def set_all_face_attributes(self):
+        return
+    
+    @abc.abstractmethod
+    def set_cell_center_lat_lon(self):
+        return
+    
+    @abc.abstractmethod
+    def set_cell_node_lat_lon(self):
+        return
+    
+    @abc.abstractmethod
+    def set_grid(self):
+        return
+        
+        
+class SGrid2DContainer(SGridNDContainer):
+    
+    topology_dim = 2
+    
+    def set_face_dimensions(self):
+        try:
+            face_dim = self.topology_var.face_dimensions
+        except AttributeError:
+            pass
+        else:
+            face_dim_padding = self.pp.parse_padding(face_dim)
+            self._sgrid.face_dimensions = face_dim
+            self._sgrid.face_padding = face_dim_padding
+            
+    def set_sgrid_vertical_dimensions(self):
+        try:
+            vertical_dim = self.topology_var.vertical_dimensions
+        except AttributeError:
+            pass
+        else:
+            vertical_dim_padding = self.pp.parse_padding(vertical_dim)
+            self._sgrid.vertical_dimensions = vertical_dim
+            self._sgrid.vertical_padding = vertical_dim_padding
+        
+    def set_face_coordindates(self):
+        try:
+            face_coordinates = self.topology_var.face_coordinates
+        except AttributeError:
+            grid_cell_center_vars = self.ncd.find_coordinates_by_location('face', self.topology_dim)
+            self._sgrid.face_coordinates = grid_cell_center_vars
+        else:
+            face_coordinate_val = face_coordinates.split(' ')
+            self._sgrid.face_coordinates = tuple(face_coordinate_val)
+            
+    def set_all_face_attributes(self):
+        self.set_face_dimensions()
+        self.set_face_coordindates()
+        
+    def set_cell_center_lat_lon(self):
+        grid_cell_center_lon_var, grid_cell_center_lat_var = self._sgrid.face_coordinates
+        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
+        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
+        self._sgrid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
+        
+    def set_cell_node_lat_lon(self):
+        grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self._sgrid.node_coordinates
+        grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
+        grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
+        self._sgrid.nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        
+    def set_grid(self):
+        self.set_dimensions()
+        self.set_grid_topology_vars()
+        self.set_sgrid_topology()
+        self.set_sgrid_vertical_dimensions()
+        self.set_sgrid_node_coordinates()
+        self.set_all_edge_attributes()
+        self.set_all_face_attributes()
+        self.set_cell_center_lat_lon()
+        self.set_cell_node_lat_lon()
+        self.set_sgrid_angles()
+        self.set_sgrid_time()
+        self.set_sgrid_variable_attributes()
+            
+            
+class SGrid3DContainer(SGridNDContainer):
+    
+    topology_dim = 3
+    
+    def set_volume_dimensions(self):
+        try:
+            vol_dim = self.topology_var.volume_dimensions
+        except AttributeError:
+            pass
+        else:
+            vol_dim_padding = self.pp.parse_padding(vol_dim)
+            self._sgrid.volume_dimensions = vol_dim
+            self._sgrid.volume_padding = vol_dim_padding
+        
+    def set_volume_coordinates(self):
+        try:
+            volume_coordinates = self.topology_var.volume_coordinates
+        except AttributeError:
+            grid_cell_center_vars = self.ncd.find_coordinates_by_location('volume', self.topology_dim)
+            self._sgrid.volume_coordinates = grid_cell_center_vars
+        else:
+            volume_coordinates_val = volume_coordinates.split(' ')
+            self._sgrid.volume_coordinates = tuple(volume_coordinates_val)
+            
+    def set_edge3_dimensions(self):
+        try:
+            edge3_dim = self.topology_var.edge3_dimensions
+        except AttributeError:
+            pass
+        else:
+            edge3_dim_padding = self.pp.parse_padding(edge3_dim)
+            self._sgrid.edge3_dimension = edge3_dim
+            self._sgrid.edge3_padding = edge3_dim_padding
+            
+    def set_edge3_coordinates(self):
+        try:
+            edge3_coordinates = self.topology_var.edge3_coordinates
+        except AttributeError:
+            pass
+        else:
+            edge3_coordinates_val = edge3_coordinates.split(' ')
+            self._sgrid.edge3_coordinates = tuple(edge3_coordinates_val)
+        
+    def set_all_edge_attributes(self):
+        self.set_edge1_dimensions()
+        self.set_edge1_coordinates()
+        self.set_edge2_dimensions()
+        self.set_edge2_coordinates()
+        self.set_edge3_dimensions()
+        self.set_edge3_coordinates()
+        
+    def set_face1_dimensions(self):
+        try:
+            face1_dim = self.topology_var.face1_dimensions
+        except AttributeError:
+            pass
+        else:
+            face1_dim_padding = self.pp.parse_padding(face1_dim)
+            self._sgrid.face1_dimensions = face1_dim
+            self._sgrid.face1_padding = face1_dim_padding
+            
+    def set_face1_coordinates(self):
+        try:
+            face1_coordinates = self.topology_var.face1_coordinates
+        except AttributeError:
+            pass
+        else:
+            face1_coordinates_val = face1_coordinates.split(' ')
+            self._sgrid.face1_coordinates = face1_coordinates_val
+            
+    def set_face2_dimensions(self):
+        try:
+            face2_dim = self.topology_var.face2_dimensions
+        except AttributeError:
+            pass
+        else:
+            face2_dim_padding = self.pp.parse_padding(face2_dim)
+            self._sgrid.face2_dimensions = face2_dim
+            self._sgrid.face2_padding = face2_dim_padding
+            
+    def set_face2_coordinates(self):
+        try:
+            face2_coordinates = self.topology_var.face2_coordinates
+        except AttributeError:
+            pass
+        else:
+            face2_coordinates_val = face2_coordinates.split(' ')
+            self._sgrid.face2_coordinates = face2_coordinates_val
+            
+    def set_face3_dimensions(self):
+        try:
+            face3_dim = self.topology_var.face3_dimensions
+        except AttributeError:
+            pass
+        else:
+            face3_dim_padding = self.pp.parse_padding(face3_dim)
+            self._sgrid.face3_dimensions = face3_dim
+            self._sgrid.face3_padding = face3_dim_padding
+            
+    def set_face3_coordinates(self):
+        try:
+            face3_coordinates = self.topology_var.face3_coordinates
+        except AttributeError:
+            pass
+        else:
+            face3_coordinates_val = face3_coordinates.split(' ')
+            self._sgrid.face3_coordinates = face3_coordinates_val
+     
+    def set_all_face_attributes(self):
+        self.set_face1_dimensions()
+        self.set_face1_coordinates()
+        self.set_face2_dimensions()
+        self.set_face2_coordinates()
+        self.set_face3_dimensions()
+        self.set_face3_coordinates()
+        
+    def set_cell_center_lat_lon(self):
+        grid_cell_center_lon_var = self._sgrid.volume_coordinates[0]
+        grid_cell_center_lat_var = self._sgrid.volume_coordinates[1]
+        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
+        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
+        self._sgrid.centers = pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
+        
+    def set_cell_node_lat_lon(self):
+        pass
+    
+    def set_grid(self):
+        self.set_dimensions()
+        self.set_grid_topology_vars()
+        self.set_sgrid_topology()
+        self.set_sgrid_node_coordinates()
+        self.set_all_edge_attributes()
+        self.set_all_face_attributes()
+        self.set_volume_dimensions()
+        self.set_volume_coordinates()
+        self.set_cell_center_lat_lon()
+        self.set_cell_node_lat_lon()
+        self.set_sgrid_angles()
+        self.set_sgrid_time()
+        self.set_sgrid_variable_attributes()
+    
+   
+class SGrid(object):
+    
+    @classmethod
+    def _load_grid_from_nc_dataset(cls,
+                                   nc_dataset,
+                                   topology_dim,
+                                   grid_topology_vars=None, 
+                                   load_data=True):
+        """
+        Create an SGRID object from an SGRID
+        compliant netCDF4.Dataset object. An
+        exception is raised if the dataset is
+        non-compliant.
+        
+        :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
+        :type nc_dataset: netCDF4.Dataset
+        :param grid: an SGRID object
+        :type grid: sgrid.SGrid
+        :return: an SGrid object
+        :rtype: sgrid.SGrid
+        
+        """
+        ncd = NetCDFDataset(nc_dataset)
+        is_sgrid_compliant = ncd.sgrid_compliant_file()
+        if is_sgrid_compliant:
+            if grid_topology_vars is None:
+                grid_topology_vars_attr = ncd.find_grid_topology_vars()
+            else:
+                grid_topology_vars_attr = grid_topology_vars
+            # grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables
+            topology_var = grid_topology_vars_attr
+            nc_grid_topology_var = nc_dataset.variables[topology_var]
+            if topology_dim == 2:
+                grid = SGrid2D()
+                sg = SGrid2DContainer(nc_dataset, grid, topology_var)  
+            elif topology_dim == 3:
+                grid = SGrid3D()
+                sg = SGrid3DContainer(nc_dataset, grid, topology_var)
+            else:
+                raise ValueError('A topology dimension of {0} is unsupported'.format(nc_grid_topology_var.topology_dimension))
+            sg.set_grid()
+            result_sgrid = sg.sgrid
+            return result_sgrid
+        else:
+            raise SGridNonCompliantError(nc_dataset)
+    
+    @classmethod
+    def _return_grid_type(cls, nc_dataset):
+        ncd = NetCDFDataset(nc_dataset)
+        if ncd.sgrid_compliant_file():
+            grid_topology_var = ncd.find_grid_topology_vars()
+            nc_grid_topology_var = nc_dataset.variables[grid_topology_var]
+            topology_dim = nc_grid_topology_var.topology_dimension
+            if topology_dim == 2 or topology_dim == 3:
+                return topology_dim
+            else:
+                raise ValueError
+        else:
+            raise SGridNonCompliantError(nc_dataset)
+    
+    @classmethod
+    def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
+        with nc4.Dataset(nc_url, 'r') as nc_dataset:
+            topology_dim = cls._return_grid_type(nc_dataset)
+            grid = cls._load_grid_from_nc_dataset(nc_dataset, topology_dim, 
+                                                  grid_topology_vars, load_data
+                                                  )
+        return grid
+    
+    @classmethod
+    def from_nc_dataset(cls, nc_dataset, grid_topology_vars=None, load_data=False):
+        topology_dim = cls._return_grid_type(nc_dataset)
+        grid = cls._load_grid_from_nc_dataset(nc_dataset, topology_dim, 
+                                              grid_topology_vars, load_data
+                                              )
+        return grid
