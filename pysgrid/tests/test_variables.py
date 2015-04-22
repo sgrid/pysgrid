@@ -5,8 +5,10 @@ Created on Apr 15, 2015
 '''
 import os
 import unittest
+
 import netCDF4 as nc4
 import numpy as np
+
 from ..variables import SGridVariable
 
 

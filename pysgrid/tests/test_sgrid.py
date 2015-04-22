@@ -5,10 +5,12 @@ Created on Apr 7, 2015
 '''
 import os
 import unittest
+
+import mock
 import netCDF4 as nc4
 import numpy as np
-import mock
-from pysgrid.sgrid import SGridND, from_nc_file, from_nc_dataset
+
+from ..sgrid import SGridND, from_nc_file, from_nc_dataset
 from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
 
