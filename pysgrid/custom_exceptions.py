@@ -3,8 +3,9 @@ Created on Mar 23, 2015
 
 @author: ayan
 '''
-import warnings
 import functools
+import warnings
+
 
 
 class CannotFindPaddingError(Exception):
