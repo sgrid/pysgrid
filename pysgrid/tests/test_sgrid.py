@@ -8,7 +8,7 @@ import unittest
 import netCDF4 as nc4
 import numpy as np
 import mock
-from pysgrid.sgrid import SGridND, SGrid
+from pysgrid.sgrid import SGridND, from_nc_file, from_nc_dataset
 from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
 
@@ -21,11 +21,10 @@ class TestSGridCompliant(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms.nc')
-        self.sg = SGrid
         
     def test_exception_raised(self):
         self.assertRaises(SGridNonCompliantError, 
-                          self.sg.from_nc_file, 
+                          from_nc_file,
                           self.sgrid_test_file
                           )
 
@@ -34,15 +33,14 @@ class TestSGridCreate(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
-        self.sg = SGrid
   
     def test_load_from_file(self):
-        sg_obj = self.sg.from_nc_file(self.sgrid_test_file)
+        sg_obj = from_nc_file(self.sgrid_test_file)
         self.assertIsInstance(sg_obj, SGridND)
 
     def test_load_from_dataset(self):
         ds = nc4.Dataset(self.sgrid_test_file)
-        sg_obj = self.sg.from_nc_dataset(ds)
+        sg_obj = from_nc_dataset(ds)
         self.assertIsInstance(sg_obj, SGridND)
     
 
@@ -50,7 +48,7 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
     def test_centers(self):
@@ -124,7 +122,7 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):
         centers = self.sg_obj.centers
@@ -204,11 +202,11 @@ class TestSGridSave(unittest.TestCase):
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES,'test_sgrid_deltares.nc' )
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_save_as_netcdf(self):
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        target = SGrid.from_nc_file(self.sgrid_target)
+        target = from_nc_file(self.sgrid_target)
         target_dims = target.dimensions
         expected_target_dims = [(u'MMAXZ', 4), 
                                 (u'NMAXZ', 4), 
@@ -248,7 +246,7 @@ class Test3DimensionalSGrid(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_sgrid_instance(self):
         self.assertIsInstance(self.sg_obj, SGridND)
