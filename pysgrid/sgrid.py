@@ -8,8 +8,8 @@ import abc
 import netCDF4 as nc4
 
 from .custom_exceptions import SGridNonCompliantError
-from .read_netcdf import NetCDFDataset
-from .utils import parse_padding, pair_arrays, determine_variable_slicing
+from .read_netcdf import NetCDFDataset, parse_padding
+from .utils import pair_arrays, determine_variable_slicing
 from .variables import SGridVariable
 
 
