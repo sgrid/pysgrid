@@ -28,7 +28,7 @@ def make_dimension_parser(attr_name):
         else:
             attr_substr = attr_name.split('_')[0]
             attr_padding_key = '{0}_padding'.format(attr_substr)
-            attr_padding = parse_padding(attr_dims, topology_variable)
+            attr_padding = parse_padding(attr_dims, topology_variable.name)
             result = {attr_name: attr_dims,
                       attr_padding_key: attr_padding 
                       }
