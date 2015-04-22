@@ -4,6 +4,36 @@ Created on Mar 19, 2015
 @author: ayan
 '''
 from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
+from .utils import parse_padding
+
+
+def make_coordinate_parser(attr_name, find_coordinates_manually):
+    def parse_coordinates(topology_variable):
+        try:
+            attr_coordinates = getattr(topology_variable, attr_name)
+        except AttributeError:
+            pass
+        else:
+            attr_coordinates_val = attr_coordinates.split(' ')
+            return {attr_name: attr_coordinates_val}
+    return parse_coordinates
+
+
+def make_dimension_parser(attr_name):
+    def dimension_parser(topology_variable):
+        try:
+            attr_dims = getattr(topology_variable, attr_name)
+        except AttributeError:
+            pass
+        else:
+            attr_substr = attr_name.split('_')[0]
+            attr_padding_key = '{0}_padding'.format(attr_substr)
+            attr_padding = parse_padding(attr_dims, topology_variable)
+            result = {attr_name: attr_dims,
+                      attr_padding_key: attr_padding 
+                      }
+            return result
+    return dimension_parser
 
 
 class NetCDFDataset(object):
@@ -55,7 +85,7 @@ class NetCDFDataset(object):
                 topology_dim = None
             else:
                 topology_dim = nc_var_obj.topology_dimension
-            if cf_role == 'grid_topology' and topology_dim >= 2:
+            if cf_role == 'grid_topology' and (topology_dim == 2 or topology_dim == 3):
                 grid_topology_vars.append(nc_var)
         if len(grid_topology_vars) > 0:
             grid_topology_var = grid_topology_vars[0]
