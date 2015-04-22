@@ -62,7 +62,7 @@ class SGridND(object):
         self._angles = angles
         self._edge1_dimensions = edge1_dimensions
         self._edge2_dimensions = edge2_dimensions
-    
+        
     @property
     def grid_topology_vars(self):
         return self._grid_topology_vars
@@ -1034,81 +1034,77 @@ class SGrid3DContainer(SGridNDContainer):
         self.set_sgrid_angles()
         self.set_sgrid_time()
         self.set_sgrid_variable_attributes()
-    
-   
-class SGrid(object):
-    
-    @classmethod
-    def _load_grid_from_nc_dataset(cls,
-                                   nc_dataset,
-                                   topology_dim,
-                                   grid_topology_vars=None, 
-                                   load_data=True):
-        """
-        Create an SGRID object from an SGRID
-        compliant netCDF4.Dataset object. An
-        exception is raised if the dataset is
-        non-compliant.
         
-        :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
-        :type nc_dataset: netCDF4.Dataset
-        :param grid: an SGRID object
-        :type grid: sgrid.SGrid
-        :return: an SGrid object
-        :rtype: sgrid.SGrid
         
-        """
-        ncd = NetCDFDataset(nc_dataset)
-        is_sgrid_compliant = ncd.sgrid_compliant_file()
-        if is_sgrid_compliant:
-            if grid_topology_vars is None:
-                grid_topology_vars_attr = ncd.find_grid_topology_vars()
-            else:
-                grid_topology_vars_attr = grid_topology_vars
-            # grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables
-            topology_var = grid_topology_vars_attr
-            nc_grid_topology_var = nc_dataset.variables[topology_var]
-            if topology_dim == 2:
-                grid = SGrid2D()
-                sg = SGrid2DContainer(nc_dataset, grid, topology_var)  
-            elif topology_dim == 3:
-                grid = SGrid3D()
-                sg = SGrid3DContainer(nc_dataset, grid, topology_var)
-            else:
-                raise ValueError('A topology dimension of {0} is unsupported'.format(nc_grid_topology_var.topology_dimension))
-            sg.set_grid()
-            result_sgrid = sg.sgrid
-            return result_sgrid
+def _load_grid_from_nc_dataset(nc_dataset,
+                               topology_dim,
+                               grid_topology_vars=None, 
+                               load_data=True):
+    """
+    Create an SGRID object from an SGRID
+    compliant netCDF4.Dataset object. An
+    exception is raised if the dataset is
+    non-compliant.
+    
+    :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
+    :type nc_dataset: netCDF4.Dataset
+    :param grid: an SGRID object
+    :type grid: sgrid.SGrid
+    :return: an SGrid object
+    :rtype: sgrid.SGrid
+    
+    """
+    ncd = NetCDFDataset(nc_dataset)
+    is_sgrid_compliant = ncd.sgrid_compliant_file()
+    if is_sgrid_compliant:
+        if grid_topology_vars is None:
+            grid_topology_vars_attr = ncd.find_grid_topology_vars()
         else:
-            raise SGridNonCompliantError(nc_dataset)
-    
-    @classmethod
-    def _return_grid_type(cls, nc_dataset):
-        ncd = NetCDFDataset(nc_dataset)
-        if ncd.sgrid_compliant_file():
-            grid_topology_var = ncd.find_grid_topology_vars()
-            nc_grid_topology_var = nc_dataset.variables[grid_topology_var]
-            topology_dim = nc_grid_topology_var.topology_dimension
-            if topology_dim == 2 or topology_dim == 3:
-                return topology_dim
-            else:
-                raise ValueError
+            grid_topology_vars_attr = grid_topology_vars
+        # grid.grid_topology_vars = grid_topology_vars_attr  # set grid variables
+        topology_var = grid_topology_vars_attr
+        nc_grid_topology_var = nc_dataset.variables[topology_var]
+        if topology_dim == 2:
+            grid = SGrid2D()
+            sg = SGrid2DContainer(nc_dataset, grid, topology_var)  
+        elif topology_dim == 3:
+            grid = SGrid3D()
+            sg = SGrid3DContainer(nc_dataset, grid, topology_var)
         else:
-            raise SGridNonCompliantError(nc_dataset)
+            raise ValueError('A topology dimension of {0} is unsupported'.format(nc_grid_topology_var.topology_dimension))
+        sg.set_grid()
+        result_sgrid = sg.sgrid
+        return result_sgrid
+    else:
+        raise SGridNonCompliantError(nc_dataset)
     
-    @classmethod
-    def from_nc_file(cls, nc_url, grid_topology_vars=None, load_data=False):
-        with nc4.Dataset(nc_url, 'r') as nc_dataset:
-            topology_dim = cls._return_grid_type(nc_dataset)
-            grid = cls._load_grid_from_nc_dataset(nc_dataset, topology_dim, 
-                                                  grid_topology_vars, load_data
-                                                  )
-        return grid
     
-    @classmethod
-    def from_nc_dataset(cls, nc_dataset, grid_topology_vars=None, load_data=False):
-        topology_dim = cls._return_grid_type(nc_dataset)
-        grid = cls._load_grid_from_nc_dataset(nc_dataset, topology_dim, 
-                                              grid_topology_vars, load_data
-                                              )
-        return grid
+def _return_grid_type(nc_dataset):
+    ncd = NetCDFDataset(nc_dataset)
+    if ncd.sgrid_compliant_file():
+        grid_topology_var = ncd.find_grid_topology_vars()
+        nc_grid_topology_var = nc_dataset.variables[grid_topology_var]
+        topology_dim = nc_grid_topology_var.topology_dimension
+        if topology_dim == 2 or topology_dim == 3:
+            return topology_dim
+        else:
+            raise ValueError
+    else:
+        raise SGridNonCompliantError(nc_dataset)
+    
+    
+def from_nc_file(nc_url, grid_topology_vars=None, load_data=False):
+    with nc4.Dataset(nc_url, 'r') as nc_dataset:
+        topology_dim = _return_grid_type(nc_dataset)
+        grid = _load_grid_from_nc_dataset(nc_dataset, topology_dim, 
+                                          grid_topology_vars, load_data
+                                          )
+    return grid
+
+
+def from_nc_dataset(nc_dataset, grid_topology_vars=None, load_data=False):
+    topology_dim = _return_grid_type(nc_dataset)
+    grid = _load_grid_from_nc_dataset(nc_dataset, topology_dim, 
+                                          grid_topology_vars, load_data
+                                          )
+    return grid

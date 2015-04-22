@@ -1,1 +1,1 @@
-from pysgrid.sgrid import SGrid
+from pysgrid.sgrid import from_nc_file, from_nc_dataset
