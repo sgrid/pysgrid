@@ -5,9 +5,9 @@ Created on Mar 19, 2015
 '''
 import re
 
+from .custom_exceptions import CannotFindPaddingError
 from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
 from .utils import GridPadding
-from .custom_exceptions import CannotFindPaddingError
 
 
 def parse_padding(padding_str, mesh_topology_var):

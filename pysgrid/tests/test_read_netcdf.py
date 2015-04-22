@@ -5,9 +5,12 @@ Created on Apr 7, 2015
 '''
 import os
 import unittest
+
 import netCDF4 as nc4
-from ..read_netcdf import NetCDFDataset, parse_padding
+
 from ..custom_exceptions import CannotFindPaddingError
+from ..read_netcdf import NetCDFDataset, parse_padding
+
 
 
 

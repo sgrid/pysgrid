@@ -4,7 +4,9 @@ Created on Mar 23, 2015
 @author: ayan
 '''
 import unittest
+
 import numpy as np
+
 from ..utils import pair_arrays, check_element_equal
 
 
