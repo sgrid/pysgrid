@@ -3,10 +3,8 @@ Created on Mar 23, 2015
 
 @author: ayan
 '''
-import re
 from collections import namedtuple
 import numpy as np
-from .custom_exceptions import CannotFindPaddingError
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
@@ -93,46 +91,4 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
                 slice_indices += (slice_index,)
     else:
         pass
-    return slice_indices
-
-
-def parse_padding(padding_str, mesh_topology_var):
-    """
-    Use regex expressions to break apart an
-    attribute string containing padding types
-    for each variable with a cf_role of 
-    'grid_topology'.
-    
-    Padding information is returned within a named tuple
-    for each node dimension of an edge, face, or vertical
-    dimension. The named tuples have the following attributes:
-    mesh_topology_var, dim_name, dim_var, and padding.
-    Padding information is returned as a list
-    of these named tuples.
-    
-    :param str padding_str: string containing padding types from a netCDF attribute
-    :return: named tuples with padding information
-    :rtype: list
-    
-    """
-    p = re.compile('([a-zA-Z0-9_]+:) ([a-zA-Z0-9_]+) (\(padding: [a-zA-Z]+\))')
-    padding_matches = p.findall(padding_str)
-    padding_type_list = []
-    for padding_match in padding_matches:
-        raw_dim, raw_sub_dim, raw_padding_var = padding_match
-        dim = raw_dim.split(':')[0]
-        sub_dim = raw_sub_dim
-        cleaned_padding_var = re.sub('[\(\)]', '', raw_padding_var)  # remove parentheses
-        padding_type = cleaned_padding_var.split(':')[1].strip()  # get the padding value and remove spaces
-        grid_padding = GridPadding(mesh_topology_var=mesh_topology_var,
-                                   dim=dim,
-                                   sub_dim=sub_dim,
-                                   padding=padding_type
-                                   )
-        padding_type_list.append(grid_padding)
-    if len(padding_type_list) > 0:
-        final_padding_types = padding_type_list
-    else:
-        final_padding_types = None
-        raise CannotFindPaddingError
-    return final_padding_types                    
+    return slice_indices                  
