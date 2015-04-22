@@ -135,4 +135,4 @@ def parse_padding(padding_str, mesh_topology_var):
     else:
         final_padding_types = None
         raise CannotFindPaddingError
-    return final_padding_types        
+    return final_padding_types                    
