@@ -41,10 +41,15 @@ class SGridVariable(object):
     from an SGRID compliant dataset.
     
     """
-    def __init__(self, variable=None, grid=None, 
-                 axes=None, center_slicing=None,
-                 node_slicing=None, dimensions=None, 
-                 dtype=None, location=None):
+    def __init__(self, 
+                 variable=None, 
+                 grid=None, 
+                 axes=None, 
+                 center_slicing=None,
+                 node_slicing=None, 
+                 dimensions=None, 
+                 dtype=None, 
+                 location=None):
         self._variable = variable
         self._grid = grid
         self._axes = axes
