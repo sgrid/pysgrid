@@ -673,7 +673,11 @@ class SGrid3D(SGridND):
     
 
 class SGridAttributes(object):
+    """
+    Class containg methods to help with getting the
+    attributes for either a 2D or 3D SGrid.
     
+    """
     def __init__(self, nc_dataset, topology_dim, topology_variable=None):
         self.nc_dataset = nc_dataset
         self.ncd = NetCDFDataset(self.nc_dataset)
