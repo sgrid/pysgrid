@@ -62,10 +62,6 @@ class SGridND(object):
         self._angles = angles
         self._edge1_dimensions = edge1_dimensions
         self._edge2_dimensions = edge2_dimensions
-    
-    @classmethod
-    def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
-        return
         
     @property
     def grid_topology_vars(self):
