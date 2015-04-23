@@ -86,6 +86,37 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
                          u'zeta'
                          ]
         self.assertEqual(dataset_vars, expected_vars)
+        
+    def test_grid_variables(self):
+        dataset_grid_variables = self.sg_obj.grid_variables
+        expected_grid_variables = [u'u', u'v']
+        self.assertEqual(dataset_grid_variables, expected_grid_variables)
+        
+    def test_non_grid_variables(self):
+        dataset_non_grid_variables = self.sg_obj.non_grid_variables
+        expected_non_grid_variables = [u'z_center', 
+                                       u'z_node', 
+                                       u'time', 
+                                       u'x_center', 
+                                       u'y_center', 
+                                       u'x_node', 
+                                       u'y_node', 
+                                       u'x_u', 
+                                       u'y_u', 
+                                       u'x_v', 
+                                       u'y_v', 
+                                       u'grid', 
+                                       u'lon_center', 
+                                       u'lat_center', 
+                                       u'lon_node', 
+                                       u'lat_node', 
+                                       u'lat_u', 
+                                       u'lon_u', 
+                                       u'lat_v', 
+                                       u'lon_v', 
+                                       u'zeta'
+                                       ]
+        self.assertEqual(dataset_non_grid_variables, expected_non_grid_variables)
 
     def test_variable_slicing(self):
         u_center_slices = self.sg_obj.u.center_slicing
@@ -108,11 +139,6 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(node_coordinates, nc_expected)
         self.assertEqual(edge1_coordinates, e1c_expected)
         self.assertEqual(edge2_coordinates, e2c_expected)
-        
-    def test_grid_variables(self):
-        grid_variables = self.sg_obj.grid_variables
-        expected_grid_variables = ['u', 'v']
-        self.assertEqual(grid_variables, expected_grid_variables)
     
     @mock.patch('pysgrid.sgrid.nc4')
     def test_write_sgrid_to_netcdf(self, mock_nc):
