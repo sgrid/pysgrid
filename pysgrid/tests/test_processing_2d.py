@@ -5,7 +5,8 @@ Created on Apr 3, 2015
 '''
 import unittest
 import numpy as np
-from ..processing_2d import vector_sum, rotate_vectors, avg_to_cell_center
+
+from ..processing_2d import avg_to_cell_center, rotate_vectors, vector_sum
 
 
 class TestVectorSum(unittest.TestCase):
