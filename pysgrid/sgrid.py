@@ -9,7 +9,7 @@ import netCDF4 as nc4
 
 from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
-from .utils import pair_arrays, determine_variable_slicing
+from .utils import pair_arrays
 from .variables import SGridVariable
 
 
