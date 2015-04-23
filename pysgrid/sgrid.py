@@ -62,10 +62,6 @@ class SGridND(object):
         self._angles = angles
         self._edge1_dimensions = edge1_dimensions
         self._edge2_dimensions = edge2_dimensions
-        
-    @classmethod
-    def get_topology_dimension(cls):
-        return cls.topology_dimensions
     
     @classmethod
     def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
@@ -213,20 +209,20 @@ class SGrid2D(SGridND):
         
     @classmethod
     def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, topology_variable)
+        sa = SGridAttributes(nc_dataset, 2, topology_variable)
         dimensions = sa.get_dimensions()
-        node_dimensions, node_coordinates = sa.get_sgrid_node_coordinates()
-        grid_topology_vars = sa.get_grid_topology_vars()
-        edge1_dimensions, edge1_padding = sa.get_edge1_dimensions()
-        edge2_dimensions, edge2_padding = sa.get_edge2_dimensions()
-        edge1_coordinates = sa.get_edge1_coordinates()
-        edge2_coordinates = sa.get_edge2_coordinates()
-        angles = sa.get_sgrid_angles()
-        grid_times = sa.get_sgrid_time()
-        vertical_dimensions, vertical_padding = sa.get_sgrid_vertical_dimensions()
+        node_dimensions, node_coordinates = sa.get_node_coordinates()
+        grid_topology_vars = sa.get_topology_vars()
+        edge1_dimensions, edge1_padding = sa.get_attr_dimension('edge1_dimensions')
+        edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
+        edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
+        edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
+        angles = sa.get_angles()
+        grid_times = sa.get_time()
+        vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')
         centers = sa.get_cell_center_lat_lon()
-        face_dimensions, face_padding = sa.get_face_dimensions()
-        face_coordinates = sa.get_face_coordinates()
+        face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')
+        face_coordinates = sa.get_attr_coordinates('face_coordinates')
         nodes = sa.get_cell_node_lat_lon()
         sgrid = cls(angles=angles,
                     centers=centers,
@@ -253,7 +249,7 @@ class SGrid2D(SGridND):
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding
                     )
-        sa.get_sgrid_variable_attributes(sgrid)
+        sa.get_variable_attributes(sgrid)
         return sgrid
     
     @classmethod
@@ -432,25 +428,25 @@ class SGrid3D(SGridND):
         
     @classmethod
     def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, topology_variable)
+        sa = SGridAttributes(nc_dataset, 3, topology_variable)
         dimensions = sa.get_dimensions()
-        node_dimensions, node_coordinates = sa.get_sgrid_node_coordinates()
-        grid_topology_vars = sa.get_grid_topology_vars()
-        edge1_dimensions, edge1_padding = sa.get_edge1_dimensions()
-        edge2_dimensions, edge2_padding = sa.get_edge2_dimensions()
-        edge1_coordinates = sa.get_edge1_coordinates()
-        edge2_coordinates = sa.get_edge2_coordinates()
-        grid_times = sa.get_sgrid_time()
-        edge3_dimensions, edge3_padding = sa.get_edge3_dimensions()
-        edge3_coordinates = sa.get_edge3_coordinates()
-        face1_dimensions, face1_padding = sa.get_face1_dimensions()
-        face1_coordinates = sa.get_face1_coordinates()
-        face2_dimensions, face2_padding = sa.get_face2_dimensions()
-        face2_coordinates = sa.get_face2_coordinates()
-        face3_dimensions, face3_padding = sa.get_face3_dimensions()
-        face3_coordinates = sa.get_face3_coordinates()
-        volume_dimensions, volume_padding = sa.get_volume_dimensions()
-        volume_coordinates = sa.get_volume_coordinates()
+        node_dimensions, node_coordinates = sa.get_node_coordinates()
+        grid_topology_vars = sa.get_topology_vars()
+        edge1_dimensions, edge1_padding = sa.get_attr_dimension('edge1_dimensions')
+        edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
+        edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
+        edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
+        grid_times = sa.get_time()
+        edge3_dimensions, edge3_padding = sa.get_attr_dimension('edge3_dimensions')
+        edge3_coordinates = sa.get_attr_coordinates('edge3_coordinates')
+        face1_dimensions, face1_padding = sa.get_attr_dimension('face1_dimensions')
+        face1_coordinates = sa.get_attr_coordinates('face1_coordinates')
+        face2_dimensions, face2_padding = sa.get_attr_dimension('face2_dimensions')
+        face2_coordinates = sa.get_attr_coordinates('face2_coordinates')
+        face3_dimensions, face3_padding = sa.get_attr_dimension('face3_dimensions')
+        face3_coordinates = sa.get_attr_coordinates('face3_coordinates')
+        volume_dimensions, volume_padding = sa.get_attr_dimension('volume_dimensions')
+        volume_coordinates = sa.get_attr_coordinates('volume_coordinates')
         centers = sa.get_cell_center_lat_lon_3d()
         nodes = sa.get_cell_node_lat_lon_3d()
         sgrid = cls(angles=None,
@@ -487,7 +483,7 @@ class SGrid3D(SGridND):
                     volume_dimensions=volume_dimensions,
                     volume_padding=volume_padding
                     )
-        sa.get_sgrid_variable_attributes(sgrid)
+        sa.get_variable_attributes(sgrid)
         return sgrid
     
     @classmethod
@@ -677,9 +673,10 @@ class SGrid3D(SGridND):
 
 class SGridAttributes(object):
     
-    def __init__(self, nc_dataset, topology_variable=None):
+    def __init__(self, nc_dataset, topology_dim, topology_variable=None):
         self.nc_dataset = nc_dataset
         self.ncd = NetCDFDataset(self.nc_dataset)
+        self.topology_dim = topology_dim
         if topology_variable is None:
             # the netCDF variable with a cf_role of 'grid_topology'
             self.topology_variable = self.ncd.find_grid_topology_vars()
@@ -692,55 +689,33 @@ class SGridAttributes(object):
         grid_dims = [(ds_dim, len(ds_dims[ds_dim])) for ds_dim in ds_dims]
         return grid_dims
         
-    def get_grid_topology_vars(self):
+    def get_topology_vars(self):
         grid_topology_vars = self.ncd.find_grid_topology_vars()
         return grid_topology_vars
     
-    def get_edge1_dimensions(self):
+    def get_attr_dimension(self, attr_name):
         try:
-            edge1_dim = self.topology_var.edge1_dimensions
+            attr_dim = getattr(self.topology_var, attr_name)
         except AttributeError:
-            edge1_dimension = None
-            edge1_padding = None
+            attr_dim = None
+            attr_padding = None
         else:
-            edge1_dim_padding = parse_padding(edge1_dim, self.topology_variable)
-            edge1_dimension = edge1_dim
-            edge1_padding = edge1_dim_padding
-        return edge1_dimension, edge1_padding
-        
-    def get_edge1_coordinates(self):
+            attr_dim_padding = parse_padding(attr_dim, self.topology_variable)
+            attr_padding = attr_dim_padding
+        return attr_dim, attr_padding
+    
+    def get_attr_coordinates(self, attr_name):
         try:
-            edge1_coordinates = self.topology_var.edge1_coordinates
+            attr_coordinates_raw = getattr(self.topology_var, attr_name)
         except AttributeError:
-            edge1_coordinates = None
+            location_name = attr_name.split('_')[0]
+            attr_coordinates = self.ncd.find_coordinates_by_location(location_name, self.topology_dim)
         else:
-            edge1_coordinates_val = edge1_coordinates.split(' ')
-            edge1_coordinates = tuple(edge1_coordinates_val)
-        return edge1_coordinates
-        
-    def get_edge2_dimensions(self):
-        try:
-            edge2_dim = self.topology_var.edge2_dimensions
-        except AttributeError:
-            edge2_dimension = None
-            edge2_padding = None
-        else:
-            edge2_dim_padding = parse_padding(edge2_dim, self.topology_variable)
-            edge2_dimension = edge2_dim
-            edge2_padding = edge2_dim_padding
-        return edge2_dimension, edge2_padding
-        
-    def get_edge2_coordinates(self):
-        try:
-            edge2_coordinates = self.topology_var.edge2_coordinates
-        except AttributeError:
-            edge2_coordinates = None
-        else:
-            edge2_coordinates_val = edge2_coordinates.split(' ')
-            edge2_coordinates = tuple(edge2_coordinates_val)
-        return edge2_coordinates
-        
-    def get_sgrid_node_coordinates(self):
+            attr_coordinates_val = attr_coordinates_raw.split(' ')
+            attr_coordinates = tuple(attr_coordinates_val)
+        return attr_coordinates
+
+    def get_node_coordinates(self):
         node_dims = self.topology_var.node_dimensions
         node_dimensions = node_dims
         try:
@@ -753,7 +728,7 @@ class SGridAttributes(object):
             node_coordinates = tuple(node_coordinate_val)
         return node_dimensions, node_coordinates
             
-    def get_sgrid_variable_attributes(self, sgrid):
+    def get_variable_attributes(self, sgrid):
         dataset_variables = []
         grid_variables = []
         nc_variables = self.nc_dataset.variables
@@ -773,7 +748,7 @@ class SGridAttributes(object):
         sgrid._variables = dataset_variables
         sgrid._grid_variables = grid_variables
         
-    def get_sgrid_angles(self):
+    def get_angles(self):
         try:
             # remove hard coding of variable name moving forward
             grid_angles = self.nc_dataset.variables['angle'][:]
@@ -782,7 +757,7 @@ class SGridAttributes(object):
             angles = None
         return angles
         
-    def get_sgrid_time(self):
+    def get_time(self):
         try:
             # hard coding the time variable is not the best way to go...
             # change this in the future
@@ -790,167 +765,21 @@ class SGridAttributes(object):
         except KeyError:
             grid_time = self.nc_dataset.variables['Times'][:]
         return grid_time
-    
-    def get_face_dimensions(self):
-        try:
-            face_dim = self.topology_var.face_dimensions
-        except AttributeError:
-            face_dimensions = None
-            face_padding = None
-        else:
-            face_dim_padding = parse_padding(face_dim, self.topology_variable)
-            face_dimensions = face_dim
-            face_padding = face_dim_padding
-        return face_dimensions, face_padding
-            
-    def get_sgrid_vertical_dimensions(self):
-        try:
-            vertical_dim = self.topology_var.vertical_dimensions
-        except AttributeError:
-            vertical_dimensions = None
-            vertical_padding = None
-        else:
-            vertical_dim_padding = parse_padding(vertical_dim, self.topology_variable)
-            vertical_dimensions = vertical_dim
-            vertical_padding = vertical_dim_padding
-        return vertical_dimensions, vertical_padding
-        
-    def get_face_coordinates(self):
-        try:
-            face_coordinates = self.topology_var.face_coordinates
-        except AttributeError:
-            grid_cell_center_vars = self.ncd.find_coordinates_by_location('face', self.topology_dim)
-            face_coordinates = grid_cell_center_vars
-        else:
-            face_coordinate_val = face_coordinates.split(' ')
-            face_coordinates = tuple(face_coordinate_val)
-        return face_coordinates
         
     def get_cell_center_lat_lon(self):
-        grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_face_coordinates()
+        grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')
         grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
         grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
         
     def get_cell_node_lat_lon(self):
-        grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_sgrid_node_coordinates()[1]
+        grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]
         grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
         grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
         return pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
-    
-    def get_volume_dimensions(self):
-        try:
-            vol_dim = self.topology_var.volume_dimensions
-        except AttributeError:
-            volume_dimensions = None
-            volume_padding = None
-        else:
-            vol_dim_padding = parse_padding(vol_dim, self.topology_variable)
-            volume_dimensions = vol_dim
-            volume_padding = vol_dim_padding
-        return volume_dimensions, volume_padding
-            
-    def get_volume_coordinates(self):
-        try:
-            volume_coordinates = self.topology_var.volume_coordinates
-        except AttributeError:
-            grid_cell_center_vars = self.ncd.find_coordinates_by_location('volume', self.topology_dim)
-            volume_coordinates = grid_cell_center_vars
-        else:
-            volume_coordinates_val = volume_coordinates.split(' ')
-            volume_coordinates = tuple(volume_coordinates_val)
-        return volume_coordinates
-            
-    def get_edge3_dimensions(self):
-        try:
-            edge3_dim = self.topology_var.edge3_dimensions
-        except AttributeError:
-            edge3_dimension = None
-            edge3_padding = None
-        else:
-            edge3_dim_padding = parse_padding(edge3_dim, self.topology_variable)
-            edge3_dimension = edge3_dim
-            edge3_padding = edge3_dim_padding
-        return edge3_dimension, edge3_padding
-            
-    def get_edge3_coordinates(self):
-        try:
-            edge3_coordinates = self.topology_var.edge3_coordinates
-        except AttributeError:
-            edge3_coordinates = None
-        else:
-            edge3_coordinates_val = edge3_coordinates.split(' ')
-            edge3_coordinates = tuple(edge3_coordinates_val)
-        return edge3_coordinates
-        
-    def get_face1_dimensions(self):
-        try:
-            face1_dim = self.topology_var.face1_dimensions
-        except AttributeError:
-            face1_dimensions = None
-            face1_padding = None
-        else:
-            face1_dim_padding = parse_padding(face1_dim, self.topology_variable)
-            face1_dimensions = face1_dim
-            face1_padding = face1_dim_padding
-        return face1_dimensions, face1_padding
-            
-    def get_face1_coordinates(self):
-        try:
-            face1_coordinates = self.topology_var.face1_coordinates
-        except AttributeError:
-            face1_coordinates = None
-        else:
-            face1_coordinates_val = face1_coordinates.split(' ')
-            face1_coordinates = face1_coordinates_val
-        return face1_coordinates
-            
-    def get_face2_dimensions(self):
-        try:
-            face2_dim = self.topology_var.face2_dimensions
-        except AttributeError:
-            face2_dimensions = None
-            face2_padding = None
-        else:
-            face2_dim_padding = parse_padding(face2_dim, self.topology_variable)
-            face2_dimensions = face2_dim
-            face2_padding = face2_dim_padding
-        return face2_dimensions, face2_padding
-            
-    def get_face2_coordinates(self):
-        try:
-            face2_coordinates = self.topology_var.face2_coordinates
-        except AttributeError:
-            face2_coordinates = None
-        else:
-            face2_coordinates_val = face2_coordinates.split(' ')
-            face2_coordinates = face2_coordinates_val
-        return face2_coordinates
-            
-    def get_face3_dimensions(self):
-        try:
-            face3_dim = self.topology_var.face3_dimensions
-        except AttributeError:
-            face3_dimensions = None
-            face3_padding = None
-        else:
-            face3_dim_padding = parse_padding(face3_dim, self.topology_variable)
-            face3_dimensions = face3_dim
-            face3_padding = face3_dim_padding
-        return face3_dimensions, face3_padding
-            
-    def get_face3_coordinates(self):
-        try:
-            face3_coordinates = self.topology_var.face3_coordinates
-        except AttributeError:
-            face3_coordinates = None
-        else:
-            face3_coordinates_val = face3_coordinates.split(' ')
-            face3_coordinates = face3_coordinates_val
-        return face3_coordinates
         
     def get_cell_center_lat_lon_3d(self):
-        volume_coordinates = self.get_volume_coordinates()
+        volume_coordinates = self.get_attr_coordinates('volume_coordinates')
         grid_cell_center_lon_var = volume_coordinates[0]
         grid_cell_center_lat_var = volume_coordinates[1]
         grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
@@ -987,7 +816,7 @@ def _load_grid_from_nc_dataset(nc_dataset,
         elif topology_dim == 3:
             grid = SGrid3D.sgrid_from_dataset(nc_dataset)
         else:
-            raise ValueError('A topology dimensions of 2 or 3 are supported')
+            raise ValueError('Only topology dimensions of 2 or 3 are supported')
         return grid
     else:
         raise SGridNonCompliantError(nc_dataset)
@@ -1002,7 +831,7 @@ def _return_grid_type(nc_dataset):
         if topology_dim == 2 or topology_dim == 3:
             return topology_dim
         else:
-            raise ValueError
+            raise ValueError('Only topology dimensions of 2 or 3 are supported')
     else:
         raise SGridNonCompliantError(nc_dataset)
     
