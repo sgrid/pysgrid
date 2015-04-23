@@ -56,7 +56,11 @@ class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
         self.ncd = nc_dataset_obj
-        self._filepath = nc_dataset_obj.filepath()
+        # in case a user as a version netcdf C library < 4.1.2
+        try:
+            self._filepath = nc_dataset_obj.filepath()
+        except ValueError:
+            self._filepath = None
         self.sgrid_compliant_file()
     
     def find_grid_cell_node_vars(self):
