@@ -83,6 +83,11 @@ class SGridND(object):
         
         """
         return self._grid_variables
+    
+    @property
+    def non_grid_variables(self):
+        non_grid_variables = [variable for variable in self._variables if variable not in self._grid_variables]
+        return non_grid_variables
         
     @property
     def dimensions(self):
