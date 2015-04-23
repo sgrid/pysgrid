@@ -734,8 +734,7 @@ class SGridAttributes(object):
             dataset_variables.append(nc_var_name)
             sgrid_var = SGridVariable.create_variable(nc_var)
             var_center_slicing = determine_variable_slicing(sgrid,
-                                                            self.nc_dataset,
-                                                            nc_variable,
+                                                            nc_var,
                                                             method='center')
             sgrid_var.center_slicing = var_center_slicing
             sgrid.add_property(sgrid_var.variable, sgrid_var)

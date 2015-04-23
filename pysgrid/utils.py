@@ -53,7 +53,7 @@ def check_element_equal(lst):
     return lst[1:] == lst[:-1]
 
 
-def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center'):
+def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     """
     Figure out how to slice a variable. This function
     only knows who to figure out slices that would be
@@ -70,11 +70,10 @@ def determine_variable_slicing(sgrid_obj, nc_dataset, variable, method='center')
     :rtype: tuple
     
     """
-    var_obj = nc_dataset.variables[variable]
     grid_variables = sgrid_obj.grid_variables
     if grid_variables is None:
         grid_variables = []
-    var_dims = var_obj.dimensions
+    var_dims = nc_variable.dimensions
     padding_summary = sgrid_obj._define_face_padding_summary()
     slice_indices = tuple()
     if method == 'center':
