@@ -10,7 +10,7 @@ import mock
 import netCDF4 as nc4
 import numpy as np
 
-from ..sgrid import SGridND, from_nc_file, from_nc_dataset
+from ..sgrid import SGrid2D, SGrid3D, from_nc_file, from_nc_dataset
 from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
 
@@ -38,12 +38,12 @@ class TestSGridCreate(unittest.TestCase):
   
     def test_load_from_file(self):
         sg_obj = from_nc_file(self.sgrid_test_file)
-        self.assertIsInstance(sg_obj, SGridND)
+        self.assertIsInstance(sg_obj, SGrid2D)
 
     def test_load_from_dataset(self):
         ds = nc4.Dataset(self.sgrid_test_file)
         sg_obj = from_nc_dataset(ds)
-        self.assertIsInstance(sg_obj, SGridND)
+        self.assertIsInstance(sg_obj, SGrid2D)
     
 
 class TestSGridWithOptionalAttributes(unittest.TestCase):
@@ -234,7 +234,7 @@ class TestSGridSave(unittest.TestCase):
                                      ]
         target_face_coordinates = target.face_coordinates
         expected_target_face_coordinates = (u'XZ', u'YZ')
-        self.assertIsInstance(target, SGridND)
+        self.assertIsInstance(target, SGrid2D)
         self.assertEqual(target_dims, expected_target_dims)
         self.assertEqual(target_vars, expected_target_vars)
         self.assertEqual(target_grid_vars, expected_target_grid_vars)
@@ -251,7 +251,7 @@ class Test3DimensionalSGrid(unittest.TestCase):
         self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_sgrid_instance(self):
-        self.assertIsInstance(self.sg_obj, SGridND)
+        self.assertIsInstance(self.sg_obj, SGrid3D)
         
     def test_variables(self):
         sg_vars = self.sg_obj.variables
