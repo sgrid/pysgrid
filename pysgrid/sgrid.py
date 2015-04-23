@@ -805,45 +805,44 @@ def _load_grid_from_nc_dataset(nc_dataset,
     :rtype: sgrid.SGrid2D or sgrid.SGrid3D
     
     """
-    ncd = NetCDFDataset(nc_dataset)
-    is_sgrid_compliant = ncd.sgrid_compliant_file()
-    if is_sgrid_compliant:
-        if topology_dim == 2:
-            grid = SGrid2D.sgrid_from_dataset(nc_dataset, grid_topology_var)
-        elif topology_dim == 3:
-            grid = SGrid3D.sgrid_from_dataset(nc_dataset, grid_topology_var)
-        else:
-            raise ValueError('Only topology dimensions of 2 or 3 are supported')
-        return grid
+    if topology_dim == 2:
+        grid = SGrid2D.sgrid_from_dataset(nc_dataset, grid_topology_var)
+    elif topology_dim == 3:
+        grid = SGrid3D.sgrid_from_dataset(nc_dataset, grid_topology_var)
     else:
-        raise SGridNonCompliantError(nc_dataset)
+        raise ValueError('Only topology dimensions of 2 or 3 are supported')
+    return grid
     
     
-def _return_grid_type(nc_dataset):
+def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
     """
     Given a netCDF dataset, determine the topology
     dimension.
     
     :param nc_dataset: a netCDF dataset
     :type nc_dataset: netCDF4.Dataset
+    :param str grid_topology_vars: the name of the grid topology variable; defaults to None
     :return: topology dimension
     :rtype: int
     
     """
     ncd = NetCDFDataset(nc_dataset)
     if ncd.sgrid_compliant_file():
-        grid_topology_var = ncd.find_grid_topology_var()
-        nc_grid_topology_var = nc_dataset.variables[grid_topology_var]
+        if grid_topology_var is not None:
+            topology_var = grid_topology_var
+        else:
+            topology_var = ncd.find_grid_topology_var()
+        nc_grid_topology_var = nc_dataset.variables[topology_var]
         topology_dim = nc_grid_topology_var.topology_dimension
         if topology_dim == 2 or topology_dim == 3:
-            return topology_dim
+            return topology_dim, grid_topology_var
         else:
             raise ValueError('Only topology dimensions of 2 or 3 are supported')
     else:
         raise SGridNonCompliantError(nc_dataset)
     
     
-def from_nc_file(nc_url, grid_topology_vars=None):
+def from_nc_file(nc_url, grid_topology_var=None):
     """
     Get a SGrid object from a file. There is no need
     to know the topology dimensions a priori.
@@ -855,15 +854,19 @@ def from_nc_file(nc_url, grid_topology_vars=None):
     
     """
     with nc4.Dataset(nc_url, 'r') as nc_dataset:
-        topology_dim = _return_grid_type(nc_dataset)
+        topology_dim, introspected_grid_topology_var = _return_grid_topology_dim(nc_dataset, grid_topology_var)
+        if grid_topology_var is not None:
+            topology_var = grid_topology_var
+        else:
+            topology_var = introspected_grid_topology_var
         grid = _load_grid_from_nc_dataset(nc_dataset, 
                                           topology_dim, 
-                                          grid_topology_vars
+                                          topology_var
                                           )
     return grid
 
 
-def from_nc_dataset(nc_dataset, grid_topology_vars=None):
+def from_nc_dataset(nc_dataset, grid_topology_var=None):
     """
     Get a SGrid object from a netCDF4.Dataset. There is no need
     to know the topology dimensions a priori.
@@ -874,9 +877,13 @@ def from_nc_dataset(nc_dataset, grid_topology_vars=None):
     :rtype: sgrid.SGrid2D or sgrid.SGrid3D
     
     """
-    topology_dim = _return_grid_type(nc_dataset)
+    topology_dim, introspected_grid_topology_var = _return_grid_topology_dim(nc_dataset, grid_topology_var)
+    if grid_topology_var is not None:
+        topology_var = grid_topology_var
+    else:
+        topology_var = introspected_grid_topology_var
     grid = _load_grid_from_nc_dataset(nc_dataset, 
                                       topology_dim, 
-                                      grid_topology_vars
+                                      topology_var
                                       )
     return grid
