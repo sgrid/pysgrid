@@ -7,7 +7,6 @@ import abc
 
 import netCDF4 as nc4
 
-from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
 from .utils import pair_arrays
 from .variables import SGridVariable
@@ -831,19 +830,16 @@ def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
     
     """
     ncd = NetCDFDataset(nc_dataset)
-    if ncd.sgrid_compliant_file():
-        if grid_topology_var is not None:
-            topology_var = grid_topology_var
-        else:
-            topology_var = ncd.find_grid_topology_var()
-        nc_grid_topology_var = nc_dataset.variables[topology_var]
-        topology_dim = nc_grid_topology_var.topology_dimension
-        if topology_dim == 2 or topology_dim == 3:
-            return topology_dim, grid_topology_var
-        else:
-            raise ValueError('Only topology dimensions of 2 or 3 are supported')
+    if grid_topology_var is not None:
+        topology_var = grid_topology_var
     else:
-        raise SGridNonCompliantError(nc_dataset)
+        topology_var = ncd.find_grid_topology_var()
+    nc_grid_topology_var = nc_dataset.variables[topology_var]
+    topology_dim = nc_grid_topology_var.topology_dimension
+    if topology_dim == 2 or topology_dim == 3:
+        return topology_dim, grid_topology_var
+    else:
+        raise ValueError('Only topology dimensions of 2 or 3 are supported')
     
     
 def from_nc_file(nc_url, grid_topology_var=None):

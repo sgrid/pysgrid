@@ -18,15 +18,15 @@ class CannotFindPaddingError(Exception):
 
 class SGridNonCompliantError(Exception):
     
-    base_message = 'This netCDF object does not appear to be SGRID compliant: {0}.'
+    base_message = 'This netCDF object derived from the dataset at {0} does not appear to be SGRID compliant.'
     
-    def __init__(self, dataset_obj):
-        self.dataset_obj = dataset_obj
-        
+    def __init__(self, dataset_path):
+        self.dataset_path = dataset_path
+
     def __str__(self):
-        filepath = self.dataset_obj.filepath()
-        error_message = self.base_message.format(filepath)
+        error_message = self.base_message.format(self.dataset_path)
         return error_message
+
     
     
 def deprecated(deprecated_function):
