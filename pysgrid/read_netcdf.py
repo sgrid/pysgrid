@@ -79,7 +79,7 @@ class NetCDFDataset(object):
                     grid_cell_node_lat = nc_var
         return grid_cell_node_lon, grid_cell_node_lat
         
-    def find_grid_topology_vars(self):
+    def find_grid_topology_var(self):
         """
         Get the variables from a netCDF dataset
         that have a cf_role attribute of 'grid_topology'.
@@ -91,7 +91,7 @@ class NetCDFDataset(object):
         
         """
         nc_vars = self.ncd.variables
-        grid_topology_vars = []
+        # grid_topology_vars = []
         for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
             try:
@@ -102,11 +102,11 @@ class NetCDFDataset(object):
             else:
                 topology_dim = nc_var_obj.topology_dimension
             if cf_role == 'grid_topology' and (topology_dim == 2 or topology_dim == 3):
-                grid_topology_vars.append(nc_var)
-        if len(grid_topology_vars) > 0:
-            grid_topology_var = grid_topology_vars[0]
-        else:
-            grid_topology_var = None
+                grid_topology_var = nc_var
+                # exit the loop once the topology variable is found
+                break
+            else:
+                grid_topology_var = None
         return grid_topology_var
     
     def search_variables_by_location(self, location_str):
@@ -204,7 +204,7 @@ class NetCDFDataset(object):
         :rtype: bool
         
         """
-        grid_vars = self.find_grid_topology_vars()
+        grid_vars = self.find_grid_topology_var()
         if grid_vars is not None:
             sgrid_compliant = True
         else:

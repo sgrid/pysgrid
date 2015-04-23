@@ -88,7 +88,7 @@ class TestNetCDFDataset(unittest.TestCase):
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):
-        result = self.nc_ds.find_grid_topology_vars()
+        result = self.nc_ds.find_grid_topology_var()
         expected = 'grid'
         self.assertEqual(result, expected)
         
