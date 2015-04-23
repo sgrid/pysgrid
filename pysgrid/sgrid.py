@@ -63,6 +63,10 @@ class SGridND(object):
         self._edge1_dimensions = edge1_dimensions
         self._edge2_dimensions = edge2_dimensions
         
+    @classmethod
+    def get_topology_dimension(cls):
+        return cls.topology_dimensions
+        
     @property
     def grid_topology_vars(self):
         return self._grid_topology_vars
@@ -552,10 +556,14 @@ class SGrid3D(SGridND):
 
 class SGridAttributes(object):
     
-    def __init__(self, nc_dataset, topology_variable):
+    def __init__(self, nc_dataset, topology_variable=None):
         self.nc_dataset = nc_dataset
         self.ncd = NetCDFDataset(self.nc_dataset)
-        self.topology_variable = topology_variable  # the netCDF variable with a cf_role of 'grid_topology'
+        if topology_variable is None:
+            # the netCDF variable with a cf_role of 'grid_topology'
+            self.topology_variable = self.ncd.find_grid_topology_vars()
+        else:
+            self.topology_variable = topology_variable
         self.topology_var = self.nc_dataset.variables[self.topology_variable]
     
     def get_dimensions(self):
@@ -853,13 +861,7 @@ def _load_grid_from_nc_dataset(nc_dataset,
     ncd = NetCDFDataset(nc_dataset)
     is_sgrid_compliant = ncd.sgrid_compliant_file()
     if is_sgrid_compliant:
-        if grid_topology_vars is None:
-            grid_topology_vars_attr = ncd.find_grid_topology_vars()
-        else:
-            grid_topology_vars_attr = grid_topology_vars
-        topology_var = grid_topology_vars_attr
-        nc_grid_topology_var = nc_dataset.variables[topology_var]
-        sa = SGridAttributes(nc_dataset, topology_var)
+        sa = SGridAttributes(nc_dataset, grid_topology_vars)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_sgrid_node_coordinates()
         grid_topology_vars = sa.get_grid_topology_vars()
@@ -949,7 +951,7 @@ def _load_grid_from_nc_dataset(nc_dataset,
                            volume_padding=volume_padding
                            )
         else:
-            raise ValueError('A topology dimension of {0} is unsupported'.format(nc_grid_topology_var.topology_dimension))
+            raise ValueError('A topology dimensions of 2 or 3 are supported')
         sa.get_sgrid_variable_attributes(grid)
         return grid
     else:
