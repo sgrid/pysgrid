@@ -9,6 +9,7 @@ import unittest
 import netCDF4 as nc4
 import numpy as np
 
+from ..sgrid import SGrid2D
 from ..variables import SGridVariable
 
 
@@ -20,16 +21,17 @@ class TestSGridVariable(unittest.TestCase):
     
     def setUp(self):
         self.test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
+        self.sgrid = SGrid2D()
         self.dataset = nc4.Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']
         
     def test_create_sgrid_variable_object(self):
-        sgrid_var = SGridVariable.create_variable(self.test_var_1)
+        sgrid_var = SGridVariable.create_variable(self.test_var_1, self.sgrid)
         self.assertIsInstance(sgrid_var, SGridVariable)
         
     def test_attributes_with_grid(self):
-        sgrid_var = SGridVariable.create_variable(self.test_var_1)
+        sgrid_var = SGridVariable.create_variable(self.test_var_1, self.sgrid)
         sgrid_var_name = sgrid_var.variable
         sgrid_var_name_expected = 'u'
         sgrid_var_dim = sgrid_var.dimensions
@@ -45,7 +47,7 @@ class TestSGridVariable(unittest.TestCase):
         self.assertEqual(sgrid_var_dtype, np.dtype('float32'))
         
     def test_attributes_with_location(self):
-        sgrid_var = SGridVariable.create_variable(self.test_var_2)
+        sgrid_var = SGridVariable.create_variable(self.test_var_2, self.sgrid)
         sgrid_var_name = sgrid_var.variable
         sgrid_var_name_expected = 'zeta'
         sgrid_var_dim = sgrid_var.dimensions
