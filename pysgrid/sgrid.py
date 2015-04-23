@@ -730,16 +730,11 @@ class SGridAttributes(object):
         nc_variables = self.nc_dataset.variables
         for nc_variable in nc_variables:
             nc_var = nc_variables[nc_variable]
-            nc_var_name = nc_var.name
-            dataset_variables.append(nc_var_name)
-            sgrid_var = SGridVariable.create_variable(nc_var)
-            var_center_slicing = determine_variable_slicing(sgrid,
-                                                            nc_var,
-                                                            method='center')
-            sgrid_var.center_slicing = var_center_slicing
+            sgrid_var = SGridVariable.create_variable(nc_var, sgrid)
             sgrid.add_property(sgrid_var.variable, sgrid_var)
+            dataset_variables.append(nc_var.name)
             if hasattr(nc_var, 'grid'):
-                grid_variables.append(nc_var_name)
+                grid_variables.append(nc_var.name)
         sgrid._variables = dataset_variables
         sgrid._grid_variables = grid_variables
         
