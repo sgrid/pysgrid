@@ -49,36 +49,7 @@ def parse_padding(padding_str, mesh_topology_var):
     else:
         final_padding_types = None
         raise CannotFindPaddingError
-    return final_padding_types  
-
-
-def make_coordinate_parser(attr_name, find_coordinates_manually):
-    def parse_coordinates(topology_variable):
-        try:
-            attr_coordinates = getattr(topology_variable, attr_name)
-        except AttributeError:
-            pass
-        else:
-            attr_coordinates_val = attr_coordinates.split(' ')
-            return {attr_name: attr_coordinates_val}
-    return parse_coordinates
-
-
-def make_dimension_parser(attr_name):
-    def dimension_parser(topology_variable):
-        try:
-            attr_dims = getattr(topology_variable, attr_name)
-        except AttributeError:
-            pass
-        else:
-            attr_substr = attr_name.split('_')[0]
-            attr_padding_key = '{0}_padding'.format(attr_substr)
-            attr_padding = parse_padding(attr_dims, topology_variable.name)
-            result = {attr_name: attr_dims,
-                      attr_padding_key: attr_padding 
-                      }
-            return result
-    return dimension_parser
+    return final_padding_types
 
 
 class NetCDFDataset(object):
