@@ -5,10 +5,12 @@ Created on Apr 7, 2015
 '''
 import os
 import unittest
+
+import mock
 import netCDF4 as nc4
 import numpy as np
-import mock
-from ..sgrid import SGrid
+
+from ..sgrid import SGrid2D, SGrid3D, from_nc_file, from_nc_dataset
 from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
 
@@ -21,11 +23,10 @@ class TestSGridCompliant(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms.nc')
-        self.sg = SGrid
         
     def test_exception_raised(self):
         self.assertRaises(SGridNonCompliantError, 
-                          self.sg.from_nc_file, 
+                          from_nc_file,
                           self.sgrid_test_file
                           )
 
@@ -34,23 +35,22 @@ class TestSGridCreate(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
-        self.sg = SGrid
   
     def test_load_from_file(self):
-        sg_obj = self.sg.from_nc_file(self.sgrid_test_file)
-        self.assertIsInstance(sg_obj, SGrid)
+        sg_obj = from_nc_file(self.sgrid_test_file)
+        self.assertIsInstance(sg_obj, SGrid2D)
 
     def test_load_from_dataset(self):
         ds = nc4.Dataset(self.sgrid_test_file)
-        sg_obj = self.sg.from_nc_dataset(ds)
-        self.assertIsInstance(sg_obj, SGrid)
-        
+        sg_obj = from_nc_dataset(ds)
+        self.assertIsInstance(sg_obj, SGrid2D)
+    
 
 class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
     def test_centers(self):
@@ -118,13 +118,13 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     def test_write_sgrid_to_netcdf(self, mock_nc):
         self.sg_obj.save_as_netcdf(self.write_path)
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
-        
+      
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):
         centers = self.sg_obj.centers
@@ -168,6 +168,29 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
         
+    def test_no_3d_attributes(self):
+        self.assertFalse(hasattr(self.sg_obj, 'volume_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'volume_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'volume_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face1_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face2_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'face3_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face3_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'edge3_dimensions'))
+        
+    def test_2d_attributes(self):
+        self.assertTrue(hasattr(self.sg_obj, 'face_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'vertical_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'vertical_dimensions'))
+
 
 class TestSGridSave(unittest.TestCase):
     """
@@ -181,11 +204,11 @@ class TestSGridSave(unittest.TestCase):
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES,'test_sgrid_deltares.nc' )
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_save_as_netcdf(self):
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        target = SGrid.from_nc_file(self.sgrid_target)
+        target = from_nc_file(self.sgrid_target)
         target_dims = target.dimensions
         expected_target_dims = [(u'MMAXZ', 4), 
                                 (u'NMAXZ', 4), 
@@ -211,7 +234,7 @@ class TestSGridSave(unittest.TestCase):
                                      ]
         target_face_coordinates = target.face_coordinates
         expected_target_face_coordinates = (u'XZ', u'YZ')
-        self.assertIsInstance(target, SGrid)
+        self.assertIsInstance(target, SGrid2D)
         self.assertEqual(target_dims, expected_target_dims)
         self.assertEqual(target_vars, expected_target_vars)
         self.assertEqual(target_grid_vars, expected_target_grid_vars)
@@ -225,10 +248,10 @@ class Test3DimensionalSGrid(unittest.TestCase):
     
     def setUp(self):
         self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf.nc')
-        self.sg_obj = SGrid.from_nc_file(self.sgrid_test_file)
+        self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_sgrid_instance(self):
-        self.assertIsInstance(self.sg_obj, SGrid)
+        self.assertIsInstance(self.sg_obj, SGrid3D)
         
     def test_variables(self):
         sg_vars = self.sg_obj.variables
@@ -265,5 +288,26 @@ class Test3DimensionalSGrid(unittest.TestCase):
         topology_dim = self.sg_obj.topology_dimension
         expected_topology_dim = 3
         self.assertEqual(topology_dim, expected_topology_dim)
-
-    
+        
+    def test_no_2d_attributes(self):
+        self.assertFalse(hasattr(self.sg_obj, 'face_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'face_coordinates'))
+        self.assertFalse(hasattr(self.sg_obj, 'face_dimensions'))
+        self.assertFalse(hasattr(self.sg_obj, 'vertical_padding'))
+        self.assertFalse(hasattr(self.sg_obj, 'vertical_dimensions'))
+        
+    def test_3d_attributes(self):
+        self.assertTrue(hasattr(self.sg_obj, 'volume_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'volume_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'volume_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face1_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'face2_dimensions'))
+        self.assertTrue(hasattr(self.sg_obj, 'face3_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'face3_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_padding'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_coordinates'))
+        self.assertTrue(hasattr(self.sg_obj, 'edge3_dimensions'))

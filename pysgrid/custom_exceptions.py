@@ -3,8 +3,9 @@ Created on Mar 23, 2015
 
 @author: ayan
 '''
-import warnings
 import functools
+import warnings
+
 
 
 class CannotFindPaddingError(Exception):
@@ -23,7 +24,8 @@ class SGridNonCompliantError(Exception):
         self.dataset_obj = dataset_obj
         
     def __str__(self):
-        error_message = self.base_message.format(self.dataset_obj.filepath())
+        filepath = self.dataset_obj.filepath()
+        error_message = self.base_message.format(filepath)
         return error_message
     
     
