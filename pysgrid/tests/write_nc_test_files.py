@@ -92,11 +92,17 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
         grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         latitude.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[1]
+        latitude.axes = 'X: NMAXZ Y: MMAXZ'
         longitude.long_name = LON_GRID_CELL_CENTER_LONG_NAME[1]
+        longitude.axes = 'X: NMAXZ Y: MMAXZ'
         grid_latitude.long_name = LAT_GRID_CELL_NODE_LONG_NAME[1]
+        grid_latitude.axes = 'X: NMAX Y: MMAX'
         grid_longitude.long_name = LON_GRID_CELL_NODE_LONG_NAME[1]
+        grid_longitude.axes = 'X: NMAX Y: MMAX'
         u1.grid = 'some grid'
+        u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
         v1.grid = 'some grid'
+        v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
@@ -160,10 +166,14 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
         lon_centers.standard_name = 'longitude'
+        lon_centers.axes = 'X: xi_rho Y: eta_rho'
         lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
         lat_centers.standard_name = 'latitude'
+        lat_centers.axes = 'X: xi_rho Y: eta_rho'
         lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
+        lon_nodes.axes = 'X: xi_psi Y: eta_psi'
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
+        lat_nodes.axes = 'X: xi_psi Y: eta_psi'
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'xi_psi eta_psi'
@@ -178,7 +188,9 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         zeta.location = 'faces'
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
+        u.axes = 'X: xi_u Y: eta_u'
         v.grid = 'some grid'
+        v.axes = 'X: xi_v Y: eta_v'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
@@ -249,7 +261,7 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
         
         
         
-def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
+def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -331,7 +343,7 @@ if __name__ == '__main__':
     
     deltares_sgrid()
     roms_sgrid()
-    roms_non_compliant_sgrid()
-    simulated_dgrid()
-    wrf_sgrid()
+    # non_compliant_sgrid()
+    # simulated_dgrid()
+    # wrf_sgrid()
         

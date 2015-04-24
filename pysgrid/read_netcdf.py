@@ -52,6 +52,25 @@ def parse_padding(padding_str, mesh_topology_var):
     return final_padding_types
 
 
+def parse_axes(axes_attr):
+    p = re.compile('([a-zA-Z]: [a-zA-Z_]+)')
+    matches = p.findall(axes_attr)
+    x_axis = None
+    y_axis = None
+    z_axis = None
+    for match in matches:
+        axis_split = match.split(':')
+        axis_name = axis_split[0].strip()
+        axis_coordinate = axis_split[1].strip()
+        if axis_name.lower() == 'x':
+            x_axis = axis_coordinate
+        elif axis_name.lower() == 'y':
+            y_axis = axis_coordinate
+        elif axis_name.lower() == 'z':
+            z_axis = axis_coordinate
+    return x_axis, y_axis, z_axis
+
+
 class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
