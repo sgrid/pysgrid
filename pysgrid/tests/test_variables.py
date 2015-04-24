@@ -10,6 +10,7 @@ import netCDF4 as nc4
 import numpy as np
 
 from ..sgrid import SGrid2D
+from ..utils import GridPadding
 from ..variables import SGridVariable
 
 
@@ -22,6 +23,7 @@ class TestSGridVariable(unittest.TestCase):
     def setUp(self):
         self.test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.sgrid = SGrid2D()
+        self.sgrid._face_padding = [GridPadding(mesh_topology_var=u'grid', dim=u'MMAXZ', sub_dim=u'MMAX', padding=u'low'), GridPadding(mesh_topology_var=u'grid', dim=u'NMAXZ', sub_dim=u'NMAX', padding=u'low')]
         self.dataset = nc4.Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']
@@ -39,6 +41,7 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_grid = sgrid_var.grid
         sgrid_var_grid_expected = 'some grid'
         sgrid_var_location = sgrid_var.location
+        sgrid_var_location_expected = 'edge1'
         sgrid_var_dtype = sgrid_var.dtype
         x_axis = sgrid_var.x_axis
         x_axis_expected = 'xi_u'
@@ -48,7 +51,7 @@ class TestSGridVariable(unittest.TestCase):
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
         self.assertEqual(sgrid_var_grid, sgrid_var_grid_expected)
-        self.assertIsNone(sgrid_var_location)
+        self.assertEqual(sgrid_var_location, sgrid_var_location_expected)
         self.assertEqual(sgrid_var_dtype, np.dtype('float32'))
         self.assertEqual(x_axis, x_axis_expected)
         self.assertEqual(y_axis, y_axis_expected)

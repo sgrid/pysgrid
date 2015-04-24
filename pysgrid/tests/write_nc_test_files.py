@@ -189,8 +189,10 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
         u.axes = 'X: xi_u Y: eta_u'
+        u.location = 'edge1'
         v.grid = 'some grid'
         v.axes = 'X: xi_v Y: eta_v'
+        v.location = 'edge2'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
