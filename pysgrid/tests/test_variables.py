@@ -40,11 +40,19 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_grid_expected = 'some grid'
         sgrid_var_location = sgrid_var.location
         sgrid_var_dtype = sgrid_var.dtype
+        x_axis = sgrid_var.x_axis
+        x_axis_expected = 'xi_u'
+        y_axis = sgrid_var.y_axis
+        y_axis_expected = 'eta_u'
+        z_axis = sgrid_var.z_axis
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
         self.assertEqual(sgrid_var_grid, sgrid_var_grid_expected)
         self.assertIsNone(sgrid_var_location)
         self.assertEqual(sgrid_var_dtype, np.dtype('float32'))
+        self.assertEqual(x_axis, x_axis_expected)
+        self.assertEqual(y_axis, y_axis_expected)
+        self.assertIsNone(z_axis)
         
     def test_attributes_with_location(self):
         sgrid_var = SGridVariable.create_variable(self.test_var_2, self.sgrid)
@@ -56,8 +64,14 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_location_expected = 'faces'
         sgrid_var_dim_expected = ('time', 'eta_rho', 'xi_rho')
         sgrid_var_dtype = sgrid_var.dtype
+        x_axis = sgrid_var.x_axis
+        y_axis = sgrid_var.y_axis
+        z_axis = sgrid_var.z_axis
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
         self.assertIsNone(sgrid_var_grid)
         self.assertEqual(sgrid_var_location, sgrid_var_location_expected)
         self.assertEqual(sgrid_var_dtype, np.dtype('float32'))
+        self.assertIsNone(x_axis)
+        self.assertIsNone(y_axis)
+        self.assertIsNone(z_axis)

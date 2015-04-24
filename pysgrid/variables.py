@@ -3,6 +3,7 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
+from .read_netcdf import parse_axes
 from .utils import determine_variable_slicing
 
 
@@ -15,7 +16,9 @@ class SGridVariable(object):
     def __init__(self, 
                  variable=None, 
                  grid=None, 
-                 axes=None, 
+                 x_axis=None,
+                 y_axis=None,
+                 z_axis=None, 
                  center_slicing=None,
                  node_slicing=None, 
                  dimensions=None, 
@@ -23,7 +26,9 @@ class SGridVariable(object):
                  location=None):
         self._variable = variable
         self._grid = grid
-        self._axes = axes
+        self._x_axis = x_axis
+        self._y_axis = y_axis
+        self._z_axis = z_axis
         self._center_slicing = center_slicing
         self._node_slicing = node_slicing
         self._dimensions = dimensions
@@ -47,9 +52,19 @@ class SGridVariable(object):
             location = nc_var_obj.location
         except AttributeError:
             location = None
+        try:
+            axes = nc_var_obj.axes
+        except AttributeError:
+            x_axis = None
+            y_axis = None
+            z_axis = None
+        else:
+            x_axis, y_axis, z_axis = parse_axes(axes)
         sgrid_var = cls(variable=variable,
                         grid=grid,
-                        axes=None,
+                        x_axis=x_axis,
+                        y_axis=y_axis,
+                        z_axis=z_axis,
                         center_slicing=center_slicing,
                         node_slicing=None,
                         dimensions=dimensions,
@@ -65,10 +80,18 @@ class SGridVariable(object):
     @property
     def grid(self):
         return self._grid
-        
+    
     @property
-    def axes(self):
-        return self._axes
+    def x_axis(self):
+        return self._x_axis
+    
+    @property
+    def y_axis(self):
+        return self._y_axis
+    
+    @property
+    def z_axis(self):
+        return self._z_axis
         
     @property
     def center_slicing(self):
