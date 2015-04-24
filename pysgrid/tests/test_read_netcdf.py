@@ -9,13 +9,30 @@ import unittest
 import netCDF4 as nc4
 
 from ..custom_exceptions import CannotFindPaddingError
-from ..read_netcdf import NetCDFDataset, parse_padding
+from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding
 
 
 
 
 CURRENT_DIR = os.path.dirname(__file__)
 TEST_FILES = os.path.join(CURRENT_DIR, 'files')
+
+
+class TestParseAxes(unittest.TestCase):
+    
+    def setUp(self):
+        self.xy = 'X: xi_psi Y: eta_psi'
+        self.xyz = 'X: NMAX Y: MMAXZ Z: KMAX'
+        
+    def test_xyz_axis_parse(self):
+        result = parse_axes(self.xyz)
+        expected = ('NMAX', 'MMAXZ', 'KMAX')
+        self.assertEqual(result, expected)
+        
+    def test_xy_axis_parse(self):
+        result = parse_axes(self.xy)
+        expected = ('xi_psi', 'eta_psi', None)
+        self.assertEqual(result, expected)
 
 
 class TestParsePadding(unittest.TestCase):
