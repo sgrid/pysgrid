@@ -4,7 +4,7 @@ Created on Apr 15, 2015
 @author: ayan
 '''
 from .read_netcdf import parse_axes
-from .utils import determine_variable_slicing
+from .utils import determine_variable_slicing, infer_avg_axes
 
 
 class SGridVariable(object):
@@ -20,7 +20,9 @@ class SGridVariable(object):
                  y_axis=None,
                  z_axis=None, 
                  center_slicing=None,
-                 node_slicing=None, 
+                 center_axis=None,
+                 node_slicing=None,
+                 node_axis=None, 
                  dimensions=None, 
                  dtype=None, 
                  location=None):
@@ -30,7 +32,9 @@ class SGridVariable(object):
         self._y_axis = y_axis
         self._z_axis = z_axis
         self._center_slicing = center_slicing
+        self._center_axis = center_axis
         self._node_slicing = node_slicing
+        self._node_axis = node_axis
         self._dimensions = dimensions
         self._dtype = dtype
         self._location = location
@@ -40,8 +44,12 @@ class SGridVariable(object):
         variable = nc_var_obj.name
         try:
             grid = nc_var_obj.grid
-        except:
+        except AttributeError:
             grid = None
+            center_axis = None
+            node_axis = None
+        else:
+            center_axis, node_axis = infer_avg_axes(sgrid_obj, nc_var_obj)
         center_slicing = determine_variable_slicing(sgrid_obj, 
                                                     nc_var_obj, 
                                                     method='center'
@@ -66,7 +74,9 @@ class SGridVariable(object):
                         y_axis=y_axis,
                         z_axis=z_axis,
                         center_slicing=center_slicing,
+                        center_axis=center_axis,
                         node_slicing=None,
+                        node_axis=node_axis,
                         dimensions=dimensions,
                         dtype=dtype,
                         location=location
@@ -102,6 +112,10 @@ class SGridVariable(object):
         
         """
         return self._center_slicing
+    
+    @property
+    def center_axis(self):
+        return self._center_axis
         
     @property
     def node_slicing(self):
@@ -111,6 +125,10 @@ class SGridVariable(object):
         
         """
         return self._node_slicing
+    
+    @property
+    def node_axis(self):
+        return self._node_axis
         
     @property
     def dimensions(self):

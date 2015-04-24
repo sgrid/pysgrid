@@ -126,6 +126,18 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.assertEqual(u_center_slices, u_center_expected)
         self.assertEqual(v_center_slices, v_center_expected)
         
+    def test_grid_variable_average_axes(self):
+        uc_axis = self.sg_obj.u.center_axis
+        uc_axis_expected = 1
+        un_axis = self.sg_obj.u.node_axis
+        un_axis_expected = 0
+        lon_rho_c_axis = self.sg_obj.lon_rho.center_axis
+        lon_rho_n_axis = self.sg_obj.lon_rho.node_axis
+        self.assertEqual(uc_axis, uc_axis_expected)
+        self.assertEqual(un_axis, un_axis_expected)
+        self.assertIsNone(lon_rho_c_axis)
+        self.assertIsNone(lon_rho_n_axis)
+        
     def test_optional_grid_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
         node_coordinates = self.sg_obj.node_coordinates
@@ -176,6 +188,18 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         self.assertEqual(v_center_slices, v_center_expected)
         self.assertEqual(xz_center_slices, xz_center_expected)
         self.assertEqual(xcor_center_slices, xcor_center_expected)
+        
+    def test_averaging_axes(self):
+        u1c_axis = self.sg_obj.U1.center_axis
+        u1c_expected = 0
+        v1n_axis = self.sg_obj.V1.node_axis
+        v1n_expected = 0
+        latitude_c_axis = self.sg_obj.latitude.center_axis
+        latitude_n_axis = self.sg_obj.latitude.node_axis
+        self.assertEqual(u1c_axis, u1c_expected)
+        self.assertEqual(v1n_axis, v1n_expected)
+        self.assertIsNone(latitude_c_axis)
+        self.assertIsNone(latitude_n_axis)
         
     def test_grid_optional_attrs(self):
         face_coordinates = self.sg_obj.face_coordinates
