@@ -22,7 +22,7 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 class TestSGridCompliant(unittest.TestCase):
     
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid_roms.nc')
+        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid.nc')
         
     def test_exception_raised(self):
         self.assertRaises(SGridNonCompliantError, 
@@ -61,24 +61,24 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
-        expected_vars = [u'z_center', 
-                         u'z_node', 
+        expected_vars = [u's_rho', 
+                         u's_w', 
                          u'time', 
-                         u'x_center', 
-                         u'y_center', 
-                         u'x_node', 
-                         u'y_node', 
-                         u'x_u', 
-                         u'y_u', 
-                         u'x_v', 
-                         u'y_v', 
+                         u'xi_rho', 
+                         u'eta_rho', 
+                         u'xi_psi', 
+                         u'eta_psi', 
+                         u'xi_u', 
+                         u'eta_u', 
+                         u'xi_v', 
+                         u'eta_v', 
                          u'grid', 
                          u'u', 
                          u'v', 
-                         u'lon_center', 
-                         u'lat_center', 
-                         u'lon_node', 
-                         u'lat_node', 
+                         u'lon_rho', 
+                         u'lat_rho', 
+                         u'lon_psi', 
+                         u'lat_psi', 
                          u'lat_u', 
                          u'lon_u', 
                          u'lat_v', 
@@ -94,22 +94,22 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         
     def test_non_grid_variables(self):
         dataset_non_grid_variables = self.sg_obj.non_grid_variables
-        expected_non_grid_variables = [u'z_center', 
-                                       u'z_node', 
+        expected_non_grid_variables = [u's_rho', 
+                                       u's_w', 
                                        u'time', 
-                                       u'x_center', 
-                                       u'y_center', 
-                                       u'x_node', 
-                                       u'y_node', 
-                                       u'x_u', 
-                                       u'y_u', 
-                                       u'x_v', 
-                                       u'y_v', 
+                                       u'xi_rho', 
+                                       u'eta_rho', 
+                                       u'xi_psi', 
+                                       u'eta_psi', 
+                                       u'xi_u', 
+                                       u'eta_u', 
+                                       u'xi_v', 
+                                       u'eta_v', 
                                        u'grid', 
-                                       u'lon_center', 
-                                       u'lat_center', 
-                                       u'lon_node', 
-                                       u'lat_node', 
+                                       u'lon_rho', 
+                                       u'lat_rho', 
+                                       u'lon_psi', 
+                                       u'lat_psi', 
                                        u'lat_u', 
                                        u'lon_u', 
                                        u'lat_v', 
@@ -131,8 +131,8 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         node_coordinates = self.sg_obj.node_coordinates
         edge1_coordinates = self.sg_obj.edge1_coordinates
         edge2_coordinates = self.sg_obj.edge2_coordinates
-        fc_expected = ('lon_center', 'lat_center')
-        nc_expected = ('lon_node', 'lat_node')
+        fc_expected = ('lon_rho', 'lat_rho')
+        nc_expected = ('lon_psi', 'lat_psi')
         e1c_expected = ('lon_u', 'lat_u')
         e2c_expected = ('lon_v', 'lat_v')
         self.assertEqual(face_coordinates, fc_expected)

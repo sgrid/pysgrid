@@ -79,12 +79,12 @@ class TestNetCDFDataset(unittest.TestCase):
         
     def test_finding_node_variables(self):
         result = self.nc_ds.find_grid_cell_node_vars()
-        expected = ('lon_node', 'lat_node')
+        expected = ('lon_psi', 'lat_psi')
         self.assertEqual(result, expected)
         
     def test_find_coordinatates_by_location(self):
         result = self.nc_ds.find_coordinates_by_location('faces', 2)
-        expected = ('lon_center', 'lat_center')
+        expected = ('lon_rho', 'lat_rho')
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):
