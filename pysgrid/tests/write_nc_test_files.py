@@ -121,42 +121,42 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
-        z_center = rg.createDimension('z_center', 2)
-        z_node = rg.createDimension('z_node', 3)
+        z_center = rg.createDimension('s_rho', 2)
+        z_node = rg.createDimension('s_w', 3)
         time = rg.createDimension('time', 2)
-        x_center = rg.createDimension('x_center', 4)
-        y_center = rg.createDimension('y_center', 4)
-        x_node = rg.createDimension('x_node', 3)
-        y_node = rg.createDimension('y_node', 3)
-        x_u = rg.createDimension('x_u', 3)
-        y_u = rg.createDimension('y_u', 4)
-        x_v = rg.createDimension('x_v', 4)
-        y_v = rg.createDimension('y_v', 3)
+        x_center = rg.createDimension('xi_rho', 4)
+        y_center = rg.createDimension('eta_rho', 4)
+        x_node = rg.createDimension('xi_psi', 3)
+        y_node = rg.createDimension('eta_psi', 3)
+        x_u = rg.createDimension('xi_u', 3)
+        y_u = rg.createDimension('eta_u', 4)
+        x_v = rg.createDimension('xi_v', 4)
+        y_v = rg.createDimension('eta_v', 3)
         # create coordinate variables
-        z_centers = rg.createVariable('z_center', 'i4', ('z_center',))
-        z_nodes = rg.createVariable('z_node', 'i4', ('z_node',))
+        z_centers = rg.createVariable('s_rho', 'i4', ('s_rho',))
+        z_nodes = rg.createVariable('s_w', 'i4', ('s_w',))
         times = rg.createVariable('time', 'f8', ('time',))
-        x_centers = rg.createVariable('x_center', 'f4', ('x_center',))
-        y_centers = rg.createVariable('y_center', 'f4', ('y_center',))
-        x_nodes = rg.createVariable('x_node', 'f4', ('x_node',))
-        y_nodes = rg.createVariable('y_node', 'f4', ('y_node',))
-        x_us = rg.createVariable('x_u', 'f4', ('x_u',))
-        y_us = rg.createVariable('y_u', 'f4', ('y_u',))
-        x_vs = rg.createVariable('x_v', 'f4', ('x_v',))
-        y_vs = rg.createVariable('y_v', 'f4', ('y_v',))
+        x_centers = rg.createVariable('xi_rho', 'f4', ('xi_rho',))
+        y_centers = rg.createVariable('eta_rho', 'f4', ('eta_rho',))
+        x_nodes = rg.createVariable('xi_psi', 'f4', ('xi_psi',))
+        y_nodes = rg.createVariable('eta_psi', 'f4', ('eta_psi',))
+        x_us = rg.createVariable('xi_u', 'f4', ('xi_u',))
+        y_us = rg.createVariable('eta_u', 'f4', ('eta_u',))
+        x_vs = rg.createVariable('xi_v', 'f4', ('xi_v',))
+        y_vs = rg.createVariable('eta_v', 'f4', ('eta_v',))
         # create other variables
         grid = rg.createVariable('grid', 'i2')
-        u = rg.createVariable('u', 'f4', ('time', 'z_center', 'y_u', 'x_u'))
-        v = rg.createVariable('v', 'f4', ('time', 'z_center', 'y_v', 'x_v'))
-        lon_centers = rg.createVariable('lon_center', 'f4', ('y_center', 'x_center'))
-        lat_centers = rg.createVariable('lat_center', 'f4', ('y_center', 'x_center'))
-        lon_nodes = rg.createVariable('lon_node', 'f4', ('y_node', 'x_node'))
-        lat_nodes = rg.createVariable('lat_node', 'f4', ('y_node', 'x_node'))
-        lat_u = rg.createVariable('lat_u', 'f4', ('y_u', 'x_u'))
-        lon_u = rg.createVariable('lon_u', 'f4', ('y_u', 'x_u'))
-        lat_v = rg.createVariable('lat_v', 'f4', ('y_v', 'x_v'))
-        lon_v = rg.createVariable('lon_v', 'f4', ('y_v', 'x_v'))
-        zeta = rg.createVariable('zeta', 'f4', ('time', 'y_center', 'x_center'))
+        u = rg.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
+        v = rg.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
+        lon_centers = rg.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
+        lat_centers = rg.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
+        lon_nodes = rg.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
+        lat_nodes = rg.createVariable('lat_psi', 'f4', ('eta_psi', 'xi_psi'))
+        lat_u = rg.createVariable('lat_u', 'f4', ('eta_u', 'xi_u'))
+        lon_u = rg.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
+        lat_v = rg.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
+        lon_v = rg.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
+        zeta = rg.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
         lon_centers.standard_name = 'longitude'
@@ -166,17 +166,17 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
-        grid.node_dimensions = 'x_node y_node'
-        grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'
-        grid.edge1_dimensions = 'x_u: x_node y_u: y_node (padding: both)'
-        grid.edge2_dimensions = 'x_v: x_node (padding: both) y_v: y_node'
-        grid.node_coordinates = 'lon_node lat_node'
-        grid.face_coordinates = 'lon_center lat_center'
+        grid.node_dimensions = 'xi_psi eta_psi'
+        grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'
+        grid.edge1_dimensions = 'xi_u: xi_psi eta_u: eta_psi (padding: both)'
+        grid.edge2_dimensions = 'xi_v: xi_psi (padding: both) eta_v: eta_psi'
+        grid.node_coordinates = 'lon_psi lat_psi'
+        grid.face_coordinates = 'lon_rho lat_rho'
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
-        grid.vertical_dimensions = 'z_center: z_node (padding: none)'
+        grid.vertical_dimensions = 's_rho: s_w (padding: none)'
         zeta.location = 'faces'
-        zeta.coordinates = 'time lat_center lon_center'
+        zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
         v.grid = 'some grid'
         # create coordinate data
@@ -249,7 +249,7 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
         
         
         
-def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms.nc'):
+def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ

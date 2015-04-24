@@ -35,7 +35,7 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_name = sgrid_var.variable
         sgrid_var_name_expected = 'u'
         sgrid_var_dim = sgrid_var.dimensions
-        sgrid_var_dim_expected = ('time', 'z_center', 'y_u', 'x_u')
+        sgrid_var_dim_expected = ('time', 's_rho', 'eta_u', 'xi_u')
         sgrid_var_grid = sgrid_var.grid
         sgrid_var_grid_expected = 'some grid'
         sgrid_var_location = sgrid_var.location
@@ -54,7 +54,7 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_grid = sgrid_var.grid
         sgrid_var_location = sgrid_var.location
         sgrid_var_location_expected = 'faces'
-        sgrid_var_dim_expected = ('time', 'y_center', 'x_center')
+        sgrid_var_dim_expected = ('time', 'eta_rho', 'xi_rho')
         sgrid_var_dtype = sgrid_var.dtype
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
