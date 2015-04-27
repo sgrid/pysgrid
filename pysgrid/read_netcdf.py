@@ -5,7 +5,7 @@ Created on Mar 19, 2015
 '''
 import re
 
-from .custom_exceptions import CannotFindPaddingError
+from .custom_exceptions import CannotFindPaddingError, SGridNonCompliantError
 from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
 from .utils import GridPadding
 
@@ -52,10 +52,35 @@ def parse_padding(padding_str, mesh_topology_var):
     return final_padding_types
 
 
+def parse_axes(axes_attr):
+    p = re.compile('([a-zA-Z]: [a-zA-Z_]+)')
+    matches = p.findall(axes_attr)
+    x_axis = None
+    y_axis = None
+    z_axis = None
+    for match in matches:
+        axis_split = match.split(':')
+        axis_name = axis_split[0].strip()
+        axis_coordinate = axis_split[1].strip()
+        if axis_name.lower() == 'x':
+            x_axis = axis_coordinate
+        elif axis_name.lower() == 'y':
+            y_axis = axis_coordinate
+        elif axis_name.lower() == 'z':
+            z_axis = axis_coordinate
+    return x_axis, y_axis, z_axis
+
+
 class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
         self.ncd = nc_dataset_obj
+        # in case a user as a version netcdf C library < 4.1.2
+        try:
+            self._filepath = nc_dataset_obj.filepath()
+        except ValueError:
+            self._filepath = None
+        self.sgrid_compliant_file()
     
     def find_grid_cell_node_vars(self):
         """
@@ -79,7 +104,7 @@ class NetCDFDataset(object):
                     grid_cell_node_lat = nc_var
         return grid_cell_node_lon, grid_cell_node_lat
         
-    def find_grid_topology_vars(self):
+    def find_grid_topology_var(self):
         """
         Get the variables from a netCDF dataset
         that have a cf_role attribute of 'grid_topology'.
@@ -91,22 +116,20 @@ class NetCDFDataset(object):
         
         """
         nc_vars = self.ncd.variables
-        grid_topology_vars = []
+        grid_topology_var = None
         for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
             try:
-                cf_role = nc_var_obj.cf_role.strip()
-            except AttributeError:
-                cf_role = None
-                topology_dim = None
-            else:
+                # if either of these is missing, the dataset is not compliant
+                cf_role = nc_var_obj.cf_role
                 topology_dim = nc_var_obj.topology_dimension
-            if cf_role == 'grid_topology' and (topology_dim == 2 or topology_dim == 3):
-                grid_topology_vars.append(nc_var)
-        if len(grid_topology_vars) > 0:
-            grid_topology_var = grid_topology_vars[0]
-        else:
-            grid_topology_var = None
+            except AttributeError:
+                continue
+            else:
+                if cf_role.strip() == 'grid_topology' and (topology_dim == 2 or topology_dim == 3):
+                    grid_topology_var = nc_var
+                    # exit the loop once the topology variable is found
+                    break
         return grid_topology_var
     
     def search_variables_by_location(self, location_str):
@@ -198,15 +221,13 @@ class NetCDFDataset(object):
         Determine whether a dataset is
         SGRID compliant.
         
-        :param nc: netCDF dataset
-        :type nc: netCDF4.Dataset
-        :return: True if dataset is compliant, False if it is not
+        :return: True if dataset is compliant, raise an exception if it is not
         :rtype: bool
         
         """
-        grid_vars = self.find_grid_topology_vars()
+        grid_vars = self.find_grid_topology_var()
         if grid_vars is not None:
             sgrid_compliant = True
         else:
-            sgrid_compliant = False
+            raise SGridNonCompliantError(self._filepath)
         return sgrid_compliant

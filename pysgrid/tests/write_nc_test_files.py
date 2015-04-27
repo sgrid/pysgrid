@@ -92,11 +92,17 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
         grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         latitude.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[1]
+        latitude.axes = 'X: NMAXZ Y: MMAXZ'
         longitude.long_name = LON_GRID_CELL_CENTER_LONG_NAME[1]
+        longitude.axes = 'X: NMAXZ Y: MMAXZ'
         grid_latitude.long_name = LAT_GRID_CELL_NODE_LONG_NAME[1]
+        grid_latitude.axes = 'X: NMAX Y: MMAX'
         grid_longitude.long_name = LON_GRID_CELL_NODE_LONG_NAME[1]
+        grid_longitude.axes = 'X: NMAX Y: MMAX'
         u1.grid = 'some grid'
+        u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
         v1.grid = 'some grid'
+        v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
@@ -109,6 +115,7 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
         longitude[:] = np.random.random((4, 4))
         grid_latitude[:] = np.random.random((4, 4))
         grid_longitude[:] = np.random.random((4, 4))
+    return file_name
         
         
 def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
@@ -121,64 +128,72 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
-        z_center = rg.createDimension('z_center', 2)
-        z_node = rg.createDimension('z_node', 3)
+        z_center = rg.createDimension('s_rho', 2)
+        z_node = rg.createDimension('s_w', 3)
         time = rg.createDimension('time', 2)
-        x_center = rg.createDimension('x_center', 4)
-        y_center = rg.createDimension('y_center', 4)
-        x_node = rg.createDimension('x_node', 3)
-        y_node = rg.createDimension('y_node', 3)
-        x_u = rg.createDimension('x_u', 3)
-        y_u = rg.createDimension('y_u', 4)
-        x_v = rg.createDimension('x_v', 4)
-        y_v = rg.createDimension('y_v', 3)
+        x_center = rg.createDimension('xi_rho', 4)
+        y_center = rg.createDimension('eta_rho', 4)
+        x_node = rg.createDimension('xi_psi', 3)
+        y_node = rg.createDimension('eta_psi', 3)
+        x_u = rg.createDimension('xi_u', 3)
+        y_u = rg.createDimension('eta_u', 4)
+        x_v = rg.createDimension('xi_v', 4)
+        y_v = rg.createDimension('eta_v', 3)
         # create coordinate variables
-        z_centers = rg.createVariable('z_center', 'i4', ('z_center',))
-        z_nodes = rg.createVariable('z_node', 'i4', ('z_node',))
+        z_centers = rg.createVariable('s_rho', 'i4', ('s_rho',))
+        z_nodes = rg.createVariable('s_w', 'i4', ('s_w',))
         times = rg.createVariable('time', 'f8', ('time',))
-        x_centers = rg.createVariable('x_center', 'f4', ('x_center',))
-        y_centers = rg.createVariable('y_center', 'f4', ('y_center',))
-        x_nodes = rg.createVariable('x_node', 'f4', ('x_node',))
-        y_nodes = rg.createVariable('y_node', 'f4', ('y_node',))
-        x_us = rg.createVariable('x_u', 'f4', ('x_u',))
-        y_us = rg.createVariable('y_u', 'f4', ('y_u',))
-        x_vs = rg.createVariable('x_v', 'f4', ('x_v',))
-        y_vs = rg.createVariable('y_v', 'f4', ('y_v',))
+        x_centers = rg.createVariable('xi_rho', 'f4', ('xi_rho',))
+        y_centers = rg.createVariable('eta_rho', 'f4', ('eta_rho',))
+        x_nodes = rg.createVariable('xi_psi', 'f4', ('xi_psi',))
+        y_nodes = rg.createVariable('eta_psi', 'f4', ('eta_psi',))
+        x_us = rg.createVariable('xi_u', 'f4', ('xi_u',))
+        y_us = rg.createVariable('eta_u', 'f4', ('eta_u',))
+        x_vs = rg.createVariable('xi_v', 'f4', ('xi_v',))
+        y_vs = rg.createVariable('eta_v', 'f4', ('eta_v',))
         # create other variables
         grid = rg.createVariable('grid', 'i2')
-        u = rg.createVariable('u', 'f4', ('time', 'z_center', 'y_u', 'x_u'))
-        v = rg.createVariable('v', 'f4', ('time', 'z_center', 'y_v', 'x_v'))
-        lon_centers = rg.createVariable('lon_center', 'f4', ('y_center', 'x_center'))
-        lat_centers = rg.createVariable('lat_center', 'f4', ('y_center', 'x_center'))
-        lon_nodes = rg.createVariable('lon_node', 'f4', ('y_node', 'x_node'))
-        lat_nodes = rg.createVariable('lat_node', 'f4', ('y_node', 'x_node'))
-        lat_u = rg.createVariable('lat_u', 'f4', ('y_u', 'x_u'))
-        lon_u = rg.createVariable('lon_u', 'f4', ('y_u', 'x_u'))
-        lat_v = rg.createVariable('lat_v', 'f4', ('y_v', 'x_v'))
-        lon_v = rg.createVariable('lon_v', 'f4', ('y_v', 'x_v'))
-        zeta = rg.createVariable('zeta', 'f4', ('time', 'y_center', 'x_center'))
+        u = rg.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
+        v = rg.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
+        lon_centers = rg.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
+        lat_centers = rg.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
+        lon_nodes = rg.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
+        lat_nodes = rg.createVariable('lat_psi', 'f4', ('eta_psi', 'xi_psi'))
+        lat_u = rg.createVariable('lat_u', 'f4', ('eta_u', 'xi_u'))
+        lon_u = rg.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
+        lat_v = rg.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
+        lon_v = rg.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
+        zeta = rg.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
         lon_centers.standard_name = 'longitude'
+        lon_centers.axes = 'X: xi_rho Y: eta_rho'
         lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
         lat_centers.standard_name = 'latitude'
+        lat_centers.axes = 'X: xi_rho Y: eta_rho'
         lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
+        lon_nodes.axes = 'X: xi_psi Y: eta_psi'
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
+        lat_nodes.axes = 'X: xi_psi Y: eta_psi'
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
-        grid.node_dimensions = 'x_node y_node'
-        grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'
-        grid.edge1_dimensions = 'x_u: x_node y_u: y_node (padding: both)'
-        grid.edge2_dimensions = 'x_v: x_node (padding: both) y_v: y_node'
-        grid.node_coordinates = 'lon_node lat_node'
-        grid.face_coordinates = 'lon_center lat_center'
+        grid.node_dimensions = 'xi_psi eta_psi'
+        grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'
+        grid.edge1_dimensions = 'xi_u: xi_psi eta_u: eta_psi (padding: both)'
+        grid.edge2_dimensions = 'xi_v: xi_psi (padding: both) eta_v: eta_psi'
+        grid.node_coordinates = 'lon_psi lat_psi'
+        grid.face_coordinates = 'lon_rho lat_rho'
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
-        grid.vertical_dimensions = 'z_center: z_node (padding: none)'
+        grid.vertical_dimensions = 's_rho: s_w (padding: none)'
         zeta.location = 'faces'
-        zeta.coordinates = 'time lat_center lon_center'
+        zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
+        u.axes = 'X: xi_u Y: eta_u'
+        u.location = 'edge1'
         v.grid = 'some grid'
+        v.axes = 'X: xi_v Y: eta_v'
+        v.location = 'edge2'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
@@ -196,6 +211,7 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+    return file_name
         
         
 def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
@@ -246,10 +262,10 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
         xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
         znus[:, :] = np.random.random(size=(2, 3))
         znws[:, :] = np.random.random(size=(2, 4))
+    return file_name
         
-        
-        
-def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms.nc'):
+               
+def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -326,12 +342,13 @@ def roms_non_compliant_sgrid(nc_filename='test_noncompliant_sgrid_roms.nc'):
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+    return file_name
 
 if __name__ == '__main__':
     
     deltares_sgrid()
     roms_sgrid()
-    roms_non_compliant_sgrid()
+    non_compliant_sgrid()
     simulated_dgrid()
     wrf_sgrid()
         
