@@ -13,6 +13,7 @@ import numpy as np
 from ..sgrid import SGrid2D, SGrid3D, from_nc_file, from_nc_dataset
 from ..utils import GridPadding
 from ..custom_exceptions import SGridNonCompliantError
+from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -21,8 +22,13 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 
 class TestSGridCompliant(unittest.TestCase):
     
-    def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_noncompliant_sgrid.nc')
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = non_compliant_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
         
     def test_exception_raised(self):
         self.assertRaises(SGridNonCompliantError, 
@@ -33,23 +39,40 @@ class TestSGridCompliant(unittest.TestCase):
 
 class TestSGridCreate(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = roms_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
+        self.ds = nc4.Dataset(self.sgrid_test_file)
+        
+    def tearDown(self):
+        self.ds.close()
   
     def test_load_from_file(self):
         sg_obj = from_nc_file(self.sgrid_test_file)
         self.assertIsInstance(sg_obj, SGrid2D)
 
     def test_load_from_dataset(self):
-        ds = nc4.Dataset(self.sgrid_test_file)
-        sg_obj = from_nc_dataset(ds)
+        sg_obj = from_nc_dataset(self.ds)
         self.assertIsInstance(sg_obj, SGrid2D)
-    
+
 
 class TestSGridWithOptionalAttributes(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = roms_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+    
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.sg_obj = from_nc_file(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
   
@@ -156,12 +179,19 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     def test_write_sgrid_to_netcdf(self, mock_nc):
         self.sg_obj.save_as_netcdf(self.write_path)
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
-      
+     
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = deltares_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+    
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_deltares.nc')
         self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_centers(self):
@@ -251,8 +281,15 @@ class TestSGridSave(unittest.TestCase):
     mocks, but this will do for now.
     """
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = deltares_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES,'test_sgrid_deltares.nc' )
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
         self.sg_obj = from_nc_file(self.sgrid_test_file)
         
@@ -296,8 +333,15 @@ class TestSGridSave(unittest.TestCase):
         
 class Test3DimensionalSGrid(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = wrf_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+    
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_wrf.nc')
         self.sg_obj = from_nc_file(self.sgrid_test_file)
         
     def test_sgrid_instance(self):

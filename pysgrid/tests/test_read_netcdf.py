@@ -10,12 +10,7 @@ import netCDF4 as nc4
 
 from ..custom_exceptions import CannotFindPaddingError
 from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding
-
-
-
-
-CURRENT_DIR = os.path.dirname(__file__)
-TEST_FILES = os.path.join(CURRENT_DIR, 'files')
+from .write_nc_test_files import roms_sgrid
 
 
 class TestParseAxes(unittest.TestCase):
@@ -89,10 +84,20 @@ class TestParsePadding(unittest.TestCase):
 
 class TestNetCDFDataset(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = roms_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+    
     def setUp(self):
-        self.sgrid_test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.ds = nc4.Dataset(self.sgrid_test_file)
         self.nc_ds = NetCDFDataset(self.ds)
+        
+    def tearDown(self):
+        self.ds.close()
         
     def test_finding_node_variables(self):
         result = self.nc_ds.find_grid_cell_node_vars()
