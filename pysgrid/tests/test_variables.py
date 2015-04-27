@@ -12,6 +12,7 @@ import numpy as np
 from ..sgrid import SGrid2D
 from ..utils import GridPadding
 from ..variables import SGridVariable
+from .write_nc_test_files import roms_sgrid
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -20,13 +21,25 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 
 class TestSGridVariable(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        cls.test_file = roms_sgrid()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.test_file)
+    
     def setUp(self):
-        self.test_file = os.path.join(TEST_FILES, 'test_sgrid_roms.nc')
         self.sgrid = SGrid2D()
-        self.sgrid._face_padding = [GridPadding(mesh_topology_var=u'grid', dim=u'MMAXZ', sub_dim=u'MMAX', padding=u'low'), GridPadding(mesh_topology_var=u'grid', dim=u'NMAXZ', sub_dim=u'NMAX', padding=u'low')]
+        self.sgrid._face_padding = [GridPadding(mesh_topology_var=u'grid', dim=u'MMAXZ', sub_dim=u'MMAX', padding=u'low'), 
+                                    GridPadding(mesh_topology_var=u'grid', dim=u'NMAXZ', sub_dim=u'NMAX', padding=u'low')
+                                    ]
         self.dataset = nc4.Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']
+        
+    def tearDown(self):
+        self.dataset.close()
         
     def test_create_sgrid_variable_object(self):
         sgrid_var = SGridVariable.create_variable(self.test_var_1, self.sgrid)

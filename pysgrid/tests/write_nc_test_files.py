@@ -115,6 +115,7 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
         longitude[:] = np.random.random((4, 4))
         grid_latitude[:] = np.random.random((4, 4))
         grid_longitude[:] = np.random.random((4, 4))
+    return file_name
         
         
 def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
@@ -210,6 +211,7 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+    return file_name
         
         
 def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
@@ -260,9 +262,9 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
         xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
         znus[:, :] = np.random.random(size=(2, 3))
         znws[:, :] = np.random.random(size=(2, 4))
+    return file_name
         
-        
-        
+               
 def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
@@ -340,12 +342,13 @@ def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+    return file_name
 
 if __name__ == '__main__':
     
     deltares_sgrid()
     roms_sgrid()
-    # non_compliant_sgrid()
-    # simulated_dgrid()
-    # wrf_sgrid()
+    non_compliant_sgrid()
+    simulated_dgrid()
+    wrf_sgrid()
         
