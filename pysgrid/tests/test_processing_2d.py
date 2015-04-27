@@ -47,16 +47,16 @@ class TestRotateVectors(unittest.TestCase):
 class TestAvgToCellCenter(unittest.TestCase):
     
     def setUp(self):
-        self.data = np.array([[4, 5, 9, 10], [8, 39, 41, 20]])
+        self.data = np.array([[4, 5, 9, 10], [8, 39, 41, 20], [5, 29, 18, 71]])
         self.avg_dim_0 = 0
         self.avg_dim_1 = 1
         
     def test_no_transpose(self):
         avg_result = avg_to_cell_center(self.data, self.avg_dim_1)
-        expected = np.array([[4.5, 7, 9.5], [23.5, 40, 30.5]])
+        expected = np.array([[4.5, 7, 9.5], [23.5, 40, 30.5], [17, 23.5, 44.5]])
         np.testing.assert_almost_equal(avg_result, expected, decimal=3)
         
     def test_with_transpose(self):
         avg_result = avg_to_cell_center(self.data, self.avg_dim_0)
-        expected = np.array([[6, 22, 25, 15]])
+        expected = np.array([[6, 22, 25, 15], [6.5, 34, 29.5, 45.5]])
         np.testing.assert_almost_equal(avg_result, expected, decimal=3)
