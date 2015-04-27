@@ -26,18 +26,18 @@ class SGridVariable(object):
                  dimensions=None, 
                  dtype=None, 
                  location=None):
-        self._variable = variable
-        self._grid = grid
-        self._x_axis = x_axis
-        self._y_axis = y_axis
-        self._z_axis = z_axis
-        self._center_slicing = center_slicing
-        self._center_axis = center_axis
-        self._node_slicing = node_slicing
-        self._node_axis = node_axis
-        self._dimensions = dimensions
-        self._dtype = dtype
-        self._location = location
+        self.variable = variable
+        self.grid = grid
+        self.x_axis = x_axis
+        self.y_axis = y_axis
+        self.z_axis = z_axis
+        self.center_slicing = center_slicing
+        self.center_axis = center_axis
+        self.node_slicing = node_slicing
+        self.node_axis = node_axis
+        self.dimensions = dimensions
+        self.dtype = dtype
+        self.location = location
         
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
@@ -82,62 +82,3 @@ class SGridVariable(object):
                         location=location
                         )
         return sgrid_var
-        
-    @property
-    def variable(self):
-        return self._variable
-        
-    @property
-    def grid(self):
-        return self._grid
-    
-    @property
-    def x_axis(self):
-        return self._x_axis
-    
-    @property
-    def y_axis(self):
-        return self._y_axis
-    
-    @property
-    def z_axis(self):
-        return self._z_axis
-        
-    @property
-    def center_slicing(self):
-        """
-        Get the slicing necessary
-        when averaging to grid cell
-        centers.
-        
-        """
-        return self._center_slicing
-    
-    @property
-    def center_axis(self):
-        return self._center_axis
-        
-    @property
-    def node_slicing(self):
-        """
-        Get the slicing necessary
-        when averaging to grid nodes
-        
-        """
-        return self._node_slicing
-    
-    @property
-    def node_axis(self):
-        return self._node_axis
-        
-    @property
-    def dimensions(self):
-        return self._dimensions
-        
-    @property
-    def dtype(self):
-        return self._dtype
-        
-    @property
-    def location(self):
-        return self._location
