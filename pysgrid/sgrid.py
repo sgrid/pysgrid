@@ -31,7 +31,7 @@ class SGridND(object):
                  node_padding=None,
                  edge1_padding=None,
                  edge2_padding=None,
-                 grid_topology_vars=None,
+                 grid_topology_var=None,
                  grid_times=None,
                  variables=None,
                  grid_variables=None,
@@ -50,7 +50,7 @@ class SGridND(object):
         self._node_padding = node_padding
         self._edge1_padding = edge1_padding
         self._edge2_padding = edge2_padding
-        self._grid_topology_vars = grid_topology_vars
+        self._grid_topology_var = grid_topology_var
         self._grid_times = grid_times
         self._variables = variables
         self._grid_variables = grid_variables
@@ -64,8 +64,8 @@ class SGridND(object):
         self._edge2_dimensions = edge2_dimensions
         
     @property
-    def grid_topology_vars(self):
-        return self._grid_topology_vars
+    def grid_topology_var(self):
+        return self._grid_topology_var
         
     @property
     def variables(self):
@@ -213,7 +213,7 @@ class SGrid2D(SGridND):
         sa = SGridAttributes(nc_dataset, 2, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
-        grid_topology_vars = sa.get_topology_vars()
+        grid_topology_var = sa.get_topology_var()
         edge1_dimensions, edge1_padding = sa.get_attr_dimension('edge1_dimensions')
         edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
@@ -240,7 +240,7 @@ class SGrid2D(SGridND):
                     face_padding=face_padding,
                     faces=None,
                     grid_times=grid_times,
-                    grid_topology_vars=grid_topology_vars,
+                    grid_topology_var=grid_topology_var,
                     grid_variables=None,
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
@@ -300,7 +300,7 @@ class SGrid2D(SGridND):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            grid_var = self._grid_topology_vars
+            grid_var = self._grid_topology_var
             # create dimensions
             for grid_dim in self._dimensions:
                 dim_name, dim_size = grid_dim
@@ -432,7 +432,7 @@ class SGrid3D(SGridND):
         sa = SGridAttributes(nc_dataset, 3, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
-        grid_topology_vars = sa.get_topology_vars()
+        grid_topology_var = sa.get_topology_var()
         edge1_dimensions, edge1_padding = sa.get_attr_dimension('edge1_dimensions')
         edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
@@ -473,7 +473,7 @@ class SGrid3D(SGridND):
                     face3_dimensions=face3_dimensions,
                     face3_padding=face3_padding,
                     grid_times=grid_times,
-                    grid_topology_vars=grid_topology_vars,
+                    grid_topology_var=grid_topology_var,
                     grid_variables=None,
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
@@ -580,7 +580,7 @@ class SGrid3D(SGridND):
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
-            grid_var = self._grid_topology_vars
+            grid_var = self._grid_topology_var
             # create dimensions
             for grid_dim in self._dimensions:
                 dim_name, dim_size = grid_dim
@@ -694,9 +694,9 @@ class SGridAttributes(object):
         grid_dims = [(ds_dim, len(ds_dims[ds_dim])) for ds_dim in ds_dims]
         return grid_dims
         
-    def get_topology_vars(self):
-        grid_topology_vars = self.ncd.find_grid_topology_var()
-        return grid_topology_vars
+    def get_topology_var(self):
+        grid_topology_var = self.ncd.find_grid_topology_var()
+        return grid_topology_var
     
     def get_attr_dimension(self, attr_name):
         try:
