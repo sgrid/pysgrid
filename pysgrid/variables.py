@@ -3,7 +3,8 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
-from .utils import determine_variable_slicing
+from .read_netcdf import parse_axes
+from .utils import determine_variable_slicing, infer_avg_axes
 
 
 class SGridVariable(object):
@@ -15,17 +16,25 @@ class SGridVariable(object):
     def __init__(self, 
                  variable=None, 
                  grid=None, 
-                 axes=None, 
+                 x_axis=None,
+                 y_axis=None,
+                 z_axis=None, 
                  center_slicing=None,
-                 node_slicing=None, 
+                 center_axis=None,
+                 node_slicing=None,
+                 node_axis=None, 
                  dimensions=None, 
                  dtype=None, 
                  location=None):
         self._variable = variable
         self._grid = grid
-        self._axes = axes
+        self._x_axis = x_axis
+        self._y_axis = y_axis
+        self._z_axis = z_axis
         self._center_slicing = center_slicing
+        self._center_axis = center_axis
         self._node_slicing = node_slicing
+        self._node_axis = node_axis
         self._dimensions = dimensions
         self._dtype = dtype
         self._location = location
@@ -35,8 +44,12 @@ class SGridVariable(object):
         variable = nc_var_obj.name
         try:
             grid = nc_var_obj.grid
-        except:
+        except AttributeError:
             grid = None
+            center_axis = None
+            node_axis = None
+        else:
+            center_axis, node_axis = infer_avg_axes(sgrid_obj, nc_var_obj)
         center_slicing = determine_variable_slicing(sgrid_obj, 
                                                     nc_var_obj, 
                                                     method='center'
@@ -47,11 +60,23 @@ class SGridVariable(object):
             location = nc_var_obj.location
         except AttributeError:
             location = None
+        try:
+            axes = nc_var_obj.axes
+        except AttributeError:
+            x_axis = None
+            y_axis = None
+            z_axis = None
+        else:
+            x_axis, y_axis, z_axis = parse_axes(axes)
         sgrid_var = cls(variable=variable,
                         grid=grid,
-                        axes=None,
+                        x_axis=x_axis,
+                        y_axis=y_axis,
+                        z_axis=z_axis,
                         center_slicing=center_slicing,
+                        center_axis=center_axis,
                         node_slicing=None,
+                        node_axis=node_axis,
                         dimensions=dimensions,
                         dtype=dtype,
                         location=location
@@ -65,10 +90,18 @@ class SGridVariable(object):
     @property
     def grid(self):
         return self._grid
-        
+    
     @property
-    def axes(self):
-        return self._axes
+    def x_axis(self):
+        return self._x_axis
+    
+    @property
+    def y_axis(self):
+        return self._y_axis
+    
+    @property
+    def z_axis(self):
+        return self._z_axis
         
     @property
     def center_slicing(self):
@@ -79,6 +112,10 @@ class SGridVariable(object):
         
         """
         return self._center_slicing
+    
+    @property
+    def center_axis(self):
+        return self._center_axis
         
     @property
     def node_slicing(self):
@@ -88,6 +125,10 @@ class SGridVariable(object):
         
         """
         return self._node_slicing
+    
+    @property
+    def node_axis(self):
+        return self._node_axis
         
     @property
     def dimensions(self):

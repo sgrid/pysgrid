@@ -91,4 +91,53 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
                 slice_indices += (slice_index,)
     else:
         pass
-    return slice_indices                  
+    return slice_indices
+
+
+def infer_avg_axes(sgrid_obj, nc_var_obj):
+    """
+    Infer which numpy axis to average over given
+    the a variable defined on the grid. Works
+    well for 2D. Not so sure about 3D.
+    
+    """
+    fe_padding = []
+    if hasattr(sgrid_obj, 'face_padding') and sgrid_obj.face_padding is not None:
+        fe_padding += sgrid_obj.face_padding
+    if hasattr(sgrid_obj, 'face1_padding') and sgrid_obj.face1_padding is not None:
+        fe_padding += sgrid_obj.face1_padding
+    if hasattr(sgrid_obj, 'face2_padding') and sgrid_obj.face2_padding is not None:
+        fe_padding += sgrid_obj.face2_padding
+    if hasattr(sgrid_obj, 'face3_padding') and sgrid_obj.face3_padding is not None:
+        fe_padding += sgrid_obj.face3_padding
+    if sgrid_obj.edge1_padding is not None:
+        fe_padding += sgrid_obj.edge1_padding
+    if sgrid_obj.edge2_padding is not None:
+        fe_padding += sgrid_obj.edge2_padding
+    if hasattr(sgrid_obj, 'edge3_padding') and sgrid_obj.edge3_padding is not None:
+        fe_padding += sgrid_obj.edge3_padding
+    var_dims = nc_var_obj.dimensions
+    # define center averaging axis for a variable
+    for var_dim in var_dims:
+        try:
+            padding_info = next((info for info in fe_padding if info.dim == var_dim))
+        except StopIteration:
+            padding_info = None
+            avg_dim = None
+            continue
+        else:
+            avg_dim = var_dim  # name of the dimension we're averaging over
+            break  # exit the loop once it's found
+    if padding_info is not None and avg_dim is not None:
+        var_position = var_dims.index(avg_dim)
+        center_avg_axis = len(var_dims) - var_position - 1
+    else:
+        center_avg_axis = None
+    # define the node averaging axis for a variable
+    if center_avg_axis == 1:
+        node_avg_axis = 0
+    elif center_avg_axis == 0:
+        node_avg_axis = 1
+    else:
+        node_avg_axis = None
+    return center_avg_axis, node_avg_axis
