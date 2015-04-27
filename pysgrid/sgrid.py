@@ -7,6 +7,7 @@ import abc
 
 import netCDF4 as nc4
 
+from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
 from .utils import pair_arrays
 from .variables import SGridVariable
@@ -178,7 +179,7 @@ class SGridND(object):
         setattr(self, prop_name, value)
         
     @abc.abstractmethod
-    def _define_face_padding_summary(self):
+    def all_padding(self):
         return
     
     @abc.abstractmethod
@@ -278,7 +279,7 @@ class SGrid2D(SGridND):
     def vertical_dimensions(self):
         return self._vertical_dimensions
 
-    def _define_face_padding_summary(self):
+    def all_padding(self):
         all_padding = []
         if self._face_padding is not None:
             all_padding += self._face_padding
@@ -552,7 +553,7 @@ class SGrid3D(SGridND):
     def edge3_dimensions(self):
         return self._edge3_dimensions
 
-    def _define_face_padding_summary(self):
+    def all_padding(self):
         all_padding = []
         if self._volume_padding is not None:
             all_padding += self._volume_padding
@@ -830,16 +831,19 @@ def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
     
     """
     ncd = NetCDFDataset(nc_dataset)
-    if grid_topology_var is not None:
-        topology_var = grid_topology_var
+    if ncd.sgrid_compliant_file():
+        if grid_topology_var is not None:
+            topology_var = grid_topology_var
+        else:
+            topology_var = ncd.find_grid_topology_var()
+        nc_grid_topology_var = nc_dataset.variables[topology_var]
+        topology_dim = nc_grid_topology_var.topology_dimension
+        if topology_dim == 2 or topology_dim == 3:
+            return topology_dim, grid_topology_var
+        else:
+            raise ValueError('Only topology dimensions of 2 or 3 are supported')
     else:
-        topology_var = ncd.find_grid_topology_var()
-    nc_grid_topology_var = nc_dataset.variables[topology_var]
-    topology_dim = nc_grid_topology_var.topology_dimension
-    if topology_dim == 2 or topology_dim == 3:
-        return topology_dim, grid_topology_var
-    else:
-        raise ValueError('Only topology dimensions of 2 or 3 are supported')
+        raise SGridNonCompliantError(nc_dataset)
     
     
 def from_nc_file(nc_url, grid_topology_var=None):
