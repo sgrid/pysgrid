@@ -74,7 +74,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if grid_variables is None:
         grid_variables = []
     var_dims = nc_variable.dimensions
-    padding_summary = sgrid_obj._define_face_padding_summary()
+    padding_summary = sgrid_obj.all_padding()
     slice_indices = tuple()
     if method == 'center':
         for var_dim in var_dims:
