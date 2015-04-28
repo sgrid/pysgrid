@@ -664,7 +664,7 @@ def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
         raise SGridNonCompliantError(nc_dataset)
     
     
-def from_nc_file(nc_url, grid_topology_var=None):
+def from_ncfile(nc_url, grid_topology_var=None):
     """
     Get a SGrid object from a file. There is no need
     to know the topology dimensions a priori.
