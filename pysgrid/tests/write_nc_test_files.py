@@ -251,6 +251,8 @@ def wrf_sgrid_2d(nc_filename='test_sgrid_wrf_2.nc'):
                                 )
         grid.face_coordinates = 'XLONG XLAT'
         grid.vertical_dimensions = 'bottom_top: bottom_top_stag (padding: none)'
+        grid.edge1_dimensions = 'west_east_stag south_north: south_north_stag (padding: none)'
+        grid.edge2_dimensions = 'west_east: west_east_stag (padding: none) south_north_stag'
         times[:] = np.random.random(size=(2, 3)).astype(str)
         us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
         vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
