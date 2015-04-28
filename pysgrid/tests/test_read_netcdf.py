@@ -49,8 +49,8 @@ class TestParsePadding(unittest.TestCase):
         expected_len = 2
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        sub_dim = padding_datum_0.sub_dim
-        dim = padding_datum_0.dim
+        sub_dim = padding_datum_0.node_dim
+        dim = padding_datum_0.face_dim
         expected_sub_dim = 'xi_psi'
         expected_padding_type = 'both'
         expected_dim = 'xi_rho'
@@ -64,8 +64,8 @@ class TestParsePadding(unittest.TestCase):
         expected_len = 1
         padding_datum_0 = result[0]
         padding_type = padding_datum_0.padding
-        sub_dim = padding_datum_0.sub_dim
-        dim = padding_datum_0.dim
+        sub_dim = padding_datum_0.node_dim
+        dim = padding_datum_0.face_dim
         expected_padding_type = 'high'
         expected_sub_dim = 'xi_psi'
         expected_dim = 'xi_v'

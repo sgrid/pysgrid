@@ -9,8 +9,8 @@ import numpy as np
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
-                                         'dim',  # the topology attribute
-                                         'sub_dim',  # node dimension within the topology attribute
+                                         'face_dim',  # the topology attribute
+                                         'node_dim',  # node dimension within the topology attribute
                                          'padding'  # padding type for the node dimension
                                          ]
                          )
@@ -102,7 +102,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next((info for info in padding if info.dim == var_dim))
+                padding_info = next((info for info in padding if info.face_dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)
@@ -134,7 +134,7 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     # define center averaging axis for a variable
     for var_dim in var_dims:
         try:
-            padding_info = next((info for info in padding if info.dim == var_dim))
+            padding_info = next((info for info in padding if info.face_dim == var_dim))
         except StopIteration:
             padding_info = None
             avg_dim = None

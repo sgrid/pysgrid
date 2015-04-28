@@ -39,8 +39,8 @@ def parse_padding(padding_str, mesh_topology_var):
         cleaned_padding_var = re.sub('[\(\)]', '', raw_padding_var)  # remove parentheses
         padding_type = cleaned_padding_var.split(':')[1].strip()  # get the padding value and remove spaces
         grid_padding = GridPadding(mesh_topology_var=mesh_topology_var,
-                                   dim=dim,
-                                   sub_dim=sub_dim,
+                                   face_dim=dim,
+                                   node_dim=sub_dim,
                                    padding=padding_type
                                    )
         padding_type_list.append(grid_padding)
