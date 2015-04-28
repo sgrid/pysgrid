@@ -124,26 +124,17 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     well for 2D. Not so sure about 3D.
     
     """
-    fe_padding = []
-    if hasattr(sgrid_obj, 'face_padding') and sgrid_obj.face_padding is not None:
-        fe_padding += sgrid_obj.face_padding
-    if hasattr(sgrid_obj, 'face1_padding') and sgrid_obj.face1_padding is not None:
-        fe_padding += sgrid_obj.face1_padding
-    if hasattr(sgrid_obj, 'face2_padding') and sgrid_obj.face2_padding is not None:
-        fe_padding += sgrid_obj.face2_padding
-    if hasattr(sgrid_obj, 'face3_padding') and sgrid_obj.face3_padding is not None:
-        fe_padding += sgrid_obj.face3_padding
-    if sgrid_obj.edge1_padding is not None:
-        fe_padding += sgrid_obj.edge1_padding
-    if sgrid_obj.edge2_padding is not None:
-        fe_padding += sgrid_obj.edge2_padding
-    if hasattr(sgrid_obj, 'edge3_padding') and sgrid_obj.edge3_padding is not None:
-        fe_padding += sgrid_obj.edge3_padding
     var_dims = nc_var_obj.dimensions
+    node_dimensions = tuple(sgrid_obj.node_dimensions.split(' '))
+    separate_edge_dim_exists = does_intersection_exist(node_dimensions, var_dims)
+    if separate_edge_dim_exists:
+        padding = sgrid_obj.get_all_face_padding()
+    else:
+        padding = sgrid_obj.get_all_face_padding() + sgrid_obj.get_all_edge_padding()
     # define center averaging axis for a variable
     for var_dim in var_dims:
         try:
-            padding_info = next((info for info in fe_padding if info.dim == var_dim))
+            padding_info = next((info for info in padding if info.dim == var_dim))
         except StopIteration:
             padding_info = None
             avg_dim = None
