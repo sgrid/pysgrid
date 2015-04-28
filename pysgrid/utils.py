@@ -53,6 +53,21 @@ def check_element_equal(lst):
     return lst[1:] == lst[:-1]
 
 
+def does_intersection_exist(a, b):
+    set_a = set(a)
+    try:
+        set_b = set(b)
+    except TypeError:
+        intersect_exists = False
+    else:
+        intersect = set_a.intersection(set_b)
+        if len(intersect) > 0:
+            intersect_exists = True
+        else:
+            intersect_exists = False
+    return intersect_exists
+
+
 def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     """
     Figure out how to slice a variable. This function
@@ -74,12 +89,20 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if grid_variables is None:
         grid_variables = []
     var_dims = nc_variable.dimensions
-    padding_summary = sgrid_obj.all_padding()
+    node_dims = tuple(sgrid_obj.node_dimensions.split(' '))
+    separate_edge_dim_exists = does_intersection_exist(var_dims, node_dims)
     slice_indices = tuple()
+    if separate_edge_dim_exists:
+        try:
+            padding = sgrid_obj.face_padding  # try 2D sgrid
+        except AttributeError:
+            padding = sgrid_obj.volume_padding  # if not 2D, try 3D sgrid
+    else:
+        padding = sgrid_obj.all_padding()
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next((info for info in padding_summary if info[0] == var_dim))
+                padding_info = next((info for info in padding if info.dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)
@@ -88,7 +111,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index,)
+                slice_indices += (slice_index, )
     else:
         pass
     return slice_indices

@@ -7,7 +7,23 @@ import unittest
 
 import numpy as np
 
-from ..utils import check_element_equal, pair_arrays
+from ..utils import check_element_equal, pair_arrays, does_intersection_exist
+
+
+class TestDoesIntersectionExist(unittest.TestCase):
+    
+    def setUp(self):
+        self.tuple_a = (718, 903, 1029, 1701)
+        self.tuple_b = (718, 828)
+        self.tuple_c = (15, 20)
+        
+    def test_intersect_exists(self):
+        result = does_intersection_exist(self.tuple_a, self.tuple_b)
+        self.assertTrue(result)
+        
+    def test_intersect_does_not_exist(self):
+        result = does_intersection_exist(self.tuple_a, self.tuple_c)
+        self.assertFalse(result)
 
 
 class TestPairArrays(unittest.TestCase):
