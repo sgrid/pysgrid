@@ -1,5 +1,6 @@
 from distutils.core import setup
 
+
 setup(
     name='pysgrid',
     version='0.0.2',
