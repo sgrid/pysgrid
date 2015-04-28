@@ -67,6 +67,14 @@ class SGridND(object):
     def non_grid_variables(self):
         non_grid_variables = [variable for variable in self.variables if variable not in self.grid_variables]
         return non_grid_variables
+
+    @abc.abstractmethod
+    def from_ncfile(self):
+        return
+    
+    @abc.abstractmethod
+    def from_nc_dataset(self):
+        return
         
     @abc.abstractmethod
     def all_padding(self):
@@ -99,7 +107,7 @@ class SGrid2D(SGridND):
         super(SGrid2D, self).__init__(*args, **kwargs)
         
     @classmethod
-    def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
+    def from_nc_dataset(cls, nc_dataset, topology_variable=None):
         sa = SGridAttributes(nc_dataset, 2, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
@@ -144,7 +152,7 @@ class SGrid2D(SGridND):
         return sgrid
     
     @classmethod
-    def sgrid_from_file(cls, nc_file_path, topology_variable=None):
+    def from_ncfile(cls, nc_file_path, topology_variable=None):
         with nc4.Dataset(nc_file_path) as nc_dataset:
             sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
         return sgrid
@@ -298,7 +306,7 @@ class SGrid3D(SGridND):
         super(SGrid3D, self).__init__(*args, **kwargs)
         
     @classmethod
-    def sgrid_from_dataset(cls, nc_dataset, topology_variable=None):
+    def from_nc_dataset(cls, nc_dataset, topology_variable=None):
         sa = SGridAttributes(nc_dataset, 3, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
@@ -358,7 +366,7 @@ class SGrid3D(SGridND):
         return sgrid
     
     @classmethod
-    def sgrid_from_file(cls, nc_file_path, topology_variable=None):
+    def from_ncfile(cls, nc_file_path, topology_variable=None):
         with nc4.Dataset(nc_file_path) as nc_dataset:
             sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
         return sgrid
@@ -620,9 +628,9 @@ def _load_grid_from_nc_dataset(nc_dataset,
     
     """
     if topology_dim == 2:
-        grid = SGrid2D.sgrid_from_dataset(nc_dataset, grid_topology_var)
+        grid = SGrid2D.from_nc_dataset(nc_dataset, grid_topology_var)
     elif topology_dim == 3:
-        grid = SGrid3D.sgrid_from_dataset(nc_dataset, grid_topology_var)
+        grid = SGrid3D.from_nc_dataset(nc_dataset, grid_topology_var)
     else:
         raise ValueError('Only topology dimensions of 2 or 3 are supported')
     return grid
