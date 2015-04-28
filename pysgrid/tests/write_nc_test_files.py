@@ -343,12 +343,3 @@ def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
     return file_name
-
-if __name__ == '__main__':
-    
-    deltares_sgrid()
-    roms_sgrid()
-    non_compliant_sgrid()
-    simulated_dgrid()
-    wrf_sgrid()
-        

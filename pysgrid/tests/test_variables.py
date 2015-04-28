@@ -15,10 +15,6 @@ from ..variables import SGridVariable
 from .write_nc_test_files import roms_sgrid
 
 
-CURRENT_DIR = os.path.dirname(__file__)
-TEST_FILES = os.path.join(CURRENT_DIR, 'files')
-
-
 class TestSGridVariable(unittest.TestCase):
     
     @classmethod
