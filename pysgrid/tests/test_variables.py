@@ -26,8 +26,8 @@ class TestSGridVariable(unittest.TestCase):
         os.remove(cls.test_file)
     
     def setUp(self):
-        self.face_padding = [GridPadding(mesh_topology_var=u'grid', dim=u'MMAXZ', sub_dim=u'MMAX', padding=u'low'), 
-                             GridPadding(mesh_topology_var=u'grid', dim=u'NMAXZ', sub_dim=u'NMAX', padding=u'low')
+        self.face_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'MMAXZ', node_dim=u'MMAX', padding=u'low'), 
+                             GridPadding(mesh_topology_var=u'grid', face_dim=u'NMAXZ', node_dim=u'NMAX', padding=u'low')
                              ]
         self.sgrid = SGrid2D(face_padding=self.face_padding,
                              node_dimensions='MMAX NMAX'

@@ -401,9 +401,9 @@ class Test3DimensionalSGrid(unittest.TestCase):
         
     def test_volume_padding(self):
         volume_padding = self.sg_obj.volume_padding
-        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', dim=u'west_east', sub_dim=u'west_east_stag', padding=u'none'), 
-                                   GridPadding(mesh_topology_var=u'grid', dim=u'south_north', sub_dim=u'south_north_stag', padding=u'none'), 
-                                   GridPadding(mesh_topology_var=u'grid', dim=u'bottom_top', sub_dim=u'bottom_top_stag', padding=u'none')
+        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', face_dim=u'west_east', node_dim=u'west_east_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'south_north', node_dim=u'south_north_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'bottom_top', node_dim=u'bottom_top_stag', padding=u'none')
                                    ]
         self.assertEqual(volume_padding, volume_padding_expected)
         
