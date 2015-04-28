@@ -224,7 +224,7 @@ class TestSGridNoPadding(unittest.TestCase):
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
     """
-    Test using a representatvie delft3d file.
+    Test using a representative delft3d file.
     
     """
     @classmethod
