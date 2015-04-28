@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import pair_arrays, check_element_equal
+from ..utils import check_element_equal, pair_arrays
 
 
 class TestPairArrays(unittest.TestCase):
