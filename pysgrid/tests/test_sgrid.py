@@ -10,9 +10,9 @@ import mock
 import netCDF4 as nc4
 import numpy as np
 
+from ..custom_exceptions import SGridNonCompliantError
 from ..sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
 from ..utils import GridPadding
-from ..custom_exceptions import SGridNonCompliantError
 from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid
 
 
