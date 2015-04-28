@@ -63,13 +63,13 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dimensions
-        y_center = rg.createDimension('MMAXZ', 4)
-        x_center = rg.createDimension('NMAXZ', 4)
-        y_node = rg.createDimension('MMAX', 4)
-        x_node = rg.createDimension('NMAX', 4)
-        z_center = rg.createDimension('KMAX', 2)
-        z_node = rg.createDimension('KMAX1', 3)
-        time = rg.createDimension('time', 2)
+        rg.createDimension('MMAXZ', 4)
+        rg.createDimension('NMAXZ', 4)
+        rg.createDimension('MMAX', 4)
+        rg.createDimension('NMAX', 4)
+        rg.createDimension('KMAX', 2)
+        rg.createDimension('KMAX1', 3)
+        rg.createDimension('time', 2)
         # define variables
         xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
         ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
@@ -128,25 +128,25 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
-        z_center = rg.createDimension('s_rho', 2)
-        z_node = rg.createDimension('s_w', 3)
-        time = rg.createDimension('time', 2)
-        x_center = rg.createDimension('xi_rho', 4)
-        y_center = rg.createDimension('eta_rho', 4)
-        x_node = rg.createDimension('xi_psi', 3)
-        y_node = rg.createDimension('eta_psi', 3)
-        x_u = rg.createDimension('xi_u', 3)
-        y_u = rg.createDimension('eta_u', 4)
-        x_v = rg.createDimension('xi_v', 4)
-        y_v = rg.createDimension('eta_v', 3)
+        rg.createDimension('s_rho', 2)
+        rg.createDimension('s_w', 3)
+        rg.createDimension('time', 2)
+        rg.createDimension('xi_rho', 4)
+        rg.createDimension('eta_rho', 4)
+        rg.createDimension('xi_psi', 3)
+        rg.createDimension('eta_psi', 3)
+        rg.createDimension('xi_u', 3)
+        rg.createDimension('eta_u', 4)
+        rg.createDimension('xi_v', 4)
+        rg.createDimension('eta_v', 3)
         # create coordinate variables
         z_centers = rg.createVariable('s_rho', 'i4', ('s_rho',))
-        z_nodes = rg.createVariable('s_w', 'i4', ('s_w',))
+        rg.createVariable('s_w', 'i4', ('s_w',))
         times = rg.createVariable('time', 'f8', ('time',))
-        x_centers = rg.createVariable('xi_rho', 'f4', ('xi_rho',))
-        y_centers = rg.createVariable('eta_rho', 'f4', ('eta_rho',))
-        x_nodes = rg.createVariable('xi_psi', 'f4', ('xi_psi',))
-        y_nodes = rg.createVariable('eta_psi', 'f4', ('eta_psi',))
+        rg.createVariable('xi_rho', 'f4', ('xi_rho',))
+        rg.createVariable('eta_rho', 'f4', ('eta_rho',))
+        rg.createVariable('xi_psi', 'f4', ('xi_psi',))
+        rg.createVariable('eta_psi', 'f4', ('eta_psi',))
         x_us = rg.createVariable('xi_u', 'f4', ('xi_u',))
         y_us = rg.createVariable('eta_u', 'f4', ('eta_u',))
         x_vs = rg.createVariable('xi_v', 'f4', ('xi_v',))
@@ -212,9 +212,62 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
     return file_name
+
+
+def wrf_sgrid_2d(nc_filename='test_sgrid_wrf_2.nc'):
+    file_name = os.path.join(TEST_FILES, nc_filename)
+    with nc4.Dataset(file_name, 'w') as nc:
+        nc.createDimension('Time', 2)
+        nc.createDimension('DateStrLen', 3)
+        nc.createDimension('west_east', 4)
+        nc.createDimension('south_north', 5)
+        nc.createDimension('west_east_stag', 5)
+        nc.createDimension('bottom_top', 3)
+        nc.createDimension('south_north_stag', 6)
+        nc.createDimension('bottom_top_stag', 4)
+        times = nc.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        us.grid = 'grid'
+        us.location = 'edge1'
+        vs = nc.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        vs.grid = 'grid'
+        vs.location = 'edge2'
+        ws = nc.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        ws.grid = 'grid'
+        ws.location = 'face'
+        temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        temps.grid = 'grid'
+        temps.location = 'face'
+        xlats = nc.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
+        xlongs = nc.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        znus = nc.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
+        znws = nc.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+        grid = nc.createVariable('grid', 'i2')
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 2
+        grid.node_dimensions = 'west_east_stag south_north_stag'
+        grid.face_dimensions = ('west_east: west_east_stag (padding: none) '
+                                'south_north: south_north_stag (padding: none)'
+                                )
+        grid.face_coordinates = 'XLONG XLAT'
+        grid.vertical_dimensions = 'bottom_top: bottom_top_stag (padding: none)'
+        times[:] = np.random.random(size=(2, 3)).astype(str)
+        us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
+        vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
+        ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
+        temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
+        xlats[:, :, :] = np.random.random(size=(2, 5, 4))
+        xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
+        znus[:, :] = np.random.random(size=(2, 3))
+        znws[:, :] = np.random.random(size=(2, 4))
+    return file_name
         
         
 def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
+    """
+    Write an SGrid file using 3D conventions.
+    
+    """
     file_name = os.path.join(TEST_FILES, nc_filename)
     with  nc4.Dataset(file_name, 'w') as fg:
         # create dimensions
@@ -275,25 +328,25 @@ def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
     file_name = os.path.join(TEST_FILES, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
-        z_center = rg.createDimension('z_center', 2)
-        z_node = rg.createDimension('z_node', 3)
-        time = rg.createDimension('time', 2)
-        x_center = rg.createDimension('x_center', 4)
-        y_center = rg.createDimension('y_center', 4)
-        x_node = rg.createDimension('x_node', 3)
-        y_node = rg.createDimension('y_node', 3)
-        x_u = rg.createDimension('x_u', 3)
-        y_u = rg.createDimension('y_u', 4)
-        x_v = rg.createDimension('x_v', 4)
-        y_v = rg.createDimension('y_v', 3)
+        rg.createDimension('z_center', 2)
+        rg.createDimension('z_node', 3)
+        rg.createDimension('time', 2)
+        rg.createDimension('x_center', 4)
+        rg.createDimension('y_center', 4)
+        rg.createDimension('x_node', 3)
+        rg.createDimension('y_node', 3)
+        rg.createDimension('x_u', 3)
+        rg.createDimension('y_u', 4)
+        rg.createDimension('x_v', 4)
+        rg.createDimension('y_v', 3)
         # create coordinate variables
         z_centers = rg.createVariable('z_center', 'i4', ('z_center',))
-        z_nodes = rg.createVariable('z_node', 'i4', ('z_node',))
+        rg.createVariable('z_node', 'i4', ('z_node',))
         times = rg.createVariable('time', 'f8', ('time',))
-        x_centers = rg.createVariable('x_center', 'f4', ('x_center',))
-        y_centers = rg.createVariable('y_center', 'f4', ('y_center',))
-        x_nodes = rg.createVariable('x_node', 'f4', ('x_node',))
-        y_nodes = rg.createVariable('y_node', 'f4', ('y_node',))
+        rg.createVariable('x_center', 'f4', ('x_center',))
+        rg.createVariable('y_center', 'f4', ('y_center',))
+        rg.createVariable('x_node', 'f4', ('x_node',))
+        rg.createVariable('y_node', 'f4', ('y_node',))
         x_us = rg.createVariable('x_u', 'f4', ('x_u',))
         y_us = rg.createVariable('y_u', 'f4', ('y_u',))
         x_vs = rg.createVariable('x_v', 'f4', ('x_v',))
