@@ -13,7 +13,7 @@ import numpy as np
 from ..custom_exceptions import SGridNonCompliantError
 from ..sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
 from ..utils import GridPadding
-from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid
+from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid, wrf_sgrid_2d
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -63,7 +63,10 @@ class TestSGridCreate(unittest.TestCase):
 
 
 class TestSGridWithOptionalAttributes(unittest.TestCase):
+    """
+    Test using a representative ROMS file.
     
+    """
     @classmethod
     def setUpClass(cls):
         cls.sgrid_test_file = roms_sgrid()
@@ -179,10 +182,51 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
     def test_write_sgrid_to_netcdf(self, mock_nc):
         self.sg_obj.save_as_netcdf(self.write_path)
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
-     
+        
+        
+class TestSGridNoPadding(unittest.TestCase):
+    """
+    Test a representative WRF file.
+    
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = wrf_sgrid_2d()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
+    def setUp(self):
+        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        
+    def test_topology_dimension(self):
+        topology_dim = self.sg_obj.topology_dimension
+        expected_dim = 2
+        self.assertEqual(topology_dim, expected_dim)
+        
+    def test_variable_slicing(self):
+        u_slice = self.sg_obj.U.center_slicing
+        u_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
+        v_slice = self.sg_obj.V.center_slicing
+        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
+        self.assertEqual(u_slice, u_expected)
+        self.assertEqual(v_slice, v_expected)
+        
+    def test_variable_average_axes(self):
+        u_avg_axis = self.sg_obj.U.center_axis
+        u_axis_expected = 1
+        v_avg_axis = self.sg_obj.V.center_axis
+        v_axis_expected = 0
+        self.assertEqual(u_avg_axis, u_axis_expected)
+        self.assertEqual(v_avg_axis, v_axis_expected)
+        
 
 class TestSGridWithoutEdgesAttributes(unittest.TestCase):
+    """
+    Test using a representative delft3d file.
     
+    """
     @classmethod
     def setUpClass(cls):
         cls.sgrid_test_file = deltares_sgrid()
@@ -357,9 +401,9 @@ class Test3DimensionalSGrid(unittest.TestCase):
         
     def test_volume_padding(self):
         volume_padding = self.sg_obj.volume_padding
-        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', dim=u'west_east', sub_dim=u'west_east_stag', padding=u'none'), 
-                                   GridPadding(mesh_topology_var=u'grid', dim=u'south_north', sub_dim=u'south_north_stag', padding=u'none'), 
-                                   GridPadding(mesh_topology_var=u'grid', dim=u'bottom_top', sub_dim=u'bottom_top_stag', padding=u'none')
+        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', face_dim=u'west_east', node_dim=u'west_east_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'south_north', node_dim=u'south_north_stag', padding=u'none'), 
+                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'bottom_top', node_dim=u'bottom_top_stag', padding=u'none')
                                    ]
         self.assertEqual(volume_padding, volume_padding_expected)
         

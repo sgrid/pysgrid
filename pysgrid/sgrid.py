@@ -75,6 +75,14 @@ class SGridND(object):
     @abc.abstractmethod
     def from_nc_dataset(self):
         return
+    
+    @abc.abstractmethod
+    def get_all_face_padding(self):
+        return
+    
+    @abc.abstractmethod
+    def get_all_edge_padding(self):
+        return
         
     @abc.abstractmethod
     def all_padding(self):
@@ -156,25 +164,27 @@ class SGrid2D(SGridND):
         with nc4.Dataset(nc_file_path) as nc_dataset:
             sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
         return sgrid
+    
+    def get_all_face_padding(self):
+        if self.face_padding is not None:
+            all_face_padding = self.face_padding
+        else:
+            all_face_padding = []
+        return all_face_padding
+    
+    def get_all_edge_padding(self):
+        all_edge_padding = []
+        if self.edge1_padding is not None:
+            all_edge_padding += self.edge1_padding
+        if self.edge2_padding is not None:
+            all_edge_padding += self.edge2_padding
+        return all_edge_padding
 
     def all_padding(self):
-        all_padding = []
-        if self.face_padding is not None:
-            all_padding += self.face_padding
+        all_padding = self.get_all_face_padding() + self.get_all_edge_padding()
         if self.vertical_padding is not None:
             all_padding += self.vertical_padding
-        if self.edge1_padding is not None:
-            all_padding += self.edge1_padding
-        if self.edge2_padding is not None:
-            all_padding += self.edge2_padding
-        padding_summary = []
-        for padding_datum in all_padding:
-            dim = padding_datum.dim
-            sub_dim = padding_datum.sub_dim
-            padding_val = padding_datum.padding
-            pad_short = (dim, sub_dim, padding_val)
-            padding_summary.append(pad_short)
-        return padding_summary
+        return all_padding
         
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
@@ -370,32 +380,31 @@ class SGrid3D(SGridND):
         with nc4.Dataset(nc_file_path) as nc_dataset:
             sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
         return sgrid
+    
+    def get_all_face_padding(self):
+        all_face_padding = []
+        if self.face1_padding is not None:
+            all_face_padding += self.face1_padding
+        if self.face2_padding is not None:
+            all_face_padding += self.face2_padding
+        if self.face3_padding is not None:
+            all_face_padding += self.face3_padding
+        return all_face_padding
+    
+    def get_all_edge_padding(self):
+        all_edge_padding = []
+        if self.edge1_padding is not None:
+            all_edge_padding += self.edge1_padding
+        if self.edge2_padding is not None:
+            all_edge_padding += self.edge2_padding
+        if self.edge3_padding is not None:
+            all_edge_padding += self.edge3_padding
+        return all_edge_padding
 
     def all_padding(self):
-        all_padding = []
-        if self.volume_padding is not None:
-            all_padding += self.volume_padding
-        if self.face1_padding is not None:
-            all_padding += self.face1_padding
-        if self.face2_padding is not None:
-            all_padding += self.face2_padding
-        if self.face3_padding is not None:
-            all_padding += self.face3_padding
-        if self.edge1_padding is not None:
-            all_padding += self.edge1_padding
-        if self.edge2_padding is not None:
-            all_padding += self.edge2_padding
-        if self.edge3_padding is not None:
-            all_padding += self.edge3_padding
-        padding_summary = []
-        for padding_datum in all_padding:
-            dim = padding_datum.dim
-            sub_dim = padding_datum.sub_dim
-            padding_val = padding_datum.padding
-            pad_short = (dim, sub_dim, padding_val)
-            padding_summary.append(pad_short)
-        return padding_summary
-        
+        all_padding = self.volume_padding + self.get_all_face_padding() + self.get_all_edge_padding()
+        return all_padding
+    
     def save_as_netcdf(self, filepath):
         with nc4.Dataset(filepath, 'w') as nclocal:
             grid_var = self.grid_topology_var
@@ -591,9 +600,13 @@ class SGridAttributes(object):
         
     def get_cell_node_lat_lon(self):
         grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]
-        grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
-        grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
-        return pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        if grid_cell_nodes_lon_var is not None and grid_cell_nodes_lat_var is not None:
+            grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
+            grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
+            cell_nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
+        else:
+            cell_nodes = None
+        return cell_nodes
         
     def get_cell_center_lat_lon_3d(self):
         volume_coordinates = self.get_attr_coordinates('volume_coordinates')

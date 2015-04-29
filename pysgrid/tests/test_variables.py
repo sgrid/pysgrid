@@ -26,10 +26,12 @@ class TestSGridVariable(unittest.TestCase):
         os.remove(cls.test_file)
     
     def setUp(self):
-        self.sgrid = SGrid2D()
-        self.sgrid._face_padding = [GridPadding(mesh_topology_var=u'grid', dim=u'MMAXZ', sub_dim=u'MMAX', padding=u'low'), 
-                                    GridPadding(mesh_topology_var=u'grid', dim=u'NMAXZ', sub_dim=u'NMAX', padding=u'low')
-                                    ]
+        self.face_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'MMAXZ', node_dim=u'MMAX', padding=u'low'), 
+                             GridPadding(mesh_topology_var=u'grid', face_dim=u'NMAXZ', node_dim=u'NMAX', padding=u'low')
+                             ]
+        self.sgrid = SGrid2D(face_padding=self.face_padding,
+                             node_dimensions='MMAX NMAX'
+                             )
         self.dataset = nc4.Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']

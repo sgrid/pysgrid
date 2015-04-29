@@ -9,8 +9,8 @@ import numpy as np
 
 
 GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
-                                         'dim',  # the topology attribute
-                                         'sub_dim',  # node dimension within the topology attribute
+                                         'face_dim',  # the topology attribute
+                                         'node_dim',  # node dimension within the topology attribute
                                          'padding'  # padding type for the node dimension
                                          ]
                          )
@@ -53,6 +53,21 @@ def check_element_equal(lst):
     return lst[1:] == lst[:-1]
 
 
+def does_intersection_exist(a, b):
+    set_a = set(a)
+    try:
+        set_b = set(b)
+    except TypeError:
+        intersect_exists = False
+    else:
+        intersect = set_a.intersection(set_b)
+        if len(intersect) > 0:
+            intersect_exists = True
+        else:
+            intersect_exists = False
+    return intersect_exists
+
+
 def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     """
     Figure out how to slice a variable. This function
@@ -74,12 +89,20 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if grid_variables is None:
         grid_variables = []
     var_dims = nc_variable.dimensions
-    padding_summary = sgrid_obj.all_padding()
+    node_dims = tuple(sgrid_obj.node_dimensions.split(' '))
+    separate_edge_dim_exists = does_intersection_exist(var_dims, node_dims)
     slice_indices = tuple()
+    if separate_edge_dim_exists:
+        try:
+            padding = sgrid_obj.face_padding  # try 2D sgrid
+        except AttributeError:
+            padding = sgrid_obj.volume_padding  # if not 2D, try 3D sgrid
+    else:
+        padding = sgrid_obj.all_padding()
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next((info for info in padding_summary if info[0] == var_dim))
+                padding_info = next((info for info in padding if info.face_dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)
@@ -88,7 +111,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index,)
+                slice_indices += (slice_index, )
     else:
         pass
     return slice_indices
@@ -101,26 +124,17 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     well for 2D. Not so sure about 3D.
     
     """
-    fe_padding = []
-    if hasattr(sgrid_obj, 'face_padding') and sgrid_obj.face_padding is not None:
-        fe_padding += sgrid_obj.face_padding
-    if hasattr(sgrid_obj, 'face1_padding') and sgrid_obj.face1_padding is not None:
-        fe_padding += sgrid_obj.face1_padding
-    if hasattr(sgrid_obj, 'face2_padding') and sgrid_obj.face2_padding is not None:
-        fe_padding += sgrid_obj.face2_padding
-    if hasattr(sgrid_obj, 'face3_padding') and sgrid_obj.face3_padding is not None:
-        fe_padding += sgrid_obj.face3_padding
-    if sgrid_obj.edge1_padding is not None:
-        fe_padding += sgrid_obj.edge1_padding
-    if sgrid_obj.edge2_padding is not None:
-        fe_padding += sgrid_obj.edge2_padding
-    if hasattr(sgrid_obj, 'edge3_padding') and sgrid_obj.edge3_padding is not None:
-        fe_padding += sgrid_obj.edge3_padding
     var_dims = nc_var_obj.dimensions
+    node_dimensions = tuple(sgrid_obj.node_dimensions.split(' '))
+    separate_edge_dim_exists = does_intersection_exist(node_dimensions, var_dims)
+    if separate_edge_dim_exists:
+        padding = sgrid_obj.get_all_face_padding()
+    else:
+        padding = sgrid_obj.get_all_face_padding() + sgrid_obj.get_all_edge_padding()
     # define center averaging axis for a variable
     for var_dim in var_dims:
         try:
-            padding_info = next((info for info in fe_padding if info.dim == var_dim))
+            padding_info = next((info for info in padding if info.face_dim == var_dim))
         except StopIteration:
             padding_info = None
             avg_dim = None
