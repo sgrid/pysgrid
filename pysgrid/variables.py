@@ -22,6 +22,7 @@ class SGridVariable(object):
                  location=None,
                  node_axis=None,
                  node_slicing=None,
+                 standard_name=None,
                  variable=None,
                  vector_axis=None,
                  x_axis=None,
@@ -35,6 +36,7 @@ class SGridVariable(object):
         self.location = location
         self.node_axis = node_axis
         self.node_slicing = node_slicing
+        self.standard_name = standard_name
         self.variable = variable
         self.vector_axis = vector_axis
         self.x_axis = x_axis
@@ -73,6 +75,7 @@ class SGridVariable(object):
         try:
             standard_name = nc_var_obj.standard_name
         except AttributeError:
+            standard_name = None
             vector_axis = None
         else:
             vector_axis = parse_vector_axis(standard_name)
@@ -88,6 +91,7 @@ class SGridVariable(object):
                         dimensions=dimensions,
                         dtype=dtype,
                         location=location,
+                        standard_name=standard_name,
                         vector_axis=vector_axis
                         )
         return sgrid_var
