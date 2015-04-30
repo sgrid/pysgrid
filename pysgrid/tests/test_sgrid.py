@@ -373,7 +373,19 @@ class TestSGridSave(unittest.TestCase):
         self.assertEqual(target_dims, expected_target_dims)
         self.assertEqual(target_vars, expected_target_vars)
         self.assertEqual(target_grid_vars, expected_target_grid_vars)
-        self.assertEqual(target_face_coordinates, expected_target_face_coordinates)      
+        self.assertEqual(target_face_coordinates, expected_target_face_coordinates)
+        
+    def test_saved_sgrid(self):
+        self.sg_obj.save_as_netcdf(self.sgrid_target)
+        saved_sgrid = from_ncfile(self.sgrid_target)
+        u1_var = saved_sgrid.U1
+        u1_var_center_avg_axis = u1_var.center_axis
+        expected_u1_center_axis = 0
+        u1_vector_axis = u1_var.vector_axis
+        expected_u1_vector_axis = 'X'
+        self.assertIsInstance(saved_sgrid, SGrid2D)  
+        self.assertEqual(u1_var_center_avg_axis, expected_u1_center_axis)
+        self.assertEqual(u1_vector_axis, expected_u1_vector_axis)  
       
     def tearDown(self):
         os.remove(self.sgrid_target)
