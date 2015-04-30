@@ -42,7 +42,11 @@ def simulated_dgrid(nc_filename='fake_dgrid.nc'):
         grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         u1.grid = 'some grid'
+        u1.standard_name = 'sea_water_x_velocity'
+        u1.location = 'edge2'
         v1.grid = 'some grid'
+        v1.standard_name = 'sea_water_y_velocity'
+        v1.location = 'edge1'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))

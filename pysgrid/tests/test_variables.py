@@ -89,3 +89,12 @@ class TestSGridVariable(unittest.TestCase):
         self.assertIsNone(x_axis)
         self.assertIsNone(y_axis)
         self.assertIsNone(z_axis)
+        
+    def test_vector_directions(self):
+        u_var = SGridVariable.create_variable(self.test_var_1, self.sgrid)
+        u_vector_axis = u_var.vector_axis
+        expected_u_axis = 'X'
+        zeta_var = SGridVariable.create_variable(self.test_var_2, self.sgrid)
+        zeta_axis = zeta_var.vector_axis
+        self.assertEqual(u_vector_axis, expected_u_axis)
+        self.assertIsNone(zeta_axis)
