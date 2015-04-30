@@ -59,6 +59,8 @@ class TestSGridVariable(unittest.TestCase):
         y_axis = sgrid_var.y_axis
         y_axis_expected = 'eta_u'
         z_axis = sgrid_var.z_axis
+        standard_name = sgrid_var.standard_name
+        expected_standard_name = 'sea_water_x_velocity'
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
         self.assertEqual(sgrid_var_grid, sgrid_var_grid_expected)
@@ -67,6 +69,7 @@ class TestSGridVariable(unittest.TestCase):
         self.assertEqual(x_axis, x_axis_expected)
         self.assertEqual(y_axis, y_axis_expected)
         self.assertIsNone(z_axis)
+        self.assertEqual(standard_name, expected_standard_name)
         
     def test_attributes_with_location(self):
         sgrid_var = SGridVariable.create_variable(self.test_var_2, self.sgrid)
