@@ -9,7 +9,7 @@ import unittest
 import netCDF4 as nc4
 
 from ..custom_exceptions import CannotFindPaddingError
-from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding
+from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding, parse_vector_axis
 from .write_nc_test_files import roms_sgrid
 
 
@@ -82,6 +82,28 @@ class TestParsePadding(unittest.TestCase):
                           )
 
 
+class TestParseVectorAxis(unittest.TestCase):
+    
+    def setUp(self):
+        self.standard_name_1 = 'sea_water_y_velocity'
+        self.standard_name_2 = 'atmosphere_optical_thickness_due_to_cloud'
+        self.standard_name_3 = 'ocean_heat_x_transport_due_to_diffusion'
+        
+    def test_std_name_with_velocity_direction(self):
+        direction = parse_vector_axis(self.standard_name_1)
+        expected_direction = 'Y'
+        self.assertEqual(direction, expected_direction)
+        
+    def test_std_name_without_direction(self):
+        direction = parse_vector_axis(self.standard_name_2)
+        self.assertIsNone(direction)
+        
+    def test_std_name_with_transport_direction(self):
+        direction = parse_vector_axis(self.standard_name_3)
+        expected_direction = 'X'
+        self.assertEqual(direction, expected_direction)
+
+        
 class TestNetCDFDataset(unittest.TestCase):
     
     @classmethod

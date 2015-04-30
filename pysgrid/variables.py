@@ -3,7 +3,7 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
-from .read_netcdf import parse_axes
+from .read_netcdf import parse_axes, parse_vector_axis
 from .utils import determine_variable_slicing, infer_avg_axes
 
 
@@ -14,30 +14,32 @@ class SGridVariable(object):
     
     """
     def __init__(self, 
-                 variable=None, 
-                 grid=None, 
+                 center_axis=None,
+                 center_slicing=None,
+                 dimensions=None,
+                 dtype=None,
+                 grid=None,
+                 location=None,
+                 node_axis=None,
+                 node_slicing=None,
+                 variable=None,
+                 vector_axis=None,
                  x_axis=None,
                  y_axis=None,
-                 z_axis=None, 
-                 center_slicing=None,
-                 center_axis=None,
-                 node_slicing=None,
-                 node_axis=None, 
-                 dimensions=None, 
-                 dtype=None, 
-                 location=None):
-        self.variable = variable
+                 z_axis=None,):
+        self.center_axis = center_axis
+        self.center_slicing = center_slicing
+        self.dimensions = dimensions
+        self.dtype = dtype
         self.grid = grid
+        self.location = location
+        self.node_axis = node_axis
+        self.node_slicing = node_slicing
+        self.variable = variable
+        self.vector_axis = vector_axis
         self.x_axis = x_axis
         self.y_axis = y_axis
         self.z_axis = z_axis
-        self.center_slicing = center_slicing
-        self.center_axis = center_axis
-        self.node_slicing = node_slicing
-        self.node_axis = node_axis
-        self.dimensions = dimensions
-        self.dtype = dtype
-        self.location = location
         
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
@@ -68,6 +70,12 @@ class SGridVariable(object):
             z_axis = None
         else:
             x_axis, y_axis, z_axis = parse_axes(axes)
+        try:
+            standard_name = nc_var_obj.standard_name
+        except AttributeError:
+            vector_axis = None
+        else:
+            vector_axis = parse_vector_axis(standard_name)
         sgrid_var = cls(variable=variable,
                         grid=grid,
                         x_axis=x_axis,
@@ -79,6 +87,7 @@ class SGridVariable(object):
                         node_axis=node_axis,
                         dimensions=dimensions,
                         dtype=dtype,
-                        location=location
+                        location=location,
+                        vector_axis=vector_axis
                         )
         return sgrid_var
