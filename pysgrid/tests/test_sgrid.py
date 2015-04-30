@@ -357,7 +357,11 @@ class TestSGridSave(unittest.TestCase):
                                 u'grid', 
                                 u'time', 
                                 u'U1', 
-                                u'V1'
+                                u'V1', 
+                                u'latitude', 
+                                u'longitude', 
+                                u'grid_latitude', 
+                                u'grid_longitude'
                                 ]
         target_grid_vars = target.grid_variables
         expected_target_grid_vars = [u'U1', 
