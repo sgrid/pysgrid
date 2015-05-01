@@ -42,7 +42,11 @@ def simulated_dgrid(nc_filename='fake_dgrid.nc'):
         grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         u1.grid = 'some grid'
+        u1.standard_name = 'sea_water_x_velocity'
+        u1.location = 'edge2'
         v1.grid = 'some grid'
+        v1.standard_name = 'sea_water_y_velocity'
+        v1.location = 'edge1'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
@@ -101,8 +105,10 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
         grid_longitude.axes = 'X: NMAX Y: MMAX'
         u1.grid = 'some grid'
         u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
+        u1.standard_name = 'sea_water_x_velocity'
         v1.grid = 'some grid'
         v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
+        v1.standard_name = 'sea_water_y_velocity'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
@@ -191,9 +197,11 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
         u.grid = 'some grid'
         u.axes = 'X: xi_u Y: eta_u'
         u.location = 'edge1'
+        u.standard_name = 'sea_water_x_velocity'
         v.grid = 'some grid'
         v.axes = 'X: xi_v Y: eta_v'
         v.location = 'edge2'
+        v.standard_name = 'sea_water_y_velocity'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))

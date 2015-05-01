@@ -71,6 +71,18 @@ def parse_axes(axes_attr):
     return x_axis, y_axis, z_axis
 
 
+def parse_vector_axis(variable_standard_name):
+    p = re.compile('[a-z_]+_[xyz]_[a-z_]+')
+    match = p.match(variable_standard_name)
+    if match is not None:
+        direction_pattern = re.compile('_[xyz]_')
+        direction_substr = direction_pattern.search(match.string).group()
+        vector_direction = direction_substr.replace('_', '').upper()
+    else:
+        vector_direction = None
+    return vector_direction
+
+
 class NetCDFDataset(object):
     
     def __init__(self, nc_dataset_obj):
