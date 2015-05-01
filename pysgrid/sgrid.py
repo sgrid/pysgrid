@@ -235,15 +235,35 @@ class SGrid2D(SGridND):
                 if self.angles is not None:
                     grid_angle[:] = self.angles[:]
             # save the grid variables with attributes
-            for dataset_variable in self.variables:
+            for dataset_variable in self.grid_variables:
                 dataset_var_obj = getattr(self, dataset_variable)
+                axes = ''
+                dataset_grid_var = nclocal.createVariable(dataset_variable, 
+                                                          dataset_var_obj.dtype, 
+                                                          dataset_var_obj.dimensions
+                                                          )
                 if dataset_var_obj.grid is not None:
-                    dataset_grid_var = nclocal.createVariable(dataset_variable, 
-                                                              dataset_var_obj.dtype, 
-                                                              dataset_var_obj.dimensions
-                                                              )
                     dataset_grid_var.grid = grid_var
-            # add attributes to the variables
+                if dataset_var_obj.standard_name is not None:
+                    dataset_grid_var.standard_name = dataset_var_obj.standard_name
+                if dataset_var_obj.x_axis is not None:
+                    x_axis = 'X: {0}'.format(dataset_var_obj.x_axis)
+                    axes += x_axis
+                if dataset_var_obj.y_axis is not None:
+                    y_axis = 'Y: {0}'.format(dataset_var_obj.y_axis)
+                    axes += y_axis
+                if dataset_var_obj.z_axis is not None:
+                    z_axis = 'Z: {0}'.format(dataset_var_obj.z_axis)
+                    axes += z_axis
+                if len(axes) > 0:
+                    dataset_grid_var.axes = axes
+            for dataset_variable in self.non_grid_variables:
+                dataset_var_obj = getattr(self, dataset_variable)
+                try:
+                    nclocal.createVariable(dataset_variable, dataset_var_obj.dtype, dataset_var_obj.dimensions)
+                except RuntimeError:  # lat/lon and grid variables will already exist
+                    continue
+            # add attributes to the grid_topology variable
             grid_vars.cf_role = 'grid_topology'
             grid_vars.topology_dimension = self.topology_dimension
             grid_vars.node_dimensions = self.node_dimensions
