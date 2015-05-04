@@ -9,7 +9,7 @@ import netCDF4 as nc4
 
 from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
-from .utils import pair_arrays
+from .utils import calculate_angle_from_true_east, pair_arrays
 from .variables import SGridVariable
 
 
@@ -600,7 +600,10 @@ class SGridAttributes(object):
             grid_angles = self.nc_dataset.variables['angle'][:]
             angles = grid_angles
         except KeyError:
-            angles = None
+            cell_centers = self.get_cell_center_lat_lon()
+            centers_start = cell_centers[..., :-1, :]
+            centers_end = cell_centers[..., 1:, :]
+            angles = calculate_angle_from_true_east(centers_start, centers_end)
         return angles
         
     def get_time(self):
