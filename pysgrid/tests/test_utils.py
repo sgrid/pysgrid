@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import check_element_equal, pair_arrays, does_intersection_exist
+from ..utils import check_element_equal, pair_arrays, does_intersection_exist, calculate_bearing
 
 
 class TestDoesIntersectionExist(unittest.TestCase):
@@ -60,3 +60,16 @@ class TestCheckElementEqual(unittest.TestCase):
     def test_list_with_different_elements(self):
         result = check_element_equal(self.b)
         self.assertFalse(result)
+        
+        
+class TestCalculateBearing(unittest.TestCase):
+    
+    def setUp(self):
+        self.points = np.array([(-93.51105439, 11.88846735), (-93.46607342, 11.90917952)])
+        self.point_1 = self.points[:-1, :]
+        self.point_2 = self.points[1:, :]
+        
+    def test_bearing_calculation(self):
+        result = calculate_bearing(self.point_1, self.point_2)
+        expected = 64.7947
+        np.testing.assert_almost_equal(result, expected, decimal=3)
