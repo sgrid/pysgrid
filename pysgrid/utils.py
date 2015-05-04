@@ -168,25 +168,25 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
     lat_1 = lon_lat_1_radians[..., 1]
     lon_2 = lon_lat_2_radians[..., 0]
     lat_2 = lon_lat_2_radians[..., 1]
-    print(lon_1.shape)
-    arg_1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
-    print(arg_1.shape)
-    arg_2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)
-    print(arg_2.shape)
-    bearing_radians = np.arctan2(arg_1, arg_2)
-    print(bearing_radians.shape)
+    x1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
+    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)
+    bearing_radians = np.arctan2(x1, x2)
     bearing_degrees = bearing_radians * 180/np.pi
-    print('Bearing degress shape: {0}'.format(bearing_degrees.shape))
     return (bearing_degrees + 360) % 360
 
 
 def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
+    """
+    Return the angle from true east in radians
+    
+    """
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
-    print('Bearing shape: {0}'.format(bearing.shape))
     bearing_from_true_east = 90 - bearing
     bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
-    print('Bearing radians shape: {0}'.format(bearing_from_true_east_radians.shape))
     # not sure if this is the most appropriate thing to do for the last grid cell
-    angles = np.append(bearing_from_true_east_radians, bearing_from_true_east_radians[-1], axis=-1)
+    angles = np.append(bearing_from_true_east_radians, 
+                       bearing_from_true_east_radians[..., -1:], 
+                       axis=-1
+                       )
     return angles
     
