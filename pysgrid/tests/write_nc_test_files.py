@@ -84,7 +84,6 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
         grid.node_dimensions = 'MMAX NMAX'
         grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
         grid.node_coordinates = 'XCOR YCOR'
-        grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         xcor.standard_name = 'projection_x_coordinate'
         xcor.long_name = 'X-coordinate of grid points'
@@ -137,6 +136,7 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
         u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
         v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
+        # w = rg.createVariable('W', 'f4', ('time', 'KMAX1', 'MMAXZ', 'NMAXZ'))
         times = rg.createVariable('time', 'f8', ('time',))
         grid = rg.createVariable('grid', 'i4')
         latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
@@ -165,6 +165,8 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         v1.grid = 'some grid'
         v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
         v1.standard_name = 'sea_water_y_velocity'
+        # w.grid = 'grid'
+        # w.location = 'face'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))

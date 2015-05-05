@@ -6,7 +6,9 @@ Created on Mar 19, 2015
 import re
 
 from .custom_exceptions import CannotFindPaddingError, SGridNonCompliantError
-from .lookup import LAT_GRID_CELL_NODE_LONG_NAME, LON_GRID_CELL_NODE_LONG_NAME
+from .lookup import (LAT_GRID_CELL_NODE_LONG_NAME, 
+                     LON_GRID_CELL_NODE_LONG_NAME, 
+                     X_COORDINATES, Y_COORDINATES)
 from .utils import GridPadding
 
 
@@ -197,9 +199,11 @@ class NetCDFDataset(object):
                         pc_std_name = potential_coordinate.standard_name
                     except AttributeError:
                         pc_std_name = ''
-                    if 'lon' in pc_name.lower() or 'longitude' in pc_std_name.lower():
+                    if (any(x in pc_name.lower() for x in X_COORDINATES) or
+                        any(x in pc_std_name.lower() for x in X_COORDINATES)):
                         x_coordinate = pc_name
-                    elif 'lat' in pc_name.lower() or 'latitude' in pc_std_name.lower():
+                    elif (any(y in pc_name.lower() for y in Y_COORDINATES) or
+                          any(y in pc_std_name.lower() for y in Y_COORDINATES)):
                         y_coordinate = pc_name
                     else:
                         z_coordinate = pc_name  # this might not always work...
