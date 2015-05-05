@@ -56,6 +56,62 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         v1[:] = np.random.random((2, 2, 4, 4))
         times[:] = np.random.random((2,))
         
+        
+def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares_no_optional_attr.nc'):
+    file_name = os.path.join(target_dir, nc_filename)
+    with nc4.Dataset(file_name, 'w') as rg:
+        # define dimensions
+        rg.createDimension('MMAXZ', 4)
+        rg.createDimension('NMAXZ', 4)
+        rg.createDimension('MMAX', 4)
+        rg.createDimension('NMAX', 4)
+        rg.createDimension('KMAX', 2)
+        rg.createDimension('KMAX1', 3)
+        rg.createDimension('time', 2)
+        # define variables
+        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
+        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
+        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
+        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
+        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
+        w = rg.createVariable('W', 'f4', ('time', 'KMAX1', 'MMAXZ', 'NMAXZ'))
+        times = rg.createVariable('time', 'f8', ('time',))
+        grid = rg.createVariable('grid', 'i4')
+        # define variable attributes
+        grid.cf_role = 'grid_topology'
+        grid.topology_dimension = 2
+        grid.node_dimensions = 'MMAX NMAX'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.node_coordinates = 'XCOR YCOR'
+        grid.face_coordinates = 'XZ YZ'
+        grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
+        xcor.standard_name = 'projection_x_coordinate'
+        xcor.long_name = 'X-coordinate of grid points'
+        ycor.standard_name = 'projection_y_coordinate'
+        ycor.long_name = 'Y-coordinate of grid points'
+        xz.standard_name = 'projection_x_coordinate'
+        xz.long_name = 'X-coordinate of cell centres'
+        yz.standard_name = 'projection_y_coordinate'
+        yz.long_name = 'Y-coordinate of cell centres'
+        u1.grid = 'some grid'
+        u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
+        u1.standard_name = 'sea_water_x_velocity'
+        v1.grid = 'some grid'
+        v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
+        v1.standard_name = 'sea_water_y_velocity'
+        w.grid = 'grid'
+        w.location = 'face'
+        # create variable data
+        xcor[:] = np.random.random((4, 4))
+        ycor[:] = np.random.random((4, 4))
+        xz[:] = np.random.random((4, 4))
+        yz[:] = np.random.random((4, 4))
+        u1[:] = np.random.random((2, 2, 4, 4))
+        v1[:] = np.random.random((2, 2, 4, 4))
+        times[:] = np.random.random((2,))
+    return file_name
+       
 
 def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
     """
