@@ -122,13 +122,18 @@ class TestNetCDFDataset(unittest.TestCase):
         self.ds.close()
         
     def test_finding_node_variables(self):
-        result = self.nc_ds.find_grid_cell_node_vars()
+        result = self.nc_ds.find_node_coordinates('xi_psi eta_psi')
         expected = ('lon_psi', 'lat_psi')
         self.assertEqual(result, expected)
         
-    def test_find_coordinatates_by_location(self):
-        result = self.nc_ds.find_coordinates_by_location('faces', 2)
+    def test_find_face_coordinates_by_location(self):
+        result = self.nc_ds.find_coordinates_by_location('face', 2)
         expected = ('lon_rho', 'lat_rho')
+        self.assertEqual(result, expected)
+    
+    def test_find_edge_coordinates_by_location(self):
+        result = self.nc_ds.find_coordinates_by_location('edge1', 2)
+        expected = ('lon_u', 'lat_u')
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):

@@ -13,7 +13,9 @@ import numpy as np
 from ..custom_exceptions import SGridNonCompliantError
 from ..sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
 from ..utils import GridPadding
-from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid, wrf_sgrid_2d
+from .write_nc_test_files import (deltares_sgrid, deltares_sgrid_no_optional_attr, 
+                                  non_compliant_sgrid, roms_sgrid, wrf_sgrid, 
+                                  wrf_sgrid_2d)
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -183,6 +185,35 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.sg_obj.save_as_netcdf(self.write_path)
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
+
+class TestSGridNoFaceOrEdgeCoordinates(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = deltares_sgrid_no_optional_attr()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
+    def setUp(self):
+        self.sgrid_obj = from_ncfile(self.sgrid_test_file)
+        
+    def test_face_coordinate_inference(self):
+        face_coordinates = self.sgrid_obj.face_coordinates
+        expected_face_coordinates = (u'XZ', u'YZ')
+        self.assertEqual(face_coordinates, expected_face_coordinates)
+        
+    def test_grid_cell_centers(self):
+        centers = self.sgrid_obj.centers
+        centers_shape = (4, 4, 2)
+        self.assertEqual(centers.shape, centers_shape)
+        
+    def test_grid_cell_nodes(self):
+        nodes = self.sgrid_obj.nodes
+        nodes_shape = (4, 4, 2)
+        self.assertEqual(nodes.shape, nodes_shape)
+
         
 class TestSGridNoPadding(unittest.TestCase):
     """
@@ -291,6 +322,11 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         grid_variables = self.sg_obj.grid_variables
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
+        
+    def test_angles(self):
+        angles = self.sg_obj.angles
+        expected_shape = (4, 4)
+        self.assertEqual(angles.shape, expected_shape)
         
     def test_no_3d_attributes(self):
         self.assertFalse(hasattr(self.sg_obj, 'volume_padding'))

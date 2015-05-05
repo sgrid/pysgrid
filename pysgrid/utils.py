@@ -155,3 +155,38 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     else:
         node_avg_axis = None
     return center_avg_axis, node_avg_axis
+
+
+def calculate_bearing(lon_lat_1, lon_lat_2):
+    """
+    return bearing from true north in degrees
+    
+    """
+    lon_lat_1_radians = lon_lat_1 * np.pi/180
+    lon_lat_2_radians = lon_lat_2 * np.pi/180
+    lon_1 = lon_lat_1_radians[..., 0]
+    lat_1 = lon_lat_1_radians[..., 1]
+    lon_2 = lon_lat_2_radians[..., 0]
+    lat_2 = lon_lat_2_radians[..., 1]
+    x1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
+    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)
+    bearing_radians = np.arctan2(x1, x2)
+    bearing_degrees = bearing_radians * 180/np.pi
+    return (bearing_degrees + 360) % 360
+
+
+def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
+    """
+    Return the angle from true east in radians
+    
+    """
+    bearing = calculate_bearing(lon_lat_1, lon_lat_2)
+    bearing_from_true_east = 90 - bearing
+    bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
+    # not sure if this is the most appropriate thing to do for the last grid cell
+    angles = np.append(bearing_from_true_east_radians, 
+                       bearing_from_true_east_radians[..., -1:], 
+                       axis=-1
+                       )
+    return angles
+    
