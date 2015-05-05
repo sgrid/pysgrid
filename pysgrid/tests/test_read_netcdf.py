@@ -126,9 +126,14 @@ class TestNetCDFDataset(unittest.TestCase):
         expected = ('lon_psi', 'lat_psi')
         self.assertEqual(result, expected)
         
-    def test_find_coordinatates_by_location(self):
+    def test_find_face_coordinates_by_location(self):
         result = self.nc_ds.find_coordinates_by_location('faces', 2)
         expected = ('lon_rho', 'lat_rho')
+        self.assertEqual(result, expected)
+    
+    def test_find_edge_coordinates_by_location(self):
+        result = self.nc_ds.find_coordinates_by_location('edge1', 2)
+        expected = ('lon_u', 'lat_u')
         self.assertEqual(result, expected)
         
     def test_find_grid_topology(self):
