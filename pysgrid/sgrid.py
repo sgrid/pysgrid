@@ -596,7 +596,7 @@ class SGridAttributes(object):
         
     def get_angles(self):
         try:
-            # remove hard coding of variable name moving forward
+            # get angles if they exist, otherwise calculate them
             grid_angles = self.nc_dataset.variables['angle'][:]
             angles = grid_angles
         except KeyError:
