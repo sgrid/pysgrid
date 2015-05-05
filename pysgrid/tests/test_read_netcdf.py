@@ -127,7 +127,7 @@ class TestNetCDFDataset(unittest.TestCase):
         self.assertEqual(result, expected)
         
     def test_find_face_coordinates_by_location(self):
-        result = self.nc_ds.find_coordinates_by_location('faces', 2)
+        result = self.nc_ds.find_coordinates_by_location('face', 2)
         expected = ('lon_rho', 'lat_rho')
         self.assertEqual(result, expected)
     

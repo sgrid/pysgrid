@@ -249,7 +249,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
         grid.vertical_dimensions = 's_rho: s_w (padding: none)'
-        zeta.location = 'faces'
+        zeta.location = 'face'
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
         u.axes = 'X: xi_u Y: eta_u'

@@ -78,7 +78,7 @@ class TestSGridVariable(unittest.TestCase):
         sgrid_var_dim = sgrid_var.dimensions
         sgrid_var_grid = sgrid_var.grid
         sgrid_var_location = sgrid_var.location
-        sgrid_var_location_expected = 'faces'
+        sgrid_var_location_expected = 'face'
         sgrid_var_dim_expected = ('time', 'eta_rho', 'xi_rho')
         sgrid_var_dtype = sgrid_var.dtype
         x_axis = sgrid_var.x_axis
