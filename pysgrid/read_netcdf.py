@@ -172,7 +172,6 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         vars_with_location = self.search_variables_by_location(location_str)
-        print(vars_with_location)
         x_coordinate = None
         y_coordinate = None
         z_coordinate = None
