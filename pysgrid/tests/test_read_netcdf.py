@@ -122,7 +122,7 @@ class TestNetCDFDataset(unittest.TestCase):
         self.ds.close()
         
     def test_finding_node_variables(self):
-        result = self.nc_ds.find_grid_cell_node_vars()
+        result = self.nc_ds.find_node_coordinates('xi_psi eta_psi')
         expected = ('lon_psi', 'lat_psi')
         self.assertEqual(result, expected)
         

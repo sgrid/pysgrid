@@ -83,7 +83,6 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
         grid.topology_dimension = 2
         grid.node_dimensions = 'MMAX NMAX'
         grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
-        grid.node_coordinates = 'XCOR YCOR'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         xcor.standard_name = 'projection_x_coordinate'
         xcor.long_name = 'X-coordinate of grid points'

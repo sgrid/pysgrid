@@ -186,7 +186,7 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
 
-class TestSGridNoFaceCoordinates(unittest.TestCase):
+class TestSGridNoFaceOrEdgeCoordinates(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
@@ -203,6 +203,17 @@ class TestSGridNoFaceCoordinates(unittest.TestCase):
         face_coordinates = self.sgrid_obj.face_coordinates
         expected_face_coordinates = (u'XZ', u'YZ')
         self.assertEqual(face_coordinates, expected_face_coordinates)
+        
+    def test_grid_cell_centers(self):
+        centers = self.sgrid_obj.centers
+        centers_shape = (4, 4, 2)
+        self.assertEqual(centers.shape, centers_shape)
+        
+    def test_grid_cell_nodes(self):
+        nodes = self.sgrid_obj.nodes
+        nodes_shape = (4, 4, 2)
+        self.assertEqual(nodes.shape, nodes_shape)
+
         
 class TestSGridNoPadding(unittest.TestCase):
     """
