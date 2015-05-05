@@ -13,8 +13,8 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
-def simulated_dgrid(nc_filename='fake_dgrid.nc'):
-    file_name = os.path.join(TEST_FILES, nc_filename)
+def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
+    file_name = os.path.join(target_dir, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dims
         rg.createDimension('MMAXZ', 4)
@@ -39,7 +39,7 @@ def simulated_dgrid(nc_filename='fake_dgrid.nc'):
         grid.node_dimensions = 'MMAX NMAX'
         grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
         grid.node_coordinates = 'XCOR YCOR'
-        grid.face_coordinates = 'XZ YZ'
+        # grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         u1.grid = 'some grid'
         u1.standard_name = 'sea_water_x_velocity'
@@ -57,14 +57,14 @@ def simulated_dgrid(nc_filename='fake_dgrid.nc'):
         times[:] = np.random.random((2,))
         
 
-def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
+def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
     from an actual file.
     
     """
-    file_name = os.path.join(TEST_FILES, nc_filename)
+    file_name = os.path.join(target_dir, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # define dimensions
         rg.createDimension('MMAXZ', 4)
@@ -124,14 +124,14 @@ def deltares_sgrid(nc_filename='test_sgrid_deltares.nc'):
     return file_name
         
         
-def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
+def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
     
     """
-    file_name = os.path.join(TEST_FILES, nc_filename)
+    file_name = os.path.join(target_dir, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
         rg.createDimension('s_rho', 2)
@@ -222,8 +222,8 @@ def roms_sgrid(nc_filename='test_sgrid_roms.nc'):
     return file_name
 
 
-def wrf_sgrid_2d(nc_filename='test_sgrid_wrf_2.nc'):
-    file_name = os.path.join(TEST_FILES, nc_filename)
+def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
+    file_name = os.path.join(target_dir, nc_filename)
     with nc4.Dataset(file_name, 'w') as nc:
         nc.createDimension('Time', 2)
         nc.createDimension('DateStrLen', 3)
@@ -273,12 +273,12 @@ def wrf_sgrid_2d(nc_filename='test_sgrid_wrf_2.nc'):
     return file_name
         
         
-def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
+def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
     """
     Write an SGrid file using 3D conventions.
     
     """
-    file_name = os.path.join(TEST_FILES, nc_filename)
+    file_name = os.path.join(target_dir, nc_filename)
     with  nc4.Dataset(file_name, 'w') as fg:
         # create dimensions
         fg.createDimension('Time', 2)
@@ -328,14 +328,14 @@ def wrf_sgrid(nc_filename='test_sgrid_wrf.nc'):
     return file_name
         
                
-def non_compliant_sgrid(nc_filename='test_noncompliant_sgrid.nc'):
+def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
     
     """
-    file_name = os.path.join(TEST_FILES, nc_filename)
+    file_name = os.path.join(target_dir, nc_filename)
     with nc4.Dataset(file_name, 'w') as rg:
         # set dimensions
         rg.createDimension('z_center', 2)

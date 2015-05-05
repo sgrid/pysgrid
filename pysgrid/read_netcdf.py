@@ -179,14 +179,6 @@ class NetCDFDataset(object):
             location_var = nc_vars[var_with_location]
             location_var_dims = location_var.dimensions
             try:
-                location_var_axes = location_var.axes
-            except AttributeError:
-                pass
-            else:
-                x_coordinate, y_coordinate, z_coordinate = parse_axes(location_var_axes)
-                # exit the loop once found
-                break
-            try:
                 location_var_coordinates = location_var.coordinates
             except AttributeError:
                 # run through this if a location attributed is defined, but not coordinates
