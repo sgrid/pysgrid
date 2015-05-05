@@ -312,6 +312,11 @@ class TestSGridWithoutEdgesAttributes(unittest.TestCase):
         expected_grid_variables = ['U1', 'V1']
         self.assertEqual(grid_variables, expected_grid_variables)
         
+    def test_angles(self):
+        angles = self.sg_obj.angles
+        expected_shape = (4, 4)
+        self.assertEqual(angles.shape, expected_shape)
+        
     def test_no_3d_attributes(self):
         self.assertFalse(hasattr(self.sg_obj, 'volume_padding'))
         self.assertFalse(hasattr(self.sg_obj, 'volume_dimensions'))
