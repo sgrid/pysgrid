@@ -9,7 +9,7 @@ import netCDF4 as nc4
 
 from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
-from .utils import pair_arrays
+from .utils import calculate_angle_from_true_east, pair_arrays
 from .variables import SGridVariable
 
 
@@ -179,7 +179,7 @@ class SGrid2D(SGridND):
         if self.edge2_padding is not None:
             all_edge_padding += self.edge2_padding
         return all_edge_padding
-
+                    
     def all_padding(self):
         all_padding = self.get_all_face_padding() + self.get_all_edge_padding()
         if self.vertical_padding is not None:
@@ -573,7 +573,7 @@ class SGridAttributes(object):
         try:
             node_coordinates = self.topology_var.node_coordinates
         except AttributeError:
-            grid_cell_node_vars = self.ncd.find_grid_cell_node_vars()
+            grid_cell_node_vars = self.ncd.find_node_coordinates(node_dimensions)
             node_coordinates = grid_cell_node_vars
         else:
             node_coordinate_val = node_coordinates.split(' ')
@@ -596,11 +596,14 @@ class SGridAttributes(object):
         
     def get_angles(self):
         try:
-            # remove hard coding of variable name moving forward
+            # get angles if they exist, otherwise calculate them
             grid_angles = self.nc_dataset.variables['angle'][:]
             angles = grid_angles
         except KeyError:
-            angles = None
+            cell_centers = self.get_cell_center_lat_lon()
+            centers_start = cell_centers[..., :-1, :]
+            centers_end = cell_centers[..., 1:, :]
+            angles = calculate_angle_from_true_east(centers_start, centers_end)
         return angles
         
     def get_time(self):
