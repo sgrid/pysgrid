@@ -573,7 +573,7 @@ class SGridAttributes(object):
         try:
             node_coordinates = self.topology_var.node_coordinates
         except AttributeError:
-            grid_cell_node_vars = self.ncd.find_grid_cell_node_vars()
+            grid_cell_node_vars = self.ncd.find_node_coordinates(node_dimensions)
             node_coordinates = grid_cell_node_vars
         else:
             node_coordinate_val = node_coordinates.split(' ')

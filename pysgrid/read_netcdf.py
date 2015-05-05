@@ -6,9 +6,7 @@ Created on Mar 19, 2015
 import re
 
 from .custom_exceptions import CannotFindPaddingError, SGridNonCompliantError
-from .lookup import (LAT_GRID_CELL_NODE_LONG_NAME, 
-                     LON_GRID_CELL_NODE_LONG_NAME, 
-                     X_COORDINATES, Y_COORDINATES)
+from .lookup import X_COORDINATES, Y_COORDINATES
 from .utils import GridPadding
 
 
@@ -95,28 +93,36 @@ class NetCDFDataset(object):
         except ValueError:
             self._filepath = None
         self.sgrid_compliant_file()
-    
-    def find_grid_cell_node_vars(self):
+        
+    def find_node_coordinates(self, node_dimensions):
         """
         Find the variables for the grid
         cell vertices.
         
         """
-        nc_vars = self.ncd.variables
-        grid_cell_node_lon = None
-        grid_cell_node_lat = None
+        nc_vars = self.ncd.variables    
+        node_dims = node_dimensions.split(' ')
+        node_dim_set = set(node_dims)
+        x_node_coordinate = None
+        y_node_coordinate = None
         for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
+            nc_var_dims = nc_var_obj.dimensions
+            nc_var_dim_set = set(nc_var_dims)
+            name_lower = nc_var_obj.name.lower()
             try:
-                nc_var_long_name = nc_var_obj.long_name
+                standard_name_lower = nc_var_obj.standard_name.lower()
             except AttributeError:
-                continue
-            else:
-                if nc_var_long_name in LON_GRID_CELL_NODE_LONG_NAME:
-                    grid_cell_node_lon = nc_var
-                if nc_var_long_name in LAT_GRID_CELL_NODE_LONG_NAME:
-                    grid_cell_node_lat = nc_var
-        return grid_cell_node_lon, grid_cell_node_lat
+                standard_name_lower = ''
+            if nc_var_dim_set == node_dim_set:
+                if any(x in name_lower for x in X_COORDINATES) or any(x in standard_name_lower for x in X_COORDINATES):
+                    x_node_coordinate = nc_var
+                elif any(y in name_lower for y in Y_COORDINATES) or any(y in standard_name_lower for y in Y_COORDINATES):
+                    y_node_coordinate = nc_var
+            if x_node_coordinate is not None and y_node_coordinate is not None:
+                # exit the loop once both x and y coordinates are found
+                break
+        return x_node_coordinate, y_node_coordinate
         
     def find_grid_topology_var(self):
         """
@@ -134,7 +140,7 @@ class NetCDFDataset(object):
         for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
             try:
-                # if either of these is missing, the dataset is not compliant
+                # if either of these are not found anywhere the the dataset, the dataset is not compliant
                 cf_role = nc_var_obj.cf_role
                 topology_dim = nc_var_obj.topology_dimension
             except AttributeError:
