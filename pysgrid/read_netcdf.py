@@ -172,12 +172,21 @@ class NetCDFDataset(object):
         """
         nc_vars = self.ncd.variables
         vars_with_location = self.search_variables_by_location(location_str)
+        print(vars_with_location)
         x_coordinate = None
         y_coordinate = None
         z_coordinate = None
         for var_with_location in vars_with_location:
             location_var = nc_vars[var_with_location]
             location_var_dims = location_var.dimensions
+            try:
+                location_var_axes = location_var.axes
+            except AttributeError:
+                pass
+            else:
+                x_coordinate, y_coordinate, z_coordinate = parse_axes(location_var_axes)
+                # exit the loop once found
+                break
             try:
                 location_var_coordinates = location_var.coordinates
             except AttributeError:
@@ -210,15 +219,19 @@ class NetCDFDataset(object):
                     try:
                         var_coord_standard_name = var_coord.standard_name
                     except AttributeError:
-                        if 'lon' in var_coord.name.lower():
-                            x_coordinate = lvc
-                        elif 'lat' in var_coord.name.lower():
-                            y_coordinate = lvc
-                    else:
-                        if var_coord_standard_name == 'longitude':
-                            x_coordinate = lvc
-                        elif var_coord_standard_name == 'latitude':
-                            y_coordinate = lvc
+                        var_coord_standard_name = ''
+                    try:
+                        var_coord_desc = var_coord.description
+                    except AttributeError:
+                        var_coord_desc = ''
+                    if ('lon' in var_coord.name.lower() or
+                        'longitude' in var_coord_standard_name.lower() or 
+                        'longitude' in var_coord_desc.lower()):
+                        x_coordinate = lvc
+                    elif ('lat' in var_coord.name.lower() or 
+                          'latitude' in var_coord_standard_name.lower() or
+                          'latitude' in var_coord_desc.lower()):
+                        y_coordinate = lvc
                 if len(lvc_split) == 3:
                     z_coordinate = lvc_split[-1]
                 break 
