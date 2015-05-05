@@ -8,6 +8,7 @@ import abc
 import netCDF4 as nc4
 
 from .custom_exceptions import SGridNonCompliantError
+from .lookup import X_COORDINATES, Y_COORDINATES
 from .read_netcdf import NetCDFDataset, parse_padding
 from .utils import calculate_angle_from_true_east, pair_arrays
 from .variables import SGridVariable
@@ -108,7 +109,7 @@ class SGrid2D(SGridND):
                  **kwargs):
         self.faces = faces
         self.face_padding = face_padding
-        self.face_coordinates = face_coordinates
+        self._face_coordinates = face_coordinates
         self.face_dimensions = face_dimensions
         self.vertical_padding = vertical_padding
         self.vertical_dimensions = vertical_dimensions
@@ -179,7 +180,31 @@ class SGrid2D(SGridND):
         if self.edge2_padding is not None:
             all_edge_padding += self.edge2_padding
         return all_edge_padding
-
+    
+    @property
+    def face_coordinates(self):
+        if self._face_coordinates is None:
+            face_dimensions = [padding.face_dim for padding in self.face_padding]
+            face_dim_set = set(face_dimensions)
+            x_coordinate = None
+            y_coordinate = None
+            for variable in self.variables:
+                variable_object = getattr(self, variable)
+                variable_dimensions = variable_object.dimensions
+                if set(variable_dimensions) == face_dim_set:
+                    variable_name_lower = variable.lower()
+                    variable_std_name_lower = variable_object.standard_name.lower()
+                    if (any(x in variable_name_lower for x in X_COORDINATES) or
+                        any(x in variable_std_name_lower for x in X_COORDINATES)):
+                        x_coordinate = variable
+                    elif (any(y in variable_name_lower for y in Y_COORDINATES) or 
+                          any(y in variable_std_name_lower for y in Y_COORDINATES)):
+                        y_coordinate = variable
+            fc = (x_coordinate, y_coordinate)
+        else:
+            fc = self._face_coordinates
+        return fc
+                    
     def all_padding(self):
         all_padding = self.get_all_face_padding() + self.get_all_edge_padding()
         if self.vertical_padding is not None:

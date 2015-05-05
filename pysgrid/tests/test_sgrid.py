@@ -13,7 +13,9 @@ import numpy as np
 from ..custom_exceptions import SGridNonCompliantError
 from ..sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
 from ..utils import GridPadding
-from .write_nc_test_files import deltares_sgrid, non_compliant_sgrid, roms_sgrid, wrf_sgrid, wrf_sgrid_2d
+from .write_nc_test_files import (deltares_sgrid, deltares_sgrid_no_optional_attr, 
+                                  non_compliant_sgrid, roms_sgrid, wrf_sgrid, 
+                                  wrf_sgrid_2d)
 
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -183,6 +185,24 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         self.sg_obj.save_as_netcdf(self.write_path)
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
+
+class TestSGridNoFaceCoordinates(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = deltares_sgrid_no_optional_attr()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
+    def setUp(self):
+        self.sgrid_obj = from_ncfile(self.sgrid_test_file)
+        
+    def test_face_coordinate_inference(self):
+        face_coordinates = self.sgrid_obj.face_coordinates
+        expected_face_coordinates = (u'XZ', u'YZ')
+        self.assertEqual(face_coordinates, expected_face_coordinates)
         
 class TestSGridNoPadding(unittest.TestCase):
     """
