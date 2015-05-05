@@ -220,6 +220,11 @@ class TestSGridNoCoordinates(unittest.TestCase):
         nodes = self.sgrid_obj.nodes
         nodes_shape = (4, 4, 2)
         self.assertEqual(nodes.shape, nodes_shape)
+        
+    def test_grid_angles(self):
+        angles = self.sgrid_obj.angles
+        angles_shape = (4, 4)
+        self.assertEqual(angles.shape, angles_shape)
 
         
 class TestSGridWRFDataset(unittest.TestCase):
