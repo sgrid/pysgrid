@@ -193,9 +193,13 @@ class NetCDFDataset(object):
                         potential_coordinates.append(nc_var_obj)
                 for potential_coordinate in potential_coordinates:
                     pc_name = potential_coordinate.name
-                    if 'lon' in pc_name.lower():
+                    try:
+                        pc_std_name = potential_coordinate.standard_name
+                    except AttributeError:
+                        pc_std_name = ''
+                    if 'lon' in pc_name.lower() or 'longitude' in pc_std_name.lower():
                         x_coordinate = pc_name
-                    elif 'lat' in pc_name.lower():
+                    elif 'lat' in pc_name.lower() or 'latitude' in pc_std_name.lower():
                         y_coordinate = pc_name
                     else:
                         z_coordinate = pc_name  # this might not always work...
