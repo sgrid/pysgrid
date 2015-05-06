@@ -115,9 +115,11 @@ class NetCDFDataset(object):
             except AttributeError:
                 standard_name_lower = ''
             if nc_var_dim_set == node_dim_set:
-                if any(x in name_lower for x in X_COORDINATES) or any(x in standard_name_lower for x in X_COORDINATES):
+                if (any(x in name_lower for x in X_COORDINATES) or
+                    any(x in standard_name_lower for x in X_COORDINATES)):
                     x_node_coordinate = nc_var
-                elif any(y in name_lower for y in Y_COORDINATES) or any(y in standard_name_lower for y in Y_COORDINATES):
+                elif (any(y in name_lower for y in Y_COORDINATES) or
+                      any(y in standard_name_lower for y in Y_COORDINATES)):
                     y_node_coordinate = nc_var
             if x_node_coordinate is not None and y_node_coordinate is not None:
                 # exit the loop once both x and y coordinates are found
