@@ -64,7 +64,7 @@ class TestSGridCreate(unittest.TestCase):
         self.assertIsInstance(sg_obj, SGrid2D)
 
 
-class TestSGridWithOptionalAttributes(unittest.TestCase):
+class TestSGridRomsDataset(unittest.TestCase):
     """
     Test using a representative ROMS file.
     
@@ -186,7 +186,14 @@ class TestSGridWithOptionalAttributes(unittest.TestCase):
         mock_nc.Dataset.assert_called_with(self.write_path, 'w')
         
 
-class TestSGridNoFaceOrEdgeCoordinates(unittest.TestCase):
+class TestSGridNoCoordinates(unittest.TestCase):
+    """
+    Test to make sure that if no coordinates (e.g. face, edge1, etc)
+    are specified, those coordinates can be inferred from the dataset.
+    
+    A file is representing a delft3d dataset is used for this test.
+    
+    """
     
     @classmethod
     def setUpClass(cls):
@@ -213,9 +220,14 @@ class TestSGridNoFaceOrEdgeCoordinates(unittest.TestCase):
         nodes = self.sgrid_obj.nodes
         nodes_shape = (4, 4, 2)
         self.assertEqual(nodes.shape, nodes_shape)
+        
+    def test_grid_angles(self):
+        angles = self.sgrid_obj.angles
+        angles_shape = (4, 4)
+        self.assertEqual(angles.shape, angles_shape)
 
         
-class TestSGridNoPadding(unittest.TestCase):
+class TestSGridWRFDataset(unittest.TestCase):
     """
     Test a representative WRF file.
     
@@ -253,7 +265,7 @@ class TestSGridNoPadding(unittest.TestCase):
         self.assertEqual(v_avg_axis, v_axis_expected)
         
 
-class TestSGridWithoutEdgesAttributes(unittest.TestCase):
+class TestSGridDelft3dDataset(unittest.TestCase):
     """
     Test using a representative delft3d file.
     
