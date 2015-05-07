@@ -521,7 +521,7 @@ class SGrid3D(SGridND):
 
 class SGridAttributes(object):
     """
-    Class containg methods to help with getting the
+    Class containing methods to help with getting the
     attributes for either a 2D or 3D SGrid.
     
     """
