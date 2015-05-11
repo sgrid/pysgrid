@@ -197,9 +197,21 @@ class SGrid2D(SGridND):
             center_lon, center_lat = self.face_coordinates
             center_lon_obj = getattr(self, center_lon)
             center_lat_obj = getattr(self, center_lat)
-            node_lon, node_lat = self.node_coordinates
-            node_lon_obj = getattr(self, node_lon)
-            node_lat_obj = getattr(self, node_lat)
+            try:
+                node_lon, node_lat = self.node_coordinates
+            except TypeError:
+                pass
+            else:
+                node_lon_obj = getattr(self, node_lon)
+                grid_node_lon = nclocal.createVariable(node_lon, 
+                                                       node_lon_obj.dtype, 
+                                                       node_lon_obj.dimensions
+                                                       )
+                node_lat_obj = getattr(self, node_lat)
+                grid_node_lat = nclocal.createVariable(node_lat, 
+                                                       node_lat_obj.dtype, 
+                                                       node_lat_obj.dimensions
+                                                       )
             grid_center_lon = nclocal.createVariable(center_lon, 
                                                      center_lon_obj.dtype, 
                                                      center_lon_obj.dimensions
@@ -208,20 +220,15 @@ class SGrid2D(SGridND):
                                                      center_lat_obj.dtype, 
                                                      center_lat_obj.dimensions
                                                      )
-            grid_node_lon = nclocal.createVariable(node_lon, 
-                                                   node_lon_obj.dtype, 
-                                                   node_lon_obj.dimensions
-                                                   )
-            grid_node_lat = nclocal.createVariable(node_lat, 
-                                                   node_lat_obj.dtype, 
-                                                   node_lat_obj.dimensions
-                                                   )
             grid_var_obj = getattr(self, grid_var)
             grid_vars = nclocal.createVariable(grid_var, grid_var_obj.dtype)
             # not the most robust here... time and angle are hard-coded
             # need to address this
-            time_obj = getattr(self, 'time')
-            grid_time = nclocal.createVariable('time', 
+            try:
+                time_obj = getattr(self, 'time')
+            except AttributeError:
+                time_obj = getattr(self, 'Times')
+            grid_time = nclocal.createVariable(time_obj.variable, 
                                                time_obj.dtype, 
                                                time_obj.dimensions
                                                )
@@ -286,9 +293,10 @@ class SGrid2D(SGridND):
             # populate variables with data
             grid_time[:] = self.grid_times[:]
             grid_center_lon[:, :] = self.centers[:, :, 0]
-            grid_center_lat[:, :] = self.centers[:, :, 1] 
-            grid_node_lon[:, :] = self.nodes[:, :, 0]
-            grid_node_lat[:, :] = self.nodes[:, :, 1]
+            grid_center_lat[:, :] = self.centers[:, :, 1]
+            if self.nodes is not None: 
+                grid_node_lon[:, :] = self.nodes[:, :, 0]
+                grid_node_lat[:, :] = self.nodes[:, :, 1]
         
         
 class SGrid3D(SGridND):
@@ -459,8 +467,11 @@ class SGrid3D(SGridND):
             grid_vars = nclocal.createVariable(grid_var, grid_var_obj.dtype)
             # not the most robust here... time and angle are hard-coded
             # need to address this
-            time_obj = getattr(self, 'time')
-            grid_time = nclocal.createVariable('time', 
+            try:
+                time_obj = getattr(self, 'time')
+            except AttributeError:
+                time_obj = getattr(self, 'Times')
+            grid_time = nclocal.createVariable(time_obj.variable, 
                                                time_obj.dtype, 
                                                time_obj.dimensions
                                                )
@@ -514,9 +525,10 @@ class SGrid3D(SGridND):
             # populate variables with data
             grid_time[:] = self.grid_times[:]
             grid_center_lon[:] = self.centers[..., 0]
-            grid_center_lat[:] = self.centers[..., 1] 
-            grid_node_lon[:] = self.nodes[..., 0]
-            grid_node_lat[:] = self.nodes[..., 1]
+            grid_center_lat[:] = self.centers[..., 1]
+            if self.nodes is not None: 
+                grid_node_lon[:] = self.nodes[..., 0]
+                grid_node_lat[:] = self.nodes[..., 1]
     
 
 class SGridAttributes(object):
@@ -622,13 +634,14 @@ class SGridAttributes(object):
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
         
     def get_cell_node_lat_lon(self):
-        grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]
-        if grid_cell_nodes_lon_var is not None and grid_cell_nodes_lat_var is not None:
+        try:
+            grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]
+        except TypeError:
+            cell_nodes = None
+        else:
             grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
             grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
             cell_nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
-        else:
-            cell_nodes = None
         return cell_nodes
         
     def get_cell_center_lat_lon_3d(self):
