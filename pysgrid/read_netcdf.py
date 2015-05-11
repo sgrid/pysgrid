@@ -124,7 +124,10 @@ class NetCDFDataset(object):
             if x_node_coordinate is not None and y_node_coordinate is not None:
                 # exit the loop once both x and y coordinates are found
                 break
-        return x_node_coordinate, y_node_coordinate
+        if x_node_coordinate is not None and y_node_coordinate is not None:
+            return x_node_coordinate, y_node_coordinate
+        else:
+            return None
         
     def find_grid_topology_var(self):
         """

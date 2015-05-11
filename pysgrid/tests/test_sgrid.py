@@ -113,12 +113,14 @@ class TestSGridRomsDataset(unittest.TestCase):
                          u'lon_v', 
                          u'zeta'
                          ]
+        self.assertEqual(len(dataset_vars), len(expected_vars))
         self.assertEqual(dataset_vars, expected_vars)
         
     def test_grid_variables(self):
         dataset_grid_variables = self.sg_obj.grid_variables
         expected_grid_variables = [u'u', u'v']
-        self.assertEqual(dataset_grid_variables, expected_grid_variables)
+        self.assertEqual(len(dataset_grid_variables), len(expected_grid_variables))
+        self.assertEqual(set(dataset_grid_variables), set(expected_grid_variables))
         
     def test_non_grid_variables(self):
         dataset_non_grid_variables = self.sg_obj.non_grid_variables
@@ -144,7 +146,8 @@ class TestSGridRomsDataset(unittest.TestCase):
                                        u'lon_v', 
                                        u'zeta'
                                        ]
-        self.assertEqual(dataset_non_grid_variables, expected_non_grid_variables)
+        self.assertEqual(len(dataset_non_grid_variables), len(expected_non_grid_variables))
+        self.assertEqual(set(dataset_non_grid_variables), set(expected_non_grid_variables))
 
     def test_variable_slicing(self):
         u_center_slices = self.sg_obj.u.center_slicing
@@ -333,7 +336,7 @@ class TestSGridDelft3dDataset(unittest.TestCase):
     def test_grid_variables(self):
         grid_variables = self.sg_obj.grid_variables
         expected_grid_variables = ['U1', 'V1']
-        self.assertEqual(grid_variables, expected_grid_variables)
+        self.assertEqual(set(grid_variables), set(expected_grid_variables))
         
     def test_angles(self):
         angles = self.sg_obj.angles
@@ -418,9 +421,12 @@ class TestSGridSave(unittest.TestCase):
         target_face_coordinates = target.face_coordinates
         expected_target_face_coordinates = (u'XZ', u'YZ')
         self.assertIsInstance(target, SGrid2D)
-        self.assertEqual(target_dims, expected_target_dims)
-        self.assertEqual(target_vars, expected_target_vars)
-        self.assertEqual(target_grid_vars, expected_target_grid_vars)
+        self.assertEqual(len(target_dims), len(expected_target_dims))
+        self.assertEqual(set(target_dims), set(expected_target_dims))
+        self.assertEqual(len(target_vars), len(expected_target_vars))
+        self.assertEqual(set(target_vars), set(expected_target_vars))
+        self.assertEqual(len(target_grid_vars), len(expected_target_grid_vars))
+        self.assertEqual(set(target_grid_vars), set(expected_target_grid_vars))
         self.assertEqual(target_face_coordinates, expected_target_face_coordinates)
         
     def test_saved_sgrid(self):
@@ -457,11 +463,19 @@ class Test3DimensionalSGrid(unittest.TestCase):
         
     def test_variables(self):
         sg_vars = self.sg_obj.variables
-        sg_vars_expected = [u'Times', u'U', u'V', u'W', 
-                            u'T', u'XLAT', u'XLONG', 
-                            u'ZNU', u'ZNW', u'grid'
+        sg_vars_expected = [u'Times',
+                            u'U',
+                            u'V',
+                            u'W', 
+                            u'T',
+                            u'XLAT',
+                            u'XLONG', 
+                            u'ZNU',
+                            u'ZNW',
+                            u'grid'
                             ]
-        self.assertEqual(sg_vars, sg_vars_expected)
+        self.assertEqual(len(sg_vars), len(sg_vars_expected))
+        self.assertEqual(set(sg_vars), set(sg_vars_expected))
         
     def test_volume_padding(self):
         volume_padding = self.sg_obj.volume_padding
