@@ -22,7 +22,7 @@ class SGridND(object):
                       'low': (1, None),
                       'high': (None, 1)
                       }
-    topology_dimensions = None
+    topology_dimension = None
     
     def __init__(self, 
                  nodes=None,
@@ -69,6 +69,105 @@ class SGridND(object):
     def non_grid_variables(self):
         non_grid_variables = [variable for variable in self.variables if variable not in self.grid_variables]
         return non_grid_variables
+    
+    def _save_common_components(self, nc_file):
+        grid_var = self.grid_topology_var
+        # create dimensions
+        for grid_dim in self.dimensions:
+            dim_name, dim_size = grid_dim
+            nc_file.createDimension(dim_name, dim_size)
+        # create variables
+        center_lon, center_lat = self.face_coordinates
+        center_lon_obj = getattr(self, center_lon)
+        center_lat_obj = getattr(self, center_lat)
+        grid_center_lon = nc_file.createVariable(center_lon_obj.variable,
+                                                 center_lon_obj.dtype,
+                                                 center_lon_obj.dimensions
+                                                 )
+        grid_center_lat = nc_file.createVariable(center_lat_obj.variable,
+                                                 center_lat_obj.dtype,
+                                                 center_lat_obj.dimensions
+                                                 )
+        grid_center_lon[:] = self.centers[..., 0]
+        grid_center_lat[:] = self.centers[..., 1]
+        try:
+            node_lon, node_lat = self.node_coordinates
+        except TypeError:
+            pass
+        else:
+            node_lon_obj = getattr(self, node_lon)
+            grid_node_lon = nc_file.createVariable(node_lon_obj.variable,
+                                                   node_lon_obj.dtype,
+                                                   node_lon_obj.dimensions
+                                                   )
+            node_lat_obj = getattr(self, node_lat)
+            grid_node_lat = nc_file.createVariable(node_lat_obj.variable,
+                                                   node_lat_obj.dtype,
+                                                   node_lat_obj.dimensions
+                                                   )
+            grid_node_lon[:] = self.nodes[..., 0]
+            grid_node_lat[:] = self.nodes[..., 1]
+        grid_var_obj = getattr(self, grid_var)
+        grid_vars = nc_file.createVariable(grid_var_obj.variable, grid_var_obj.dtype)
+        grid_vars.cf_role = 'grid_topology'
+        grid_vars.topology_dimension = self.topology_dimension
+        grid_vars.node_dimensions = self.node_dimensions
+        if self.edge1_dimensions is not None:
+            grid_vars.edge1_dimensions = self.edge1_dimensions
+        if self.edge2_dimensions is not None:
+            grid_vars.edge2_dimensions = self.edge2_dimensions
+        if self.node_coordinates is not None:
+            grid_vars.node_coordinates = ' '.join(self.node_coordinates)
+        if self.edge1_coordinates is not None:
+            grid_vars.edge1_coordinates = ' '.join(self.edge1_coordinates)
+        if self.edge2_coordinates is not None:
+            grid_vars.edge2_coordinates = ' '.join(self.edge2_coordinates)
+        time_obj = getattr(self, self.time_variable)
+        grid_time = nc_file.createVariable(time_obj.variable,
+                                           time_obj.dtype,
+                                           time_obj.dimensions
+                                           )
+        grid_time[:] = self.grid_times[:]
+        if hasattr(self, 'angle'):
+            angle_obj = getattr(self, 'angle', None)
+            grid_angle = nc_file.createVariable(angle_obj.variable,
+                                                angle_obj.dtype,
+                                                angle_obj.dimensions
+                                                )
+            if self.angles is not None:
+                grid_angle[:] = self.angles[:]
+        for dataset_variable in self.grid_variables:
+            dataset_var_obj = getattr(self, dataset_variable)
+            axes = []
+            dataset_grid_var = nc_file.createVariable(dataset_var_obj.variable,
+                                                      dataset_var_obj.dtype,
+                                                      dataset_var_obj.dimensions
+                                                      )
+            if dataset_var_obj.grid is not None:
+                dataset_grid_var.grid = grid_var
+            if dataset_var_obj.standard_name is not None:
+                dataset_grid_var.standard_name = dataset_var_obj.standard_name
+            if dataset_var_obj.x_axis is not None:
+                x_axis = 'X: {0}'.format(dataset_var_obj.x_axis)
+                axes.append(x_axis)
+            if dataset_var_obj.y_axis is not None:
+                y_axis = 'Y: {0}'.format(dataset_var_obj.y_axis)
+                axes.append(y_axis)
+            if dataset_var_obj.z_axis is not None:
+                z_axis = 'Z: {0}'.format(dataset_var_obj.z_axis)
+                axes.append(z_axis)
+            if len(axes) > 0:
+                dataset_grid_var.axes = ' '.join(axes)
+        for dataset_variable in self.non_grid_variables:
+            dataset_var_obj = getattr(self, dataset_variable)
+            try:
+                nc_file.createVariable(dataset_var_obj.variable,
+                                       dataset_var_obj.dtype,
+                                       dataset_var_obj.dimensions
+                                       )
+            except RuntimeError:
+                # lat/lon and grid variables will already exist
+                continue
     
     @abc.abstractmethod
     def from_ncfile(self):
