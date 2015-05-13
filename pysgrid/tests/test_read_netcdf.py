@@ -141,6 +141,15 @@ class TestNetCDFDatasetWithNodes(unittest.TestCase):
         expected = 'grid'
         self.assertEqual(result, expected)
         
+    def test_find_variables_by_standard_name(self):
+        result = self.nc_ds.find_variables_by_standard_name(standard_name='time')
+        expected = ['time']
+        self.assertEqual(result, expected)
+        
+    def test_find_variables_by_standard_name_none(self):
+        result = self.nc_ds.find_variables_by_standard_name(standard_name='some standard_name')
+        self.assertIsNone(result)
+        
     def test_sgrid_compliant_check(self):
         result = self.nc_ds.sgrid_compliant_file()
         self.assertTrue(result)

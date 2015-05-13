@@ -42,7 +42,8 @@ class SGridND(object):
                  edge2_coordinates=None,
                  angles=None,
                  edge1_dimensions=None,
-                 edge2_dimensions=None):
+                 edge2_dimensions=None,
+                 time_variable=None):
         # general attributes
         self.nodes = nodes
         self.centers = centers
@@ -62,12 +63,13 @@ class SGridND(object):
         self.angles = angles
         self.edge1_dimensions = edge1_dimensions
         self.edge2_dimensions = edge2_dimensions
+        self.time_variable = time_variable
     
     @property
     def non_grid_variables(self):
         non_grid_variables = [variable for variable in self.variables if variable not in self.grid_variables]
         return non_grid_variables
-
+    
     @abc.abstractmethod
     def from_ncfile(self):
         return
@@ -125,7 +127,7 @@ class SGrid2D(SGridND):
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
         edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
         angles = sa.get_angles()
-        grid_times = sa.get_time()
+        time_variable, grid_times = sa.get_time()
         vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')
         centers = sa.get_cell_center_lat_lon()
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')
@@ -152,6 +154,7 @@ class SGrid2D(SGridND):
                     node_dimensions=node_dimensions,
                     node_padding=None,
                     nodes=nodes,
+                    time_variable=time_variable,
                     variables=None,
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding
@@ -224,15 +227,12 @@ class SGrid2D(SGridND):
             grid_vars = nclocal.createVariable(grid_var, grid_var_obj.dtype)
             # not the most robust here... time and angle are hard-coded
             # need to address this
-            try:
-                time_obj = getattr(self, 'time')
-            except AttributeError:
-                time_obj = getattr(self, 'Times')
+            time_obj = getattr(self, self.time_variable)
             grid_time = nclocal.createVariable(time_obj.variable, 
                                                time_obj.dtype, 
                                                time_obj.dimensions
                                                )
-            
+            grid_time.standard_name = 'time'
             if hasattr(self, 'angle'):
                 angle_obj = getattr(self, 'angle', None)
                 grid_angle = nclocal.createVariable('angle', 
@@ -353,7 +353,7 @@ class SGrid3D(SGridND):
         edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
         edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
-        grid_times = sa.get_time()
+        time_variable, grid_times = sa.get_time()
         edge3_dimensions, edge3_padding = sa.get_attr_dimension('edge3_dimensions')
         edge3_coordinates = sa.get_attr_coordinates('edge3_coordinates')
         face1_dimensions, face1_padding = sa.get_attr_dimension('face1_dimensions')
@@ -395,6 +395,7 @@ class SGrid3D(SGridND):
                     node_dimensions=node_dimensions,
                     node_padding=None,
                     nodes=nodes,
+                    time_variable=time_variable,
                     variables=None,
                     volume_coordinates=volume_coordinates,
                     volume_dimensions=volume_dimensions,
@@ -475,7 +476,6 @@ class SGrid3D(SGridND):
                                                time_obj.dtype, 
                                                time_obj.dimensions
                                                )
-            
             if hasattr(self, 'angle'):
                 angle_obj = getattr(self, 'angle', None)
                 grid_angle = nclocal.createVariable('angle', 
@@ -620,12 +620,12 @@ class SGridAttributes(object):
         
     def get_time(self):
         try:
-            # hard coding the time variable is not the best way to go...
-            # change this in the future
-            grid_time = self.nc_dataset.variables['time'][:]
-        except KeyError:
-            grid_time = self.nc_dataset.variables['Times'][:]
-        return grid_time
+            time_variable = self.ncd.find_variables_by_standard_name('time')[0]
+        except TypeError:
+            raise AttributeError('Unable to identify time variable by standard name.')
+        else:
+            grid_time = self.nc_dataset.variables[time_variable][:]
+            return time_variable, grid_time
         
     def get_cell_center_lat_lon(self):
         grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')
