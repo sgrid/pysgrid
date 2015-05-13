@@ -10,7 +10,7 @@ import netCDF4 as nc4
 
 from ..custom_exceptions import CannotFindPaddingError
 from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding, parse_vector_axis
-from .write_nc_test_files import roms_sgrid
+from .write_nc_test_files import roms_sgrid, wrf_sgrid_2d
 
 
 class TestParseAxes(unittest.TestCase):
@@ -104,7 +104,7 @@ class TestParseVectorAxis(unittest.TestCase):
         self.assertEqual(direction, expected_direction)
 
         
-class TestNetCDFDataset(unittest.TestCase):
+class TestNetCDFDatasetWithNodes(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
@@ -141,6 +141,37 @@ class TestNetCDFDataset(unittest.TestCase):
         expected = 'grid'
         self.assertEqual(result, expected)
         
+    def test_find_variables_by_standard_name(self):
+        result = self.nc_ds.find_variables_by_standard_name(standard_name='time')
+        expected = ['time']
+        self.assertEqual(result, expected)
+        
+    def test_find_variables_by_standard_name_none(self):
+        result = self.nc_ds.find_variables_by_standard_name(standard_name='some standard_name')
+        self.assertIsNone(result)
+        
     def test_sgrid_compliant_check(self):
         result = self.nc_ds.sgrid_compliant_file()
         self.assertTrue(result)
+        
+        
+class TestNetCDFDatasetWithoutNodes(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.sgrid_test_file = wrf_sgrid_2d()
+        
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.sgrid_test_file)
+        
+    def setUp(self):
+        self.ds = nc4.Dataset(self.sgrid_test_file)
+        self.nc_ds = NetCDFDataset(self.ds)
+        
+    def tearDown(self):
+        self.ds.close()
+        
+    def test_node_coordinates(self):
+        node_coordinates = self.nc_ds.find_node_coordinates('west_east_stag south_north_stag')
+        self.assertIsNone(node_coordinates)

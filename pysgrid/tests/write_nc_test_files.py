@@ -92,6 +92,7 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
         xz.long_name = 'X-coordinate of cell centres'
         yz.standard_name = 'projection_y_coordinate'
         yz.long_name = 'Y-coordinate of cell centres'
+        times.standard_name = 'time'
         u1.grid = 'some grid'
         u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
         u1.standard_name = 'sea_water_x_velocity'
@@ -158,6 +159,7 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         grid_latitude.axes = 'X: NMAX Y: MMAX'
         grid_longitude.long_name = LON_GRID_CELL_NODE_LONG_NAME[1]
         grid_longitude.axes = 'X: NMAX Y: MMAX'
+        times.standard_name = 'time'
         u1.grid = 'some grid'
         u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
         u1.standard_name = 'sea_water_x_velocity'
@@ -238,6 +240,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         lon_nodes.axes = 'X: xi_psi Y: eta_psi'
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
         lat_nodes.axes = 'X: xi_psi Y: eta_psi'
+        times.standard_name = 'time'
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'xi_psi eta_psi'
@@ -291,6 +294,7 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         nc.createDimension('south_north_stag', 6)
         nc.createDimension('bottom_top_stag', 4)
         times = nc.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        xtimes = nc.createVariable('XTIME', 'f8', ('Time', ))
         us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
         us.grid = 'grid'
         us.location = 'edge1'
@@ -303,10 +307,11 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
         temps.grid = 'grid'
         temps.location = 'face'
-        xlats = nc.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
-        xlongs = nc.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        xlats = nc.createVariable('XLAT', 'f4', ('south_north', 'west_east'))
+        xlongs = nc.createVariable('XLONG', 'f4', ('south_north', 'west_east'))
         znus = nc.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
         znws = nc.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+        xtimes.standard_name = 'time'
         grid = nc.createVariable('grid', 'i2')
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
@@ -319,12 +324,13 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         grid.edge1_dimensions = 'west_east_stag south_north: south_north_stag (padding: none)'
         grid.edge2_dimensions = 'west_east: west_east_stag (padding: none) south_north_stag'
         times[:] = np.random.random(size=(2, 3)).astype(str)
+        xtimes[:] = np.random.random(size=(2,))
         us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
         vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
         ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
         temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
-        xlats[:, :, :] = np.random.random(size=(2, 5, 4))
-        xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
+        xlats[:, :] = np.random.random(size=(5, 4))
+        xlongs[:, :] = np.random.random(size=(5, 4))
         znus[:, :] = np.random.random(size=(2, 3))
         znws[:, :] = np.random.random(size=(2, 4))
     return file_name
@@ -348,6 +354,8 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
         fg.createDimension('bottom_top_stag', 4)
         # create variables
         times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        xtimes = fg.createVariable('XTIME', 'f8', ('Time',))
+        xtimes.standard_name = 'time'
         us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
         us.grid = 'grid'
         us.location = 'face1'
@@ -374,6 +382,7 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
         grid.volume_coordinates = 'XLONG XLAT ZNU'
         # create fake data
         times[:] = np.random.random(size=(2, 3)).astype(str)
+        xtimes[:] = np.random.random(size=(2,))
         us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
         vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
         ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
