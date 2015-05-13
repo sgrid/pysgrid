@@ -64,6 +64,12 @@ class SGridND(object):
         self.edge1_dimensions = edge1_dimensions
         self.edge2_dimensions = edge2_dimensions
         self.time_variable = time_variable
+        
+    @classmethod
+    def from_ncfile(cls, nc_file_path, topology_variable=None):
+        with nc4.Dataset(nc_file_path) as nc_dataset:
+            sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
+        return sgrid
     
     @property
     def non_grid_variables(self):
@@ -172,10 +178,6 @@ class SGridND(object):
         return grid_vars
     
     @abc.abstractmethod
-    def from_ncfile(self):
-        return
-    
-    @abc.abstractmethod
     def from_nc_dataset(self):
         return
     
@@ -263,12 +265,6 @@ class SGrid2D(SGridND):
         sa.get_variable_attributes(sgrid)
         return sgrid
     
-    @classmethod
-    def from_ncfile(cls, nc_file_path, topology_variable=None):
-        with nc4.Dataset(nc_file_path) as nc_dataset:
-            sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
-        return sgrid
-    
     def get_all_face_padding(self):
         if self.face_padding is not None:
             all_face_padding = self.face_padding
@@ -300,8 +296,7 @@ class SGrid2D(SGridND):
             if self.face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self.face_coordinates)
 
-        
-        
+              
 class SGrid3D(SGridND):
     
     topology_dimension = 3
@@ -405,12 +400,6 @@ class SGrid3D(SGridND):
                     volume_padding=volume_padding
                     )
         sa.get_variable_attributes(sgrid)
-        return sgrid
-    
-    @classmethod
-    def from_ncfile(cls, nc_file_path, topology_variable=None):
-        with nc4.Dataset(nc_file_path) as nc_dataset:
-            sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
         return sgrid
     
     def get_all_face_padding(self):
