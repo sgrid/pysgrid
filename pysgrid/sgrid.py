@@ -132,38 +132,32 @@ class SGridND(object):
                                                 )
             if self.angles is not None:
                 grid_angle[:] = self.angles[:]
-        for dataset_variable in self.grid_variables:
-            dataset_var_obj = getattr(self, dataset_variable)
-            axes = []
-            dataset_grid_var = nc_file.createVariable(dataset_var_obj.variable,
-                                                      dataset_var_obj.dtype,
-                                                      dataset_var_obj.dimensions
-                                                      )
-            if dataset_var_obj.grid is not None:
-                dataset_grid_var.grid = grid_var
-            if dataset_var_obj.standard_name is not None:
-                dataset_grid_var.standard_name = dataset_var_obj.standard_name
-            if dataset_var_obj.x_axis is not None:
-                x_axis = 'X: {0}'.format(dataset_var_obj.x_axis)
-                axes.append(x_axis)
-            if dataset_var_obj.y_axis is not None:
-                y_axis = 'Y: {0}'.format(dataset_var_obj.y_axis)
-                axes.append(y_axis)
-            if dataset_var_obj.z_axis is not None:
-                z_axis = 'Z: {0}'.format(dataset_var_obj.z_axis)
-                axes.append(z_axis)
-            if len(axes) > 0:
-                dataset_grid_var.axes = ' '.join(axes)
-        for dataset_variable in self.non_grid_variables:
+        for dataset_variable in self.variables:
             dataset_var_obj = getattr(self, dataset_variable)
             try:
-                nc_file.createVariable(dataset_var_obj.variable,
-                                       dataset_var_obj.dtype,
-                                       dataset_var_obj.dimensions
-                                       )
+                dataset_grid_var = nc_file.createVariable(dataset_var_obj.variable,
+                                                          dataset_var_obj.dtype,
+                                                          dataset_var_obj.dimensions
+                                                          )
             except RuntimeError:
-                # lat/lon and grid variables will already exist
                 continue
+            else:
+                axes = []
+                if dataset_var_obj.grid is not None:
+                    dataset_grid_var.grid = grid_var
+                if dataset_var_obj.standard_name is not None:
+                    dataset_grid_var.standard_name = dataset_var_obj.standard_name
+                if dataset_var_obj.x_axis is not None:
+                    x_axis = 'X: {0}'.format(dataset_var_obj.x_axis)
+                    axes.append(x_axis)
+                if dataset_var_obj.y_axis is not None:
+                    y_axis = 'Y: {0}'.format(dataset_var_obj.y_axis)
+                    axes.append(y_axis)
+                if dataset_var_obj.z_axis is not None:
+                    z_axis = 'Z: {0}'.format(dataset_var_obj.z_axis)
+                    axes.append(z_axis)
+                if axes:
+                    dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
     
     @abc.abstractmethod
