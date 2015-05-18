@@ -32,7 +32,6 @@ class SGridND(object):
                  edge1_padding=None,
                  edge2_padding=None,
                  grid_topology_var=None,
-                 grid_times=None,
                  variables=None,
                  grid_variables=None,
                  dimensions=None,
@@ -42,8 +41,7 @@ class SGridND(object):
                  edge2_coordinates=None,
                  angles=None,
                  edge1_dimensions=None,
-                 edge2_dimensions=None,
-                 time_variable=None):
+                 edge2_dimensions=None):
         # general attributes
         self.nodes = nodes
         self.centers = centers
@@ -52,7 +50,6 @@ class SGridND(object):
         self.edge1_padding = edge1_padding
         self.edge2_padding = edge2_padding
         self.grid_topology_var = grid_topology_var
-        self.grid_times = grid_times
         self.variables = variables
         self.grid_variables = grid_variables
         self.dimensions = dimensions
@@ -63,7 +60,6 @@ class SGridND(object):
         self.angles = angles
         self.edge1_dimensions = edge1_dimensions
         self.edge2_dimensions = edge2_dimensions
-        self.time_variable = time_variable
         
     @classmethod
     def from_ncfile(cls, nc_file_path, topology_variable=None):
@@ -128,13 +124,6 @@ class SGridND(object):
             grid_vars.edge1_coordinates = ' '.join(self.edge1_coordinates)
         if self.edge2_coordinates is not None:
             grid_vars.edge2_coordinates = ' '.join(self.edge2_coordinates)
-        time_obj = getattr(self, self.time_variable)
-        grid_time = nc_file.createVariable(time_obj.variable,
-                                           time_obj.dtype,
-                                           time_obj.dimensions
-                                           )
-        grid_time.standard_name = 'time'
-        grid_time[:] = self.grid_times[:]
         if hasattr(self, 'angle'):
             angle_obj = getattr(self, 'angle', None)
             grid_angle = nc_file.createVariable(angle_obj.variable,
@@ -221,7 +210,7 @@ class SGrid2D(SGridND):
         
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, 2, topology_variable)
+        sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
         grid_topology_var = sa.get_topology_var()
@@ -230,7 +219,6 @@ class SGrid2D(SGridND):
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
         edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
         angles = sa.get_angles()
-        time_variable, grid_times = sa.get_time()
         vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')
         centers = sa.get_cell_center_lat_lon()
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')
@@ -250,14 +238,12 @@ class SGrid2D(SGridND):
                     face_dimensions=face_dimensions,
                     face_padding=face_padding,
                     faces=None,
-                    grid_times=grid_times,
                     grid_topology_var=grid_topology_var,
                     grid_variables=None,
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
                     node_padding=None,
                     nodes=nodes,
-                    time_variable=time_variable,
                     variables=None,
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding
@@ -343,7 +329,7 @@ class SGrid3D(SGridND):
         
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, 3, topology_variable)
+        sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
         grid_topology_var = sa.get_topology_var()
@@ -351,7 +337,6 @@ class SGrid3D(SGridND):
         edge2_dimensions, edge2_padding = sa.get_attr_dimension('edge2_dimensions')
         edge1_coordinates = sa.get_attr_coordinates('edge1_coordinates')
         edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
-        time_variable, grid_times = sa.get_time()
         edge3_dimensions, edge3_padding = sa.get_attr_dimension('edge3_dimensions')
         edge3_coordinates = sa.get_attr_coordinates('edge3_coordinates')
         face1_dimensions, face1_padding = sa.get_attr_dimension('face1_dimensions')
@@ -386,14 +371,12 @@ class SGrid3D(SGridND):
                     face3_coordinates=face3_coordinates,
                     face3_dimensions=face3_dimensions,
                     face3_padding=face3_padding,
-                    grid_times=grid_times,
                     grid_topology_var=grid_topology_var,
                     grid_variables=None,
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
                     node_padding=None,
                     nodes=nodes,
-                    time_variable=time_variable,
                     variables=None,
                     volume_coordinates=volume_coordinates,
                     volume_dimensions=volume_dimensions,
@@ -526,15 +509,6 @@ class SGridAttributes(object):
             centers_end = cell_centers[..., 1:, :]
             angles = calculate_angle_from_true_east(centers_start, centers_end)
         return angles
-        
-    def get_time(self):
-        try:
-            time_variable = self.ncd.find_variables_by_standard_name('time')[0]
-        except TypeError:
-            raise AttributeError('Unable to identify time variable by standard name.')
-        else:
-            grid_time = self.nc_dataset.variables[time_variable][:]
-            return time_variable, grid_time
         
     def get_cell_center_lat_lon(self):
         grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')
