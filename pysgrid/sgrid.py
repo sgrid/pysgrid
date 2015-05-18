@@ -210,7 +210,7 @@ class SGrid2D(SGridND):
         
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, 2, topology_variable)
+        sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
         grid_topology_var = sa.get_topology_var()
@@ -329,7 +329,7 @@ class SGrid3D(SGridND):
         
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
-        sa = SGridAttributes(nc_dataset, 3, topology_variable)
+        sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
         dimensions = sa.get_dimensions()
         node_dimensions, node_coordinates = sa.get_node_coordinates()
         grid_topology_var = sa.get_topology_var()
