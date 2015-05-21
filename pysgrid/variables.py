@@ -16,6 +16,7 @@ class SGridVariable(object):
     def __init__(self, 
                  center_axis=None,
                  center_slicing=None,
+                 coordinates=None,
                  dimensions=None,
                  dtype=None,
                  grid=None,
@@ -79,6 +80,12 @@ class SGridVariable(object):
             vector_axis = None
         else:
             vector_axis = parse_vector_axis(standard_name)
+        try:
+            raw_coordinates = nc_var_obj.coordinates
+        except AttributeError:
+            coordinates = None
+        else:
+            coordinates = tuple(raw_coordinates.split(' '))
         sgrid_var = cls(variable=variable,
                         grid=grid,
                         x_axis=x_axis,
@@ -92,6 +99,7 @@ class SGridVariable(object):
                         dtype=dtype,
                         location=location,
                         standard_name=standard_name,
-                        vector_axis=vector_axis
+                        vector_axis=vector_axis,
+                        coordinates=coordinates
                         )
         return sgrid_var
