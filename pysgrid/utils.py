@@ -189,4 +189,3 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
                        axis=-1
                        )
     return angles
-    

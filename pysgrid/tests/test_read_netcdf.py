@@ -142,13 +142,13 @@ class TestNetCDFDatasetWithNodes(unittest.TestCase):
         self.assertEqual(result, expected)
         
     def test_find_variables_by_standard_name(self):
-        result = self.nc_ds.find_variables_by_standard_name(standard_name='time')
+        result = self.nc_ds.find_variables_by_attr(standard_name='time')
         expected = ['time']
         self.assertEqual(result, expected)
         
     def test_find_variables_by_standard_name_none(self):
-        result = self.nc_ds.find_variables_by_standard_name(standard_name='some standard_name')
-        self.assertIsNone(result)
+        result = self.nc_ds.find_variables_by_attr(standard_name='some standard_name')
+        self.assertEqual(result, [])
         
     def test_sgrid_compliant_check(self):
         result = self.nc_ds.sgrid_compliant_file()
@@ -175,3 +175,12 @@ class TestNetCDFDatasetWithoutNodes(unittest.TestCase):
     def test_node_coordinates(self):
         node_coordinates = self.nc_ds.find_node_coordinates('west_east_stag south_north_stag')
         self.assertIsNone(node_coordinates)
+        
+    def test_find_variable_by_attr(self):
+        result = self.nc_ds.find_variables_by_attr(cf_role='grid_topology', topology_dimension=2)
+        expected = ['grid']
+        self.assertEqual(result, expected)
+        
+    def test_find_variable_by_nonexistant_attr(self):
+        result = self.nc_ds.find_variables_by_attr(bird='tufted titmouse')
+        self.assertEqual(result, [])
