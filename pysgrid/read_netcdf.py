@@ -129,19 +129,23 @@ class NetCDFDataset(object):
         else:
             return None
         
-    def find_variables_by_standard_name(self, standard_name):
+    def find_variables_by_attr(self, **kwargs):
         nc_vars = self.ncd.variables
         matches = []
+        keys = kwargs.keys()
         for nc_var in nc_vars.keys():
             nc_var_obj = nc_vars[nc_var]
-            try:
-                var_std_name = nc_var_obj.standard_name
-            except AttributeError:
-                continue
-            if var_std_name == standard_name:
-                matches.append(nc_var)
-        if matches:
-            return matches
+            nc_var_attrs = dir(nc_var_obj)  # all object attributes
+            # check to see if the requested attributes are in the variable object
+            # if not, don't bother with it
+            if set(keys).issubset(nc_var_attrs):
+                attr_tracking = {}
+                for key in keys:
+                    nc_var_attr_value = getattr(nc_var_obj, key)
+                    attr_tracking[key] = nc_var_attr_value
+                if attr_tracking == kwargs:
+                    matches.append(nc_var)
+        return matches
                 
     def find_grid_topology_var(self):
         """
@@ -171,20 +175,6 @@ class NetCDFDataset(object):
                     break
         return grid_topology_var
     
-    def search_variables_by_location(self, location_str):
-        nc_vars = self.ncd.variables
-        search_results = []
-        for nc_var in nc_vars.keys():
-            nc_var_obj = nc_vars[nc_var]
-            try:
-                nc_var_location = nc_var_obj.location
-            except AttributeError:
-                continue
-            else:
-                if nc_var_location == location_str:
-                    search_results.append(nc_var)
-        return search_results
-    
     def find_coordinates_by_location(self, location_str, topology_dim):
         """
         Find a grid coordinates variables with a location attribute equal
@@ -198,7 +188,7 @@ class NetCDFDataset(object):
         
         """
         nc_vars = self.ncd.variables
-        vars_with_location = self.search_variables_by_location(location_str)
+        vars_with_location = self.find_variables_by_attr(location=location_str)
         x_coordinate = None
         y_coordinate = None
         z_coordinate = None
