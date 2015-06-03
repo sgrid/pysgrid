@@ -7,9 +7,8 @@ import unittest
 
 import numpy as np
 
-from ..utils import (check_element_equal, pair_arrays, 
-                     does_intersection_exist, calculate_bearing, 
-                     calculate_angle_from_true_east)
+from ..utils import (calculate_bearing, calculate_angle_from_true_east, 
+                     check_element_equal, does_intersection_exist, pair_arrays)
 
 
 class TestDoesIntersectionExist(unittest.TestCase):

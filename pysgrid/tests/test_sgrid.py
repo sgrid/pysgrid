@@ -89,28 +89,30 @@ class TestSGridRomsDataset(unittest.TestCase):
     
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
-        expected_vars = [u's_rho', 
-                         u's_w', 
-                         u'time', 
-                         u'xi_rho', 
-                         u'eta_rho', 
-                         u'xi_psi', 
-                         u'eta_psi', 
-                         u'xi_u', 
-                         u'eta_u', 
-                         u'xi_v', 
-                         u'eta_v', 
-                         u'grid', 
-                         u'u', 
-                         u'v', 
-                         u'lon_rho', 
-                         u'lat_rho', 
-                         u'lon_psi', 
-                         u'lat_psi', 
-                         u'lat_u', 
-                         u'lon_u', 
-                         u'lat_v', 
-                         u'lon_v', 
+        expected_vars = [u's_rho',
+                         u's_w',
+                         u'time',
+                         u'xi_rho',
+                         u'eta_rho',
+                         u'xi_psi',
+                         u'eta_psi',
+                         u'xi_u',
+                         u'eta_u',
+                         u'xi_v',
+                         u'eta_v',
+                         u'grid',
+                         u'u',
+                         u'v',
+                         u'fake_u',
+                         u'lon_rho',
+                         u'lat_rho',
+                         u'lon_psi',
+                         u'lat_psi',
+                         u'lat_u',
+                         u'lon_u',
+                         u'lat_v',
+                         u'lon_v',
+                         u'salt', 
                          u'zeta'
                          ]
         self.assertEqual(len(dataset_vars), len(expected_vars))
@@ -118,7 +120,7 @@ class TestSGridRomsDataset(unittest.TestCase):
         
     def test_grid_variables(self):
         dataset_grid_variables = self.sg_obj.grid_variables
-        expected_grid_variables = [u'u', u'v']
+        expected_grid_variables = [u'u', u'v', u'fake_u', u'salt']
         self.assertEqual(len(dataset_grid_variables), len(expected_grid_variables))
         self.assertEqual(set(dataset_grid_variables), set(expected_grid_variables))
         
@@ -334,7 +336,7 @@ class TestSGridDelft3dDataset(unittest.TestCase):
         
     def test_grid_variables(self):
         grid_variables = self.sg_obj.grid_variables
-        expected_grid_variables = ['U1', 'V1']
+        expected_grid_variables = [u'U1', u'V1', u'FAKE_U1', u'W', u'FAKE_W']
         self.assertEqual(set(grid_variables), set(expected_grid_variables))
         
     def test_angles(self):
@@ -450,22 +452,28 @@ class TestSGridSaveNodeCoordinates(unittest.TestCase):
                                 (u'time', 2)
                                 ]
         target_vars = self.target.variables
-        expected_target_vars = [u'XZ', 
-                                u'YZ', 
-                                u'XCOR', 
-                                u'YCOR', 
-                                u'grid', 
-                                u'time', 
-                                u'U1', 
-                                u'V1', 
-                                u'latitude', 
-                                u'longitude', 
-                                u'grid_latitude', 
+        expected_target_vars = [u'XZ',
+                                u'YZ',
+                                u'XCOR',
+                                u'YCOR',
+                                u'grid',
+                                u'U1',
+                                u'FAKE_U1',
+                                u'V1',
+                                u'W',
+                                u'FAKE_W',
+                                u'time',
+                                u'latitude',
+                                u'longitude',
+                                u'grid_latitude',
                                 u'grid_longitude'
                                 ]
         target_grid_vars = self.target.grid_variables
-        expected_target_grid_vars = [u'U1', 
-                                     u'V1'
+        expected_target_grid_vars = [u'U1',
+                                     u'FAKE_U1',
+                                     u'V1',
+                                     u'W',
+                                     u'FAKE_W'
                                      ]
         target_face_coordinates = self.target.face_coordinates
         expected_target_face_coordinates = (u'XZ', u'YZ')
