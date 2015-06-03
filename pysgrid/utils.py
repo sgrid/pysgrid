@@ -165,11 +165,11 @@ def infer_variable_location(sgrid, variable):
         edge_dims = tuple([e.face_dim for e in sgrid.get_all_edge_padding()])
     except TypeError:
         edge_dims = []
-    variable_dims_set = set(variable.dimensions)
-    if variable_dims_set.intersection(face_dims) and not variable_dims_set.intersection(node_dims):
+    var_dims = variable.dimensions
+    if does_intersection_exist(var_dims, face_dims) and not does_intersection_exist(var_dims, node_dims):
         inferred_location = 'face'
-    elif ((variable_dims_set.intersection(face_dims) and variable_dims_set.intersection(node_dims)) or
-          (variable_dims_set.intersection(edge_dims))
+    elif ((does_intersection_exist(var_dims, face_dims) and does_intersection_exist(var_dims, node_dims)) or
+          (does_intersection_exist(var_dims, edge_dims))
           ):
         inferred_location = 'edge'
     else:
