@@ -64,7 +64,7 @@ class SGridND(object):
     @classmethod
     def from_ncfile(cls, nc_file_path, topology_variable=None):
         with nc4.Dataset(nc_file_path) as nc_dataset:
-            sgrid = cls.sgrid_from_dataset(nc_dataset, topology_variable)
+            sgrid = cls.from_nc_dataset(nc_dataset, topology_variable)
         return sgrid
     
     @property
@@ -477,7 +477,7 @@ class SGridAttributes(object):
             node_coordinate_val = node_coordinates.split(' ')
             node_coordinates = tuple(node_coordinate_val)
         return node_dimensions, node_coordinates
-            
+    
     def get_variable_attributes(self, sgrid):
         dataset_variables = []
         grid_variables = []

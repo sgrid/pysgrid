@@ -4,7 +4,7 @@ Created on Apr 15, 2015
 @author: ayan
 '''
 from .read_netcdf import parse_axes, parse_vector_axis
-from .utils import determine_variable_slicing, infer_avg_axes
+from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_location
 
 
 class SGridVariable(object):
@@ -64,7 +64,14 @@ class SGridVariable(object):
         try:
             location = nc_var_obj.location
         except AttributeError:
-            location = None
+            location = infer_variable_location(sgrid_obj, nc_var_obj)
+        if location == 'edge':
+            if center_axis == 0:
+                location = 'edge2'
+            elif center_axis == 1:
+                location = 'edge1'
+            else:
+                location = None
         try:
             axes = nc_var_obj.axes
         except AttributeError:
