@@ -147,6 +147,8 @@ class SGridND(object):
                     dataset_grid_var.grid = grid_var
                 if dataset_var_obj.standard_name is not None:
                     dataset_grid_var.standard_name = dataset_var_obj.standard_name
+                if dataset_var_obj.coordinates is not None:
+                    dataset_grid_var.coordinates = ' '.join(dataset_var_obj.coordinates)
                 if dataset_var_obj.x_axis is not None:
                     x_axis = 'X: {0}'.format(dataset_var_obj.x_axis)
                     axes.append(x_axis)
