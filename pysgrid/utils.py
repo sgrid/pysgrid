@@ -157,6 +157,26 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     return center_avg_axis, node_avg_axis
 
 
+def infer_variable_location(sgrid, variable):
+    node_dims_val = sgrid.node_dimensions.split(' ')
+    node_dims = tuple(node_dims_val)
+    face_dims = tuple([f.face_dim for f in sgrid.get_all_face_padding()])
+    try:
+        edge_dims = tuple([e.face_dim for e in sgrid.get_all_edge_padding()])
+    except TypeError:
+        edge_dims = []
+    var_dims = variable.dimensions
+    if does_intersection_exist(var_dims, face_dims) and not does_intersection_exist(var_dims, node_dims):
+        inferred_location = 'face'
+    elif ((does_intersection_exist(var_dims, face_dims) and does_intersection_exist(var_dims, node_dims)) or
+          (does_intersection_exist(var_dims, edge_dims))
+          ):
+        inferred_location = 'edge'
+    else:
+        inferred_location = None
+    return inferred_location
+
+
 def calculate_bearing(lon_lat_1, lon_lat_2):
     """
     return bearing from true north in degrees

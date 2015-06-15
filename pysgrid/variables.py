@@ -4,7 +4,7 @@ Created on Apr 15, 2015
 @author: ayan
 '''
 from .read_netcdf import parse_axes, parse_vector_axis
-from .utils import determine_variable_slicing, infer_avg_axes
+from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_location
 
 
 class SGridVariable(object):
@@ -16,6 +16,7 @@ class SGridVariable(object):
     def __init__(self, 
                  center_axis=None,
                  center_slicing=None,
+                 coordinates=None,
                  dimensions=None,
                  dtype=None,
                  grid=None,
@@ -63,7 +64,14 @@ class SGridVariable(object):
         try:
             location = nc_var_obj.location
         except AttributeError:
-            location = None
+            location = infer_variable_location(sgrid_obj, nc_var_obj)
+        if location == 'edge':
+            if center_axis == 0:
+                location = 'edge2'
+            elif center_axis == 1:
+                location = 'edge1'
+            else:
+                location = None
         try:
             axes = nc_var_obj.axes
         except AttributeError:
@@ -79,6 +87,12 @@ class SGridVariable(object):
             vector_axis = None
         else:
             vector_axis = parse_vector_axis(standard_name)
+        try:
+            raw_coordinates = nc_var_obj.coordinates
+        except AttributeError:
+            coordinates = None
+        else:
+            coordinates = tuple(raw_coordinates.split(' '))
         sgrid_var = cls(variable=variable,
                         grid=grid,
                         x_axis=x_axis,
@@ -92,6 +106,7 @@ class SGridVariable(object):
                         dtype=dtype,
                         location=location,
                         standard_name=standard_name,
-                        vector_axis=vector_axis
+                        vector_axis=vector_axis,
+                        coordinates=coordinates
                         )
         return sgrid_var

@@ -135,14 +135,16 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
         yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
         u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        fake_u1 = rg.createVariable('FAKE_U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
         v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
-        # w = rg.createVariable('W', 'f4', ('time', 'KMAX1', 'MMAXZ', 'NMAXZ'))
+        w = rg.createVariable('W', 'f4', ('time', 'KMAX1', 'MMAXZ', 'NMAXZ'))
+        fake_w = rg.createVariable('FAKE_W', 'f4', ('time', 'MMAXZ', 'NMAXZ'))
         times = rg.createVariable('time', 'f8', ('time',))
         grid = rg.createVariable('grid', 'i4')
         latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
         longitude = rg.createVariable('longitude', 'f4', ('MMAXZ', 'NMAXZ'))
         grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))
-        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX')) 
+        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX'))
         # define variable attributes
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
@@ -163,23 +165,28 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         u1.grid = 'some grid'
         u1.axes = 'X: NMAXZ Y: MMAX Z: KMAX'
         u1.standard_name = 'sea_water_x_velocity'
+        fake_u1.grid = 'some grid'
         v1.grid = 'some grid'
         v1.axes = 'X: NMAX Y: MMAXZ Z: KMAX'
         v1.standard_name = 'sea_water_y_velocity'
-        # w.grid = 'grid'
-        # w.location = 'face'
+        w.grid = 'grid'
+        w.location = 'face'
+        fake_w.grid = 'grid'
         # create variable data
         xcor[:] = np.random.random((4, 4))
         ycor[:] = np.random.random((4, 4))
         xz[:] = np.random.random((4, 4))
         yz[:] = np.random.random((4, 4))
         u1[:] = np.random.random((2, 2, 4, 4))
+        fake_u1[:] = np.random.random((2, 2, 4, 4))
         v1[:] = np.random.random((2, 2, 4, 4))
         times[:] = np.random.random((2,))
         latitude[:] = np.random.random((4, 4))
         longitude[:] = np.random.random((4, 4))
         grid_latitude[:] = np.random.random((4, 4))
         grid_longitude[:] = np.random.random((4, 4))
+        w[:] = np.random.random((2, 3, 4, 4))
+        fake_w[:] = np.random.random((2, 4, 4))
     return file_name
         
         
@@ -220,6 +227,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         grid = rg.createVariable('grid', 'i2')
         u = rg.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
         v = rg.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
+        fake_u = rg.createVariable('fake_u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
         lon_centers = rg.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
         lat_centers = rg.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
         lon_nodes = rg.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
@@ -228,6 +236,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         lon_u = rg.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
         lat_v = rg.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
         lon_v = rg.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
+        salt = rg.createVariable('salt', 'f4', ('time', 's_rho', 'eta_rho', 'xi_rho'))
         zeta = rg.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
@@ -252,6 +261,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         grid.edge1_coordinates = 'lon_u lat_u'
         grid.edge2_coordinates = 'lon_v lat_v'
         grid.vertical_dimensions = 's_rho: s_w (padding: none)'
+        salt.grid = 'grid'
         zeta.location = 'face'
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
@@ -262,6 +272,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         v.axes = 'X: xi_v Y: eta_v'
         v.location = 'edge2'
         v.standard_name = 'sea_water_y_velocity'
+        fake_u.grid = 'some grid'
         # create coordinate data
         z_centers[:] = np.random.random(size=(2,))
         times[:] = np.random.random(size=(2,))
@@ -273,12 +284,14 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         y_us[:] = np.random.random(size=(4,))
         x_vs[:] = np.random.random(size=(4,))
         y_vs[:] = np.random.random(size=(3,))
-        u[:, :, :, :] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
-        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities 
+        u[:] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
+        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities
+        fake_u[:] = np.random.random(size=(2, 2, 4, 3))
         lat_u[:] = np.random.random(size=(4, 3))
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
         lon_v[:] = np.random.random(size=(3, 4))
+        salt[:] = np.random.random(size=(2, 2, 4, 4))
     return file_name
 
 
@@ -298,6 +311,8 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
         us.grid = 'grid'
         us.location = 'edge1'
+        fake_u = nc.createVariable('FAKE_U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        fake_u.grid = 'grid'
         vs = nc.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
         vs.grid = 'grid'
         vs.location = 'edge2'
@@ -307,6 +322,8 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
         temps.grid = 'grid'
         temps.location = 'face'
+        snow = nc.createVariable('SNOW', 'f4', ('Time', 'south_north', 'west_east'))
+        snow.grid = 'grid'
         xlats = nc.createVariable('XLAT', 'f4', ('south_north', 'west_east'))
         xlongs = nc.createVariable('XLONG', 'f4', ('south_north', 'west_east'))
         znus = nc.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
@@ -326,9 +343,11 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         times[:] = np.random.random(size=(2, 3)).astype(str)
         xtimes[:] = np.random.random(size=(2,))
         us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
+        fake_u[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
         vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
         ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
         temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
+        snow[:, :, :] = np.random.random(size=(2, 5, 4))
         xlats[:, :] = np.random.random(size=(5, 4))
         xlongs[:, :] = np.random.random(size=(5, 4))
         znus[:, :] = np.random.random(size=(2, 3))
