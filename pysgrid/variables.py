@@ -31,6 +31,7 @@ class SGridVariable(object):
                  z_axis=None,):
         self.center_axis = center_axis
         self.center_slicing = center_slicing
+        self.coordinates = coordinates
         self.dimensions = dimensions
         self.dtype = dtype
         self.grid = grid
