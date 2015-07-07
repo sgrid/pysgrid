@@ -63,6 +63,8 @@ class TestSGridVariableROMS(unittest.TestCase):
         z_axis = sgrid_var.z_axis
         standard_name = sgrid_var.standard_name
         expected_standard_name = 'sea_water_x_velocity'
+        coordinates = sgrid_var.coordinates
+        expected_coordinates = ('time', 's_rho', 'lat_u', 'lon_u')
         self.assertEqual(sgrid_var_name, sgrid_var_name_expected)
         self.assertEqual(sgrid_var_dim, sgrid_var_dim_expected)
         self.assertEqual(sgrid_var_grid, sgrid_var_grid_expected)
@@ -72,6 +74,7 @@ class TestSGridVariableROMS(unittest.TestCase):
         self.assertEqual(y_axis, y_axis_expected)
         self.assertIsNone(z_axis)
         self.assertEqual(standard_name, expected_standard_name)
+        self.assertEqual(coordinates, expected_coordinates)
         
     def test_face_location_inference(self):
         sgrid_var = SGridVariable.create_variable(self.test_var_3, self.sgrid)

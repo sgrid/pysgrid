@@ -89,11 +89,11 @@ class SGridVariable(object):
         else:
             vector_axis = parse_vector_axis(standard_name)
         try:
-            raw_coordinates = nc_var_obj.coordinates
+            raw_coordinates = nc_var_obj.coordinates.strip()
         except AttributeError:
             coordinates = None
         else:
-            coordinates = tuple(raw_coordinates.split(' '))
+            coordinates = tuple(raw_coordinates.split())
         sgrid_var = cls(variable=variable,
                         grid=grid,
                         x_axis=x_axis,
