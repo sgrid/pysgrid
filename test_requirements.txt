@@ -1,4 +1,0 @@
-mock
-nose
-netCDF4
-numpy
