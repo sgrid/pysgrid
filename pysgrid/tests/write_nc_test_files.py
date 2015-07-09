@@ -266,6 +266,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
         u.axes = 'X: xi_u Y: eta_u'
+        u.coordinates = 'time s_rho lat_u lon_u ' 
         u.location = 'edge1'
         u.standard_name = 'sea_water_x_velocity'
         v.grid = 'some grid'
