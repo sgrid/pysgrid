@@ -1,8 +1,21 @@
 from __future__ import with_statement
 
+import os
 from setuptools import setup, find_packages
 
-from pysgrid import __version__
+def extract_version(module='pysgrid'):
+    version = None
+    fdir = os.path.dirname(__file__)
+    fnme = os.path.join(fdir, module, '__init__.py')
+    with open(fnme) as fd:
+        for line in fd:
+            if (line.startswith('__version__')):
+                _, version = line.split('=')
+                # Remove quotation characters.
+                version = version.strip()[1:-1]
+                break
+    return version
+
 
 reqs = [line.strip() for line in open('requirements.txt')]
 
@@ -13,7 +26,7 @@ def readme():
 
 setup(
     name                = 'pysgrid',
-    version             = __version__,
+    version             = extract_version(),
     description         = 'Python package for working with staggered gridded data',
     author              = 'Andrew Yan',
     author_email        = 'ayan@usgs.gov',
