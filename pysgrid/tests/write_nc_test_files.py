@@ -4,7 +4,7 @@ Created on Apr 7, 2015
 @author: ayan
 '''
 import os
-import netCDF4 as nc4
+from netCDF4 import Dataset
 import numpy as np
 from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER_LONG_NAME,
                             LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
@@ -15,7 +15,7 @@ TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as rg:
+    with Dataset(file_name, 'w') as rg:
         # define dims
         rg.createDimension('MMAXZ', 4)
         rg.createDimension('NMAXZ', 4)
@@ -23,7 +23,7 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         rg.createDimension('NMAX', 4)
         rg.createDimension('KMAX', 2)
         rg.createDimension('KMAX1', 3)
-        rg.createDimension('time', 2)     
+        rg.createDimension('time', 2)
         # define vars
         xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))
         ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))
@@ -55,11 +55,11 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         u1[:] = np.random.random((2, 2, 4, 4))
         v1[:] = np.random.random((2, 2, 4, 4))
         times[:] = np.random.random((2,))
-        
-        
+
+
 def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares_no_optional_attr.nc'):
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as rg:
+    with Dataset(file_name, 'w') as rg:
         # define dimensions
         rg.createDimension('MMAXZ', 4)
         rg.createDimension('NMAXZ', 4)
@@ -110,17 +110,17 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
         v1[:] = np.random.random((2, 2, 4, 4))
         times[:] = np.random.random((2,))
     return file_name
-       
+
 
 def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
     from an actual file.
-    
+
     """
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as rg:
+    with Dataset(file_name, 'w') as rg:
         # define dimensions
         rg.createDimension('MMAXZ', 4)
         rg.createDimension('NMAXZ', 4)
@@ -188,17 +188,17 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         w[:] = np.random.random((2, 3, 4, 4))
         fake_w[:] = np.random.random((2, 4, 4))
     return file_name
-        
-        
+
+
 def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
-    
+
     """
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as rg:
+    with Dataset(file_name, 'w') as rg:
         # set dimensions
         rg.createDimension('s_rho', 2)
         rg.createDimension('s_w', 3)
@@ -266,7 +266,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         zeta.coordinates = 'time lat_rho lon_rho'
         u.grid = 'some grid'
         u.axes = 'X: xi_u Y: eta_u'
-        u.coordinates = 'time s_rho lat_u lon_u ' 
+        u.coordinates = 'time s_rho lat_u lon_u '
         u.location = 'edge1'
         u.standard_name = 'sea_water_x_velocity'
         v.grid = 'some grid'
@@ -298,7 +298,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
 
 def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as nc:
+    with Dataset(file_name, 'w') as nc:
         nc.createDimension('Time', 2)
         nc.createDimension('DateStrLen', 3)
         nc.createDimension('west_east', 4)
@@ -354,15 +354,15 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         znus[:, :] = np.random.random(size=(2, 3))
         znws[:, :] = np.random.random(size=(2, 4))
     return file_name
-        
-        
+
+
 def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
     """
     Write an SGrid file using 3D conventions.
-    
+
     """
     file_name = os.path.join(target_dir, nc_filename)
-    with  nc4.Dataset(file_name, 'w') as fg:
+    with  Dataset(file_name, 'w') as fg:
         # create dimensions
         fg.createDimension('Time', 2)
         fg.createDimension('DateStrLen', 3)
@@ -412,17 +412,17 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
         znus[:, :] = np.random.random(size=(2, 3))
         znws[:, :] = np.random.random(size=(2, 4))
     return file_name
-        
-               
+
+
 def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sgrid.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
-    
+
     """
     file_name = os.path.join(target_dir, nc_filename)
-    with nc4.Dataset(file_name, 'w') as rg:
+    with Dataset(file_name, 'w') as rg:
         # set dimensions
         rg.createDimension('z_center', 2)
         rg.createDimension('z_node', 3)
@@ -486,7 +486,7 @@ def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sg
         x_vs[:] = np.random.random(size=(4,))
         y_vs[:] = np.random.random(size=(3,))
         u[:, :, :, :] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
-        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities 
+        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities
         lat_u[:] = np.random.random(size=(4, 3))
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
