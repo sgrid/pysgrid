@@ -5,7 +5,7 @@ Created on Apr 20, 2015
 '''
 import abc
 
-import netCDF4 as nc4
+from netCDF4 import Dataset
 
 from .custom_exceptions import SGridNonCompliantError
 from .read_netcdf import NetCDFDataset, parse_padding
@@ -14,7 +14,7 @@ from .variables import SGridVariable
 
 
 class SGridND(object):
-    
+
     __metaclass__ = abc.ABCMeta
 
     padding_slices = {'both': (1, -1),
@@ -23,8 +23,8 @@ class SGridND(object):
                       'high': (None, 1)
                       }
     topology_dimension = None
-    
-    def __init__(self, 
+
+    def __init__(self,
                  nodes=None,
                  centers=None,
                  edges=None,
@@ -60,18 +60,18 @@ class SGridND(object):
         self.angles = angles
         self.edge1_dimensions = edge1_dimensions
         self.edge2_dimensions = edge2_dimensions
-        
+
     @classmethod
     def from_ncfile(cls, nc_file_path, topology_variable=None):
-        with nc4.Dataset(nc_file_path) as nc_dataset:
+        with Dataset(nc_file_path) as nc_dataset:
             sgrid = cls.from_nc_dataset(nc_dataset, topology_variable)
         return sgrid
-    
+
     @property
     def non_grid_variables(self):
         non_grid_variables = [variable for variable in self.variables if variable not in self.grid_variables]
         return non_grid_variables
-    
+
     def _save_common_components(self, nc_file):
         grid_var = self.grid_topology_var
         # create dimensions
@@ -161,32 +161,32 @@ class SGridND(object):
                 if axes:
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
-    
+
     @abc.abstractmethod
     def from_nc_dataset(self):
         return
-    
+
     @abc.abstractmethod
     def get_all_face_padding(self):
         return
-    
+
     @abc.abstractmethod
     def get_all_edge_padding(self):
         return
-        
+
     @abc.abstractmethod
     def all_padding(self):
         return
-    
+
     @abc.abstractmethod
     def save_as_netcdf(self):
         return
 
 
 class SGrid2D(SGridND):
-    
+
     topology_dimension = 2
-    
+
     def __init__(self,
                  faces=None,
                  face_padding=None,
@@ -203,7 +203,7 @@ class SGrid2D(SGridND):
         self.vertical_padding = vertical_padding
         self.vertical_dimensions = vertical_dimensions
         super(SGrid2D, self).__init__(*args, **kwargs)
-        
+
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
         sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
@@ -246,14 +246,14 @@ class SGrid2D(SGridND):
                     )
         sa.get_variable_attributes(sgrid)
         return sgrid
-    
+
     def get_all_face_padding(self):
         if self.face_padding is not None:
             all_face_padding = self.face_padding
         else:
             all_face_padding = []
         return all_face_padding
-    
+
     def get_all_edge_padding(self):
         all_edge_padding = []
         if self.edge1_padding is not None:
@@ -261,15 +261,15 @@ class SGrid2D(SGridND):
         if self.edge2_padding is not None:
             all_edge_padding += self.edge2_padding
         return all_edge_padding
-                    
+
     def all_padding(self):
         all_padding = self.get_all_face_padding() + self.get_all_edge_padding()
         if self.vertical_padding is not None:
             all_padding += self.vertical_padding
         return all_padding
-        
+
     def save_as_netcdf(self, filepath):
-        with nc4.Dataset(filepath, 'w') as nclocal:
+        with Dataset(filepath, 'w') as nclocal:
             grid_vars = self._save_common_components(nclocal)
             # add attributes to the grid_topology variable
             grid_vars.face_dimensions = self.face_dimensions
@@ -278,11 +278,11 @@ class SGrid2D(SGridND):
             if self.face_coordinates is not None:
                 grid_vars.face_coordinates = ' '.join(self.face_coordinates)
 
-              
+
 class SGrid3D(SGridND):
-    
+
     topology_dimension = 3
-    
+
     def __init__(self,
                  volume_padding=None,
                  volume_coordinates=None,
@@ -322,7 +322,7 @@ class SGrid3D(SGridND):
         self.face2_dimensions = face2_dimensions
         self.face3_dimensions = face3_dimensions
         super(SGrid3D, self).__init__(*args, **kwargs)
-        
+
     @classmethod
     def from_nc_dataset(cls, nc_dataset, topology_variable=None):
         sa = SGridAttributes(nc_dataset, cls.topology_dimension, topology_variable)
@@ -380,7 +380,7 @@ class SGrid3D(SGridND):
                     )
         sa.get_variable_attributes(sgrid)
         return sgrid
-    
+
     def get_all_face_padding(self):
         all_face_padding = []
         if self.face1_padding is not None:
@@ -390,7 +390,7 @@ class SGrid3D(SGridND):
         if self.face3_padding is not None:
             all_face_padding += self.face3_padding
         return all_face_padding
-    
+
     def get_all_edge_padding(self):
         all_edge_padding = []
         if self.edge1_padding is not None:
@@ -404,9 +404,9 @@ class SGrid3D(SGridND):
     def all_padding(self):
         all_padding = self.volume_padding + self.get_all_face_padding() + self.get_all_edge_padding()
         return all_padding
-    
+
     def save_as_netcdf(self, filepath):
-        with nc4.Dataset(filepath, 'w') as nclocal:
+        with Dataset(filepath, 'w') as nclocal:
             grid_vars = self._save_common_components(nclocal)
             # add attributes to the variables
             grid_vars.volume_dimensions = self.volume_dimensions
@@ -417,13 +417,13 @@ class SGrid3D(SGridND):
                 grid_vars.edge3_dimensions = self.edge3_dimensions
             if self.edge3_coordinates is not None:
                 grid_vars.edge3_coordinates = ' '.join(self.edge3_coordinates)
-    
+
 
 class SGridAttributes(object):
     """
     Class containing methods to help with getting the
     attributes for either a 2D or 3D SGrid.
-    
+
     """
     def __init__(self, nc_dataset, topology_dim, topology_variable=None):
         self.nc_dataset = nc_dataset
@@ -435,16 +435,16 @@ class SGridAttributes(object):
         else:
             self.topology_variable = topology_variable
         self.topology_var = self.nc_dataset.variables[self.topology_variable]
-    
+
     def get_dimensions(self):
         ds_dims = self.nc_dataset.dimensions
         grid_dims = [(ds_dim, len(ds_dims[ds_dim])) for ds_dim in ds_dims]
         return grid_dims
-        
+
     def get_topology_var(self):
         grid_topology_var = self.ncd.find_grid_topology_var()
         return grid_topology_var
-    
+
     def get_attr_dimension(self, attr_name):
         try:
             attr_dim = getattr(self.topology_var, attr_name)
@@ -455,7 +455,7 @@ class SGridAttributes(object):
             attr_dim_padding = parse_padding(attr_dim, self.topology_variable)
             attr_padding = attr_dim_padding
         return attr_dim, attr_padding
-    
+
     def get_attr_coordinates(self, attr_name):
         try:
             attr_coordinates_raw = getattr(self.topology_var, attr_name)
@@ -479,7 +479,7 @@ class SGridAttributes(object):
             node_coordinate_val = node_coordinates.split(' ')
             node_coordinates = tuple(node_coordinate_val)
         return node_dimensions, node_coordinates
-    
+
     def get_variable_attributes(self, sgrid):
         dataset_variables = []
         grid_variables = []
@@ -493,7 +493,7 @@ class SGridAttributes(object):
                 grid_variables.append(nc_var.name)
         sgrid.variables = dataset_variables
         sgrid.grid_variables = grid_variables
-        
+
     def get_angles(self):
         try:
             # get angles if they exist, otherwise calculate them
@@ -505,13 +505,13 @@ class SGridAttributes(object):
             centers_end = cell_centers[..., 1:, :]
             angles = calculate_angle_from_true_east(centers_start, centers_end)
         return angles
-        
+
     def get_cell_center_lat_lon(self):
         grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')
         grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
         grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
-        
+
     def get_cell_node_lat_lon(self):
         try:
             grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]
@@ -522,7 +522,7 @@ class SGridAttributes(object):
             grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
             cell_nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
         return cell_nodes
-        
+
     def get_cell_center_lat_lon_3d(self):
         volume_coordinates = self.get_attr_coordinates('volume_coordinates')
         grid_cell_center_lon_var = volume_coordinates[0]
@@ -530,11 +530,11 @@ class SGridAttributes(object):
         grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
         grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
-        
+
     def get_cell_node_lat_lon_3d(self):
         pass
-        
-        
+
+
 def _load_grid_from_nc_dataset(nc_dataset,
                                topology_dim,
                                grid_topology_var=None
@@ -546,14 +546,14 @@ def _load_grid_from_nc_dataset(nc_dataset,
     non-compliant. This function will introspect
     the datast to determine whether a 2D or 3D
     SGRID object is returned.
-    
+
     :param nc_dataset: a netCDF resource read into a netCDF4.Dataset object
     :type nc_dataset: netCDF4.Dataset
     :param grid_topology_var: the name of the grid topology variable; defaults to None
     :type grid_topology_var: str
     :return: an SGrid object
     :rtype: sgrid.SGrid2D or sgrid.SGrid3D
-    
+
     """
     if topology_dim == 2:
         grid = SGrid2D.from_nc_dataset(nc_dataset, grid_topology_var)
@@ -562,19 +562,19 @@ def _load_grid_from_nc_dataset(nc_dataset,
     else:
         raise ValueError('Only topology dimensions of 2 or 3 are supported')
     return grid
-    
-    
+
+
 def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
     """
     Given a netCDF dataset, determine the topology
     dimension.
-    
+
     :param nc_dataset: a netCDF dataset
     :type nc_dataset: netCDF4.Dataset
     :param str grid_topology_vars: the name of the grid topology variable; defaults to None
     :return: topology dimension
     :rtype: int
-    
+
     """
     ncd = NetCDFDataset(nc_dataset)
     if ncd.sgrid_compliant_file():
@@ -590,27 +590,27 @@ def _return_grid_topology_dim(nc_dataset, grid_topology_var=None):
             raise ValueError('Only topology dimensions of 2 or 3 are supported')
     else:
         raise SGridNonCompliantError(nc_dataset)
-    
-    
+
+
 def from_ncfile(nc_url, grid_topology_var=None):
     """
     Get a SGrid object from a file. There is no need
     to know the topology dimensions a priori.
-    
+
     :param str nc_url: URL or filepath to the netCDF file
     :param str grid_topology_vars: the name of the grid topology variable; defaults to None
     :return: SGrid object
     :rtype: sgrid.SGrid2D or sgrid.SGrid3D
-    
+
     """
-    with nc4.Dataset(nc_url, 'r') as nc_dataset:
+    with Dataset(nc_url, 'r') as nc_dataset:
         topology_dim, introspected_grid_topology_var = _return_grid_topology_dim(nc_dataset, grid_topology_var)
         if grid_topology_var is not None:
             topology_var = grid_topology_var
         else:
             topology_var = introspected_grid_topology_var
-        grid = _load_grid_from_nc_dataset(nc_dataset, 
-                                          topology_dim, 
+        grid = _load_grid_from_nc_dataset(nc_dataset,
+                                          topology_dim,
                                           topology_var
                                           )
     return grid
@@ -620,20 +620,20 @@ def from_nc_dataset(nc_dataset, grid_topology_var=None):
     """
     Get a SGrid object from a netCDF4.Dataset. There is no need
     to know the topology dimensions a priori.
-    
+
     :param netCDF4.Dataset nc_dataset: a netCDF4 Dataset
     :param str grid_topology_vars: the name of the grid topology variable; defaults to None
     :return: SGrid object
     :rtype: sgrid.SGrid2D or sgrid.SGrid3D
-    
+
     """
     topology_dim, introspected_grid_topology_var = _return_grid_topology_dim(nc_dataset, grid_topology_var)
     if grid_topology_var is not None:
         topology_var = grid_topology_var
     else:
         topology_var = introspected_grid_topology_var
-    grid = _load_grid_from_nc_dataset(nc_dataset, 
-                                      topology_dim, 
+    grid = _load_grid_from_nc_dataset(nc_dataset,
+                                      topology_dim,
                                       topology_var
                                       )
     return grid

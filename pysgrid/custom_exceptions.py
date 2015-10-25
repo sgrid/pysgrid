@@ -9,17 +9,17 @@ import warnings
 
 
 class CannotFindPaddingError(Exception):
-    
+
     base_message = 'The netCDF file appears to have conform to SGRID conventions, but padding values cannot be found.'
-        
+
     def __str__(self):
         return self.base_message
 
 
 class SGridNonCompliantError(Exception):
-    
+
     base_message = 'This netCDF object derived from the dataset at {0} does not appear to be SGRID compliant.'
-    
+
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
 
@@ -27,8 +27,8 @@ class SGridNonCompliantError(Exception):
         error_message = self.base_message.format(self.dataset_path)
         return error_message
 
-    
-    
+
+
 def deprecated(deprecated_function):
     @functools.wraps(deprecated_function)
     def new_func(*args, **kwargs):
@@ -39,4 +39,3 @@ def deprecated(deprecated_function):
                                )
         return deprecated_function(*args, **kwargs)
     return new_func
-        

@@ -7,7 +7,7 @@ Created on Mar 24, 2015
 
 LAT_GRID_CELL_CENTER_LONG_NAME = ['latitude of RHO-points',  # ROMS
                                   'X-coordinate of grid points',  # deltares
-                                  ] 
+                                  ]
 
 LON_GRID_CELL_CENTER_LONG_NAME = ['longitude of RHO-points',  # ROMS
                                   'Y-coordinate of grid points',  # deltares
@@ -18,7 +18,7 @@ LAT_GRID_CELL_NODE_LONG_NAME = ['latitude of PSI-points',  # ROMS
                                 ]
 
 LON_GRID_CELL_NODE_LONG_NAME = ['longitude of PSI-points',  # ROMS
-                                'grid cell corners, longitude-coordinate',  # deltares 
+                                'grid cell corners, longitude-coordinate',  # deltares
                                 ]
 
 

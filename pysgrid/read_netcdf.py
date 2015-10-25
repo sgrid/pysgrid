@@ -14,20 +14,20 @@ def parse_padding(padding_str, mesh_topology_var):
     """
     Use regex expressions to break apart an
     attribute string containing padding types
-    for each variable with a cf_role of 
+    for each variable with a cf_role of
     'grid_topology'.
-    
+
     Padding information is returned within a named tuple
     for each node dimension of an edge, face, or vertical
     dimension. The named tuples have the following attributes:
     mesh_topology_var, dim_name, dim_var, and padding.
     Padding information is returned as a list
     of these named tuples.
-    
+
     :param str padding_str: string containing padding types from a netCDF attribute
     :return: named tuples with padding information
     :rtype: list
-    
+
     """
     p = re.compile('([a-zA-Z0-9_]+:) ([a-zA-Z0-9_]+) (\(padding: [a-zA-Z]+\))')
     padding_matches = p.findall(padding_str)
@@ -84,7 +84,7 @@ def parse_vector_axis(variable_standard_name):
 
 
 class NetCDFDataset(object):
-    
+
     def __init__(self, nc_dataset_obj):
         self.ncd = nc_dataset_obj
         # in case a user as a version netcdf C library < 4.1.2
@@ -93,14 +93,14 @@ class NetCDFDataset(object):
         except ValueError:
             self._filepath = None
         self.sgrid_compliant_file()
-        
+
     def find_node_coordinates(self, node_dimensions):
         """
         Find the variables for the grid
         cell vertices.
-        
+
         """
-        nc_vars = self.ncd.variables    
+        nc_vars = self.ncd.variables
         node_dims = node_dimensions.split(' ')
         node_dim_set = set(node_dims)
         x_node_coordinate = None
@@ -128,7 +128,7 @@ class NetCDFDataset(object):
             return x_node_coordinate, y_node_coordinate
         else:
             return None
-        
+
     def find_variables_by_attr(self, **kwargs):
         nc_vars = self.ncd.variables
         matches = []
@@ -146,17 +146,17 @@ class NetCDFDataset(object):
                 if attr_tracking == kwargs:
                     matches.append(nc_var)
         return matches
-                
+
     def find_grid_topology_var(self):
         """
         Get the variables from a netCDF dataset
         that have a cf_role attribute of 'grid_topology'.
-        
+
         :params nc: netCDF dataset
         :type nc: netCDF4.Dataset
         :return: list of variables that contain grid topologies
         :rtype: list
-        
+
         """
         nc_vars = self.ncd.variables
         grid_topology_var = None
@@ -174,18 +174,18 @@ class NetCDFDataset(object):
                     # exit the loop once the topology variable is found
                     break
         return grid_topology_var
-    
+
     def find_coordinates_by_location(self, location_str, topology_dim):
         """
         Find a grid coordinates variables with a location attribute equal
         to location_str. This method can be used to infer edge, face, or
         volume coordinates from the location attribute of a variable.
-        
+
         Location is a required attribute per SGRID conventions.
-        
+
         :param str location_str: the location value to search for
         :param int topology_dim: the topology dimension of the grid
-        
+
         """
         nc_vars = self.ncd.variables
         vars_with_location = self.find_variables_by_attr(location=location_str)
@@ -203,8 +203,8 @@ class NetCDFDataset(object):
                 for nc_var in nc_vars.keys():
                     nc_var_obj = nc_vars[nc_var]
                     nc_var_dim_set = set(nc_var_obj.dimensions)
-                    if (nc_var_dim_set.issubset(location_var_dims) and 
-                        nc_var != var_with_location and 
+                    if (nc_var_dim_set.issubset(location_var_dims) and
+                        nc_var != var_with_location and
                         len(nc_var_dim_set) > 0
                         ):
                         potential_coordinates.append(nc_var_obj)
@@ -235,16 +235,16 @@ class NetCDFDataset(object):
                     except AttributeError:
                         var_coord_desc = ''
                     if ('lon' in var_coord.name.lower() or
-                        'longitude' in var_coord_standard_name.lower() or 
+                        'longitude' in var_coord_standard_name.lower() or
                         'longitude' in var_coord_desc.lower()):
                         x_coordinate = lvc
-                    elif ('lat' in var_coord.name.lower() or 
+                    elif ('lat' in var_coord.name.lower() or
                           'latitude' in var_coord_standard_name.lower() or
                           'latitude' in var_coord_desc.lower()):
                         y_coordinate = lvc
                 if len(lvc_split) == 3:
                     z_coordinate = lvc_split[-1]
-                break 
+                break
         if topology_dim == 2:
             coordinates = (x_coordinate, y_coordinate)
         else:
@@ -259,10 +259,10 @@ class NetCDFDataset(object):
         """
         Determine whether a dataset is
         SGRID compliant.
-        
+
         :return: True if dataset is compliant, raise an exception if it is not
         :rtype: bool
-        
+
         """
         grid_vars = self.find_grid_topology_var()
         if grid_vars is not None:

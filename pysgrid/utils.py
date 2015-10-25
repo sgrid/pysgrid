@@ -20,16 +20,16 @@ def pair_arrays(x_array, y_array):
     """
     Given two arrays to equal dimensions,
     pair their values element-wise.
-    
+
     For example given arrays [[1, 2], [3, 4]]
     and [[-1, -2], [-3, -4]], this function will
     return [[[1, -1], [2, -2]], [[3, -3], [4, -4]]].
-    
+
     :param np.array x_array: a numpy array containing "x" coordinates
     :param np.array y_array: a numpy array containing "y" coordinates
     :return: array containing (x, y) arrays
     :rtype: np.array
-    
+
     """
     x_shape = x_array.shape
     paired_array_shape = x_shape + (2,)
@@ -43,12 +43,12 @@ def check_element_equal(lst):
     """
     Check that all elements in an
     iterable are the same.
-    
+
     :params lst: iterable object to be checked
     :type lst: np.array, list, tuple
     :return: result of element equality check
     :rtype: bool
-    
+
     """
     return lst[1:] == lst[:-1]
 
@@ -74,7 +74,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     only knows who to figure out slices that would be
     used to trim data before averaging to grid cell
     centers; grid cell nodes will be supported later.
-    
+
     :param sgrid_obj: an SGrid object derived from a netCDF file or netCDF4.Dataset object
     :type sgrid_obj: sgrid.SGrid
     :param nc_dataset: a netCDF4.Dataset object from which the sgrid_obj was derived
@@ -83,7 +83,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     :param str method: slice method for analysis at grid cell centers or grid cell nodes; accepts either 'center' or 'node'
     :return: the slice for the varible for the given method
     :rtype: tuple
-    
+
     """
     grid_variables = sgrid_obj.grid_variables
     if grid_variables is None:
@@ -122,7 +122,7 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     Infer which numpy axis to average over given
     the a variable defined on the grid. Works
     well for 2D. Not so sure about 3D.
-    
+
     """
     var_dims = nc_var_obj.dimensions
     node_dimensions = tuple(sgrid_obj.node_dimensions.split(' '))
@@ -180,7 +180,7 @@ def infer_variable_location(sgrid, variable):
 def calculate_bearing(lon_lat_1, lon_lat_2):
     """
     return bearing from true north in degrees
-    
+
     """
     lon_lat_1_radians = lon_lat_1 * np.pi/180
     lon_lat_2_radians = lon_lat_2 * np.pi/180
@@ -198,14 +198,14 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
 def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     """
     Return the angle from true east in radians
-    
+
     """
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
     bearing_from_true_east = 90 - bearing
     bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
     # not sure if this is the most appropriate thing to do for the last grid cell
-    angles = np.append(bearing_from_true_east_radians, 
-                       bearing_from_true_east_radians[..., -1:], 
+    angles = np.append(bearing_from_true_east_radians,
+                       bearing_from_true_east_radians[..., -1:],
                        axis=-1
                        )
     return angles
