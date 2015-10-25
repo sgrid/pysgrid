@@ -6,7 +6,11 @@ Created on Apr 7, 2015
 import os
 import unittest
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 from netCDF4 import Dataset
 import numpy as np
 
