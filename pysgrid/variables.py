@@ -9,11 +9,11 @@ from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_lo
 
 class SGridVariable(object):
     """
-    Object of variables found and inferred 
+    Object of variables found and inferred
     from an SGRID compliant dataset.
-    
+
     """
-    def __init__(self, 
+    def __init__(self,
                  center_axis=None,
                  center_slicing=None,
                  coordinates=None,
@@ -44,7 +44,7 @@ class SGridVariable(object):
         self.x_axis = x_axis
         self.y_axis = y_axis
         self.z_axis = z_axis
-        
+
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
         variable = nc_var_obj.name
@@ -56,8 +56,8 @@ class SGridVariable(object):
             node_axis = None
         else:
             center_axis, node_axis = infer_avg_axes(sgrid_obj, nc_var_obj)
-        center_slicing = determine_variable_slicing(sgrid_obj, 
-                                                    nc_var_obj, 
+        center_slicing = determine_variable_slicing(sgrid_obj,
+                                                    nc_var_obj,
                                                     method='center'
                                                     )
         dimensions = nc_var_obj.dimensions
