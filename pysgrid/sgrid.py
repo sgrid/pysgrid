@@ -131,7 +131,7 @@ class SGridND(object):
                                                 angle_obj.dimensions
                                                 )
             if self.angles is not None:
-                grid_angle[:] = self.angles[:]
+                grid_angle = self.angles
         for dataset_variable in self.variables:
             dataset_var_obj = getattr(self, dataset_variable)
             try:
@@ -497,7 +497,7 @@ class SGridAttributes(object):
     def get_angles(self):
         try:
             # get angles if they exist, otherwise calculate them
-            grid_angles = self.nc_dataset.variables['angle'][:]
+            grid_angles = self.nc_dataset.variables['angle']
             angles = grid_angles
         except KeyError:
             cell_centers = self.get_cell_center_lat_lon()
@@ -508,8 +508,8 @@ class SGridAttributes(object):
 
     def get_cell_center_lat_lon(self):
         grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')
-        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
-        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
+        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var]
+        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var]
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
 
     def get_cell_node_lat_lon(self):
@@ -518,8 +518,8 @@ class SGridAttributes(object):
         except TypeError:
             cell_nodes = None
         else:
-            grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var][:]
-            grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var][:]
+            grid_cell_nodes_lat = self.nc_dataset.variables[grid_cell_nodes_lat_var]
+            grid_cell_nodes_lon = self.nc_dataset.variables[grid_cell_nodes_lon_var]
             cell_nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
         return cell_nodes
 
@@ -527,8 +527,8 @@ class SGridAttributes(object):
         volume_coordinates = self.get_attr_coordinates('volume_coordinates')
         grid_cell_center_lon_var = volume_coordinates[0]
         grid_cell_center_lat_var = volume_coordinates[1]
-        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var][:]
-        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var][:]
+        grid_cell_center_lon = self.nc_dataset.variables[grid_cell_center_lon_var]
+        grid_cell_center_lat = self.nc_dataset.variables[grid_cell_center_lat_var]
         return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
 
     def get_cell_node_lat_lon_3d(self):
