@@ -3,17 +3,19 @@ Created on Mar 23, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 from collections import namedtuple
 
 import numpy as np
 
 
-GridPadding = namedtuple('GridPadding', ['mesh_topology_var',  # the variable containing the padding information
-                                         'face_dim',  # the topology attribute
-                                         'node_dim',  # node dimension within the topology attribute
-                                         'padding'  # padding type for the node dimension
-                                         ]
-                         )
+GridPadding = namedtuple('GridPadding',
+                         ['mesh_topology_var',  # Padding information.
+                          'face_dim',  # The topology attribute.
+                          'node_dim',  # Node dimension.
+                          'padding'])  # Padding type for the node dimension.
 
 
 def pair_arrays(x_array, y_array):
@@ -75,13 +77,16 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     used to trim data before averaging to grid cell
     centers; grid cell nodes will be supported later.
 
-    :param sgrid_obj: an SGrid object derived from a netCDF file or netCDF4.Dataset object
+    :param sgrid_obj: an SGrid object derived from a netCDF file or
+                      netCDF4.Dataset object.
     :type sgrid_obj: sgrid.SGrid
-    :param nc_dataset: a netCDF4.Dataset object from which the sgrid_obj was derived
+    :param nc_dataset: a netCDF4.Dataset object from which
+                       the sgrid_obj was derived.
     :type nc_dataset: netCDF4.Dataset
-    :param str variable: the name of a variable to be sliced
-    :param str method: slice method for analysis at grid cell centers or grid cell nodes; accepts either 'center' or 'node'
-    :return: the slice for the varible for the given method
+    :param str variable: the name of a variable to be sliced.
+    :param str method: slice method for analysis at grid cell centers or grid
+                       cell nodes; accepts either 'center' or 'node'.
+    :return: the slice for the variable for the given method.
     :rtype: tuple
 
     """
@@ -93,16 +98,14 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     separate_edge_dim_exists = does_intersection_exist(var_dims, node_dims)
     slice_indices = tuple()
     if separate_edge_dim_exists:
-        try:
-            padding = sgrid_obj.face_padding  # try 2D sgrid
-        except AttributeError:
-            padding = sgrid_obj.volume_padding  # if not 2D, try 3D sgrid
+        padding = sgrid_obj.face_padding
     else:
         padding = sgrid_obj.all_padding()
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next((info for info in padding if info.face_dim == var_dim))
+                padding_info = next((info for info in padding if
+                                     info.face_dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)
@@ -126,15 +129,16 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
     """
     var_dims = nc_var_obj.dimensions
     node_dimensions = tuple(sgrid_obj.node_dimensions.split(' '))
-    separate_edge_dim_exists = does_intersection_exist(node_dimensions, var_dims)
+    separate_edge_dim_exists = does_intersection_exist(node_dimensions, var_dims)  # noqa
     if separate_edge_dim_exists:
         padding = sgrid_obj.get_all_face_padding()
     else:
-        padding = sgrid_obj.get_all_face_padding() + sgrid_obj.get_all_edge_padding()
-    # define center averaging axis for a variable
+        padding = sgrid_obj.get_all_face_padding() + sgrid_obj.get_all_edge_padding()  # noqa
+    # Define center averaging axis for a variable.
     for var_dim in var_dims:
         try:
-            padding_info = next((info for info in padding if info.face_dim == var_dim))
+            padding_info = next((info for info in padding if
+                                 info.face_dim == var_dim))
         except StopIteration:
             padding_info = None
             avg_dim = None
@@ -166,11 +170,12 @@ def infer_variable_location(sgrid, variable):
     except TypeError:
         edge_dims = []
     var_dims = variable.dimensions
-    if does_intersection_exist(var_dims, face_dims) and not does_intersection_exist(var_dims, node_dims):
+    if (does_intersection_exist(var_dims, face_dims) and not
+       does_intersection_exist(var_dims, node_dims)):
         inferred_location = 'face'
-    elif ((does_intersection_exist(var_dims, face_dims) and does_intersection_exist(var_dims, node_dims)) or
-          (does_intersection_exist(var_dims, edge_dims))
-          ):
+    elif ((does_intersection_exist(var_dims, face_dims) and
+           does_intersection_exist(var_dims, node_dims)) or
+          (does_intersection_exist(var_dims, edge_dims))):
         inferred_location = 'edge'
     else:
         inferred_location = None
@@ -189,7 +194,7 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
     lon_2 = lon_lat_2_radians[..., 0]
     lat_2 = lon_lat_2_radians[..., 1]
     x1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
-    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)
+    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)  # noqa
     bearing_radians = np.arctan2(x1, x2)
     bearing_degrees = bearing_radians * 180/np.pi
     return (bearing_degrees + 360) % 360
@@ -203,7 +208,7 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
     bearing_from_true_east = 90 - bearing
     bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
-    # not sure if this is the most appropriate thing to do for the last grid cell
+    # Unsure if this is the appropriate thing to do for the last grid cell.
     angles = np.append(bearing_from_true_east_radians,
                        bearing_from_true_east_radians[..., -1:],
                        axis=-1
