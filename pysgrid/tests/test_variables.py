@@ -3,13 +3,16 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 import os
 import unittest
 
 from netCDF4 import Dataset
 import numpy as np
 
-from ..sgrid import SGrid2D
+from ..sgrid import SGrid
 from ..utils import GridPadding
 from ..variables import SGridVariable
 from .write_nc_test_files import deltares_sgrid, roms_sgrid, wrf_sgrid_2d
@@ -26,12 +29,17 @@ class TestSGridVariableROMS(unittest.TestCase):
         os.remove(cls.test_file)
 
     def setUp(self):
-        self.face_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'xi_rho', node_dim=u'xi_psi', padding=u'both'),
-                             GridPadding(mesh_topology_var=u'grid', face_dim=u'eta_rho', node_dim=u'eta_psi', padding=u'both')
+        self.face_padding = [GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'xi_rho',
+                                         node_dim=u'xi_psi',
+                                         padding=u'both'),
+                             GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'eta_rho',
+                                         node_dim=u'eta_psi',
+                                         padding=u'both')
                              ]
-        self.sgrid = SGrid2D(face_padding=self.face_padding,
-                             node_dimensions='xi_psi eta_psi'
-                             )
+        self.sgrid = SGrid(face_padding=self.face_padding,
+                           node_dimensions='xi_psi eta_psi')
         self.dataset = Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['u']
         self.test_var_2 = self.dataset.variables['zeta']
@@ -90,8 +98,14 @@ class TestSGridVariableROMS(unittest.TestCase):
         self.assertIsNone(sgrid_var_location)
 
     def test_edge_location_inference_with_defined_edges(self):
-        self.sgrid.edge1_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'eta_u', node_dim=u'eta_psi', padding=u'both')]
-        self.sgrid.edge2_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'xi_v', node_dim=u'xi_psi', padding=u'both')]
+        self.sgrid.edge1_padding = [GridPadding(mesh_topology_var=u'grid',
+                                                face_dim=u'eta_u',
+                                                node_dim=u'eta_psi',
+                                                padding=u'both')]
+        self.sgrid.edge2_padding = [GridPadding(mesh_topology_var=u'grid',
+                                                face_dim=u'xi_v',
+                                                node_dim=u'xi_psi',
+                                                padding=u'both')]
         sgrid_var = SGridVariable.create_variable(self.test_var_4, self.sgrid)
         sgrid_var_location = sgrid_var.location
         expected_location = 'edge1'
@@ -140,13 +154,18 @@ class TestSGridVariablesWRF(unittest.TestCase):
         os.remove(cls.test_file)
 
     def setUp(self):
-        self.face_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'west_east', node_dim=u'west_east_stag', padding=u'none'),
-                             GridPadding(mesh_topology_var=u'grid', face_dim=u'south_north', node_dim=u'south_north_stag', padding=u'none')
+        self.face_padding = [GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'west_east',
+                                         node_dim=u'west_east_stag',
+                                         padding=u'none'),
+                             GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'south_north',
+                                         node_dim=u'south_north_stag',
+                                         padding=u'none')
                              ]
         self.node_dimensions = 'west_east_stag south_north_stag'
-        self.sgrid = SGrid2D(face_padding=self.face_padding,
-                             node_dimensions=self.node_dimensions
-                             )
+        self.sgrid = SGrid(face_padding=self.face_padding,
+                           node_dimensions=self.node_dimensions)
         self.dataset = Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['SNOW']
         self.test_var_2 = self.dataset.variables['FAKE_U']
@@ -178,13 +197,18 @@ class TestSGridVariablesDeltares(unittest.TestCase):
         os.remove(cls.test_file)
 
     def setUp(self):
-        self.face_padding = [GridPadding(mesh_topology_var=u'grid', face_dim=u'MMAXZ', node_dim=u'MMAX', padding=u'low'),
-                             GridPadding(mesh_topology_var=u'grid', face_dim=u'NMAXZ', node_dim=u'NMAX', padding=u'low')
+        self.face_padding = [GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'MMAXZ',
+                                         node_dim=u'MMAX',
+                                         padding=u'low'),
+                             GridPadding(mesh_topology_var=u'grid',
+                                         face_dim=u'NMAXZ',
+                                         node_dim=u'NMAX',
+                                         padding=u'low')
                              ]
         self.node_dimensions = 'MMAX NMAX'
-        self.sgrid = SGrid2D(face_padding=self.face_padding,
-                             node_dimensions=self.node_dimensions
-                             )
+        self.sgrid = SGrid(face_padding=self.face_padding,
+                           node_dimensions=self.node_dimensions)
         self.dataset = Dataset(self.test_file)
         self.test_var_1 = self.dataset.variables['FAKE_W']
         self.test_var_2 = self.dataset.variables['FAKE_U1']

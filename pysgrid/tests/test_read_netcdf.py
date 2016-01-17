@@ -3,13 +3,16 @@ Created on Apr 7, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 import os
 import unittest
 
 from netCDF4 import Dataset
 
-from ..custom_exceptions import CannotFindPaddingError
-from ..read_netcdf import NetCDFDataset, parse_axes, parse_padding, parse_vector_axis
+from ..read_netcdf import (NetCDFDataset, parse_axes, parse_padding,
+                           parse_vector_axis, find_grid_topology_var)
 from .write_nc_test_files import roms_sgrid, wrf_sgrid_2d
 
 
@@ -75,7 +78,7 @@ class TestParsePadding(unittest.TestCase):
         self.assertEqual(dim, expected_dim)
 
     def test_no_padding(self):
-        self.assertRaises(CannotFindPaddingError,
+        self.assertRaises(ValueError,
                           parse_padding,
                           padding_str=self.with_no_padding,
                           mesh_topology_var=self.grid_topology
@@ -137,7 +140,7 @@ class TestNetCDFDatasetWithNodes(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_find_grid_topology(self):
-        result = self.nc_ds.find_grid_topology_var()
+        result = find_grid_topology_var(self.ds)
         expected = 'grid'
         self.assertEqual(result, expected)
 

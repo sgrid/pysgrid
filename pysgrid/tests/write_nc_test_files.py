@@ -3,11 +3,16 @@ Created on Apr 7, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 import os
 from netCDF4 import Dataset
 import numpy as np
-from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME, LAT_GRID_CELL_CENTER_LONG_NAME,
-                            LON_GRID_CELL_NODE_LONG_NAME, LAT_GRID_CELL_NODE_LONG_NAME)
+from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME,
+                            LAT_GRID_CELL_CENTER_LONG_NAME,
+                            LON_GRID_CELL_NODE_LONG_NAME,
+                            LAT_GRID_CELL_NODE_LONG_NAME)
 
 
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
@@ -29,7 +34,8 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))
         xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))
         yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))
-        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))  # dims T, Z, X, Y
+        # Dimensions T, Z, X, Y.
+        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
         v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
         times = rg.createVariable('time', 'f8', ('time',))
         grid = rg.createVariable('grid', 'i4')
@@ -37,7 +43,7 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'MMAX NMAX'
-        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'  # noqa
         grid.node_coordinates = 'XCOR YCOR'
         # grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
@@ -57,10 +63,10 @@ def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
         times[:] = np.random.random((2,))
 
 
-def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares_no_optional_attr.nc'):
+def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares_no_optional_attr.nc'):  # noqa
     file_name = os.path.join(target_dir, nc_filename)
     with Dataset(file_name, 'w') as rg:
-        # define dimensions
+        # Define dimensions.
         rg.createDimension('MMAXZ', 4)
         rg.createDimension('NMAXZ', 4)
         rg.createDimension('MMAX', 4)
@@ -82,7 +88,7 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'MMAX NMAX'
-        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'  # noqa
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
         xcor.standard_name = 'projection_x_coordinate'
         xcor.long_name = 'X-coordinate of grid points'
@@ -112,7 +118,8 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
     return file_name
 
 
-def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
+def deltares_sgrid(target_dir=TEST_FILES,
+                   nc_filename='test_sgrid_deltares.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
@@ -121,7 +128,7 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
     """
     file_name = os.path.join(target_dir, nc_filename)
     with Dataset(file_name, 'w') as rg:
-        # define dimensions
+        # Define dimensions.
         rg.createDimension('MMAXZ', 4)
         rg.createDimension('NMAXZ', 4)
         rg.createDimension('MMAX', 4)
@@ -129,13 +136,13 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         rg.createDimension('KMAX', 2)
         rg.createDimension('KMAX1', 3)
         rg.createDimension('time', 2)
-        # define variables
-        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
-        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # nodes
-        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
-        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # centers
+        # Define variables.
+        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))  # Nodes.
+        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))  # Nodes.
+        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))  # Centers.
+        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))  # Centers.
         u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
-        fake_u1 = rg.createVariable('FAKE_U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
+        fake_u1 = rg.createVariable('FAKE_U1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))  # noqa
         v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
         w = rg.createVariable('W', 'f4', ('time', 'KMAX1', 'MMAXZ', 'NMAXZ'))
         fake_w = rg.createVariable('FAKE_W', 'f4', ('time', 'MMAXZ', 'NMAXZ'))
@@ -143,13 +150,13 @@ def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
         grid = rg.createVariable('grid', 'i4')
         latitude = rg.createVariable('latitude', 'f4', ('MMAXZ', 'NMAXZ'))
         longitude = rg.createVariable('longitude', 'f4', ('MMAXZ', 'NMAXZ'))
-        grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))
-        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX'))
-        # define variable attributes
+        grid_latitude = rg.createVariable('grid_latitude', 'f4', ('MMAX', 'NMAX'))  # noqa
+        grid_longitude = rg.createVariable('grid_longitude', 'f4', ('MMAX', 'NMAX'))  # noqa
+        # Define variable attributes.
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'MMAX NMAX'
-        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'
+        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'  # noqa
         grid.node_coordinates = 'XCOR YCOR'
         grid.face_coordinates = 'XZ YZ'
         grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
@@ -227,7 +234,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         grid = rg.createVariable('grid', 'i2')
         u = rg.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
         v = rg.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
-        fake_u = rg.createVariable('fake_u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
+        fake_u = rg.createVariable('fake_u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))  # noqa
         lon_centers = rg.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
         lat_centers = rg.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
         lon_nodes = rg.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
@@ -236,7 +243,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         lon_u = rg.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
         lat_v = rg.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
         lon_v = rg.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
-        salt = rg.createVariable('salt', 'f4', ('time', 's_rho', 'eta_rho', 'xi_rho'))
+        salt = rg.createVariable('salt', 'f4', ('time', 's_rho', 'eta_rho', 'xi_rho'))  # noqa
         zeta = rg.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
         # create variable attributes
         lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
@@ -253,7 +260,7 @@ def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 2
         grid.node_dimensions = 'xi_psi eta_psi'
-        grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'
+        grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'  # noqa
         grid.edge1_dimensions = 'xi_u: xi_psi eta_u: eta_psi (padding: both)'
         grid.edge2_dimensions = 'xi_v: xi_psi (padding: both) eta_v: eta_psi'
         grid.node_coordinates = 'lon_psi lat_psi'
@@ -307,23 +314,23 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
         nc.createDimension('bottom_top', 3)
         nc.createDimension('south_north_stag', 6)
         nc.createDimension('bottom_top_stag', 4)
-        times = nc.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        times = nc.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))  # noqa
         xtimes = nc.createVariable('XTIME', 'f8', ('Time', ))
-        us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))  # noqa
         us.grid = 'grid'
         us.location = 'edge1'
-        fake_u = nc.createVariable('FAKE_U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        fake_u = nc.createVariable('FAKE_U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))  # noqa
         fake_u.grid = 'grid'
-        vs = nc.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        vs = nc.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))  # noqa
         vs.grid = 'grid'
         vs.location = 'edge2'
-        ws = nc.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        ws = nc.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))  # noqa
         ws.grid = 'grid'
         ws.location = 'face'
-        temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))  # noqa
         temps.grid = 'grid'
         temps.location = 'face'
-        snow = nc.createVariable('SNOW', 'f4', ('Time', 'south_north', 'west_east'))
+        snow = nc.createVariable('SNOW', 'f4', ('Time', 'south_north', 'west_east'))  # noqa
         snow.grid = 'grid'
         xlats = nc.createVariable('XLAT', 'f4', ('south_north', 'west_east'))
         xlongs = nc.createVariable('XLONG', 'f4', ('south_north', 'west_east'))
@@ -338,9 +345,9 @@ def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
                                 'south_north: south_north_stag (padding: none)'
                                 )
         grid.face_coordinates = 'XLONG XLAT'
-        grid.vertical_dimensions = 'bottom_top: bottom_top_stag (padding: none)'
-        grid.edge1_dimensions = 'west_east_stag south_north: south_north_stag (padding: none)'
-        grid.edge2_dimensions = 'west_east: west_east_stag (padding: none) south_north_stag'
+        grid.vertical_dimensions = 'bottom_top: bottom_top_stag (padding: none)'  # noqa
+        grid.edge1_dimensions = 'west_east_stag south_north: south_north_stag (padding: none)'  # noqa
+        grid.edge2_dimensions = 'west_east: west_east_stag (padding: none) south_north_stag'  # noqa
         times[:] = np.random.random(size=(2, 3)).astype(str)
         xtimes[:] = np.random.random(size=(2,))
         us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
@@ -362,8 +369,8 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
 
     """
     file_name = os.path.join(target_dir, nc_filename)
-    with  Dataset(file_name, 'w') as fg:
-        # create dimensions
+    with Dataset(file_name, 'w') as fg:
+        # Create dimensions.
         fg.createDimension('Time', 2)
         fg.createDimension('DateStrLen', 3)
         fg.createDimension('west_east', 4)
@@ -372,33 +379,33 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
         fg.createDimension('bottom_top', 3)
         fg.createDimension('south_north_stag', 6)
         fg.createDimension('bottom_top_stag', 4)
-        # create variables
-        times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))
+        # Create variables.
+        times = fg.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))  # noqa
         xtimes = fg.createVariable('XTIME', 'f8', ('Time',))
         xtimes.standard_name = 'time'
-        us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        us = fg.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))  # noqa
         us.grid = 'grid'
         us.location = 'face1'
-        vs = fg.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        vs = fg.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))  # noqa
         vs.grid = 'grid'
         vs.location = 'face2'
-        ws = fg.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        ws = fg.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))  # noqa
         ws.grid = 'grid'
         ws.location = 'face3'
-        temps = fg.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        temps = fg.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))  # noqa
         temps.grid = 'grid'
         temps.location = 'volume'
-        xlats = fg.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
-        xlongs = fg.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        xlats = fg.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))  # noqa
+        xlongs = fg.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))  # noqa
         znus = fg.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
         znws = fg.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
         grid = fg.createVariable('grid', 'i2')
         grid.cf_role = 'grid_topology'
         grid.topology_dimension = 3
-        grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'
+        grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'  # noqa
         grid.volume_dimensions = ('west_east: west_east_stag (padding: none) '
-                                  'south_north: south_north_stag (padding: none) '
-                                  'bottom_top: bottom_top_stag (padding: none)')
+                                  'south_north: south_north_stag (padding: none) '  # noqa
+                                  'bottom_top: bottom_top_stag (padding: none)')  # noqa
         grid.volume_coordinates = 'XLONG XLAT ZNU'
         # create fake data
         times[:] = np.random.random(size=(2, 3)).astype(str)
@@ -414,7 +421,7 @@ def wrf_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf.nc'):
     return file_name
 
 
-def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sgrid.nc'):
+def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sgrid.nc'):  # noqa
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
@@ -451,8 +458,8 @@ def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sg
         grid = rg.createVariable('grid', 'i2')
         u = rg.createVariable('u', 'f4', ('time', 'z_center', 'y_u', 'x_u'))
         v = rg.createVariable('v', 'f4', ('time', 'z_center', 'y_v', 'x_v'))
-        lon_centers = rg.createVariable('lon_center', 'f4', ('y_center', 'x_center'))
-        lat_centers = rg.createVariable('lat_center', 'f4', ('y_center', 'x_center'))
+        lon_centers = rg.createVariable('lon_center', 'f4', ('y_center', 'x_center'))  # noqa
+        lat_centers = rg.createVariable('lat_center', 'f4', ('y_center', 'x_center'))  # noqa
         lon_nodes = rg.createVariable('lon_node', 'f4', ('y_node', 'x_node'))
         lat_nodes = rg.createVariable('lat_node', 'f4', ('y_node', 'x_node'))
         lat_u = rg.createVariable('lat_u', 'f4', ('y_u', 'x_u'))
@@ -466,7 +473,7 @@ def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sg
         lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
         grid.topology_dimension = 2
         grid.node_dimensions = 'x_node y_node'
-        grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'
+        grid.face_dimensions = 'x_center: x_node (padding: both) y_center: y_node (padding: both)'  # noqa
         grid.edge1_dimensions = 'x_u: x_node y_u: y_node (padding: both)'
         grid.edge2_dimensions = 'x_v: x_node (padding: both) y_v: y_node'
         grid.node_coordinates = 'lon_node lat_node'
@@ -485,8 +492,10 @@ def non_compliant_sgrid(target_dir=TEST_FILES, nc_filename='test_noncompliant_sg
         y_us[:] = np.random.random(size=(4,))
         x_vs[:] = np.random.random(size=(4,))
         y_vs[:] = np.random.random(size=(3,))
-        u[:, :, :, :] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
-        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities
+        # X-directed velocities.
+        u[:, :, :, :] = np.random.random(size=(2, 2, 4, 3))
+        # Y-directed velocities.
+        v[:] = np.random.random(size=(2, 2, 3, 4))
         lat_u[:] = np.random.random(size=(4, 3))
         lon_u[:] = np.random.random(size=(4, 3))
         lat_v[:] = np.random.random(size=(3, 4))
