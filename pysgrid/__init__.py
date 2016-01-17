@@ -1,3 +1,8 @@
-from pysgrid.sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
+from __future__ import (absolute_import, division, print_function)
 
-__version__ = "0.1.1"
+from .sgrid import SGrid, load_sgrid
+
+__version__ = '0.2.0'
+
+__all__ = ['SGrid',
+           'load_sgrid']
