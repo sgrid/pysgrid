@@ -15,7 +15,7 @@ before_install:
     - conda update --yes --all
     - travis_retry conda create --yes -n test python=$PYTHON --file requirements.txt
     - source activate test
-    - travis_retry conda install --yes nose
+    - travis_retry conda --yes --file requirements-dev.txt
     - if [[ "$PYTHON" != "3.5" ]]; then
         travis_retry conda install --yes mock ;
       fi
@@ -23,3 +23,4 @@ before_install:
 
 script:
     - nosetests
+    - find . -type f -name "*.py" | xargs flake8 --max-line-length=100
