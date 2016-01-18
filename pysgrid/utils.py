@@ -144,14 +144,14 @@ def infer_avg_axes(sgrid_obj, nc_var_obj):
             avg_dim = None
             continue
         else:
-            avg_dim = var_dim  # name of the dimension we're averaging over
-            break  # exit the loop once it's found
+            avg_dim = var_dim  # Name of the dimension we're averaging over.
+            break  # Exit the loop once it's found.
     if padding_info is not None and avg_dim is not None:
         var_position = var_dims.index(avg_dim)
         center_avg_axis = len(var_dims) - var_position - 1
     else:
         center_avg_axis = None
-    # define the node averaging axis for a variable
+    # Define the node averaging axis for a variable.
     if center_avg_axis == 1:
         node_avg_axis = 0
     elif center_avg_axis == 0:
@@ -202,7 +202,7 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
 
 def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     """
-    Return the angle from true east in radians
+    Return the angle from true east in radians.
 
     """
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
@@ -211,6 +211,5 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     # Unsure if this is the appropriate thing to do for the last grid cell.
     angles = np.append(bearing_from_true_east_radians,
                        bearing_from_true_east_radians[..., -1:],
-                       axis=-1
-                       )
+                       axis=-1)
     return angles
