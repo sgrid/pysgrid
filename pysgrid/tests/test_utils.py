@@ -90,8 +90,7 @@ class TestCalculateAngleFromTrueEast(unittest.TestCase):
         self.centers = np.array((self.vertical_1,
                                  self.vertical_2,
                                  self.vertical_3,
-                                 self.vertical_4
-                                 ))
+                                 self.vertical_4))
 
     def test_angle_from_true_east_calculation(self):
         bearing_start_points = self.centers[:, :-1, :]
