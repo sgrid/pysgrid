@@ -88,11 +88,13 @@ class TestSGridRomsDataset(unittest.TestCase):
         self.sg_obj = load_sgrid(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
 
-    def test_centers(self):
-        centers = self.sg_obj.centers
-        centers_shape = centers.shape
-        expected_shape = (4, 4, 2)
-        self.assertEqual(centers_shape, expected_shape)
+    def test_center_lon(self):
+        center_lon = self.sg_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
+
+    def test_center_lat(self):
+        center_lat = self.sg_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
 
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
@@ -226,15 +228,21 @@ class TestSGridNoCoordinates(unittest.TestCase):
         expected_face_coordinates = (u'XZ', u'YZ')
         self.assertEqual(face_coordinates, expected_face_coordinates)
 
-    def test_grid_cell_centers(self):
-        centers = self.sgrid_obj.centers
-        centers_shape = (4, 4, 2)
-        self.assertEqual(centers.shape, centers_shape)
+    def test_center_lon(self):
+        center_lon = self.sgrid_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
 
-    def test_grid_cell_nodes(self):
-        nodes = self.sgrid_obj.nodes
-        nodes_shape = (4, 4, 2)
-        self.assertEqual(nodes.shape, nodes_shape)
+    def test_center_lat(self):
+        center_lat = self.sgrid_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
+
+    def test_node_lon(self):
+        node_lon = self.sgrid_obj.node_lon
+        self.assertEqual(node_lon.shape, (4, 4))
+
+    def test_node_lat(self):
+        node_lat = self.sgrid_obj.node_lat
+        self.assertEqual(node_lat.shape, (4, 4))
 
     def test_grid_angles(self):
         angles = self.sgrid_obj.angles
@@ -296,11 +304,13 @@ class TestSGridDelft3dDataset(unittest.TestCase):
     def setUp(self):
         self.sg_obj = load_sgrid(self.sgrid_test_file)
 
-    def test_centers(self):
-        centers = self.sg_obj.centers
-        centers_shape = centers.shape
-        expected_shape = (4, 4, 2)
-        self.assertEqual(centers_shape, expected_shape)
+    def test_center_lon(self):
+        center_lon = self.sg_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
+
+    def test_center_lat(self):
+        center_lat = self.sg_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
 
     def test_topology_dimension(self):
         topology_dim = self.sg_obj.topology_dimension
@@ -408,8 +418,9 @@ class TestSGridSaveNoNodeCoordinates(unittest.TestCase):
         self.assertIsInstance(self.target, SGrid)
 
     def test_nodes(self):
-        nodes = self.target.nodes
-        self.assertIsNone(nodes)
+        node_lon = self.target.node_lon
+        node_lat = self.target.node_lat
+        self.assertIsNone(node_lon) and self.assertIsNone(node_lat)
 
     def test_node_coordinates(self):
         node_coordinates = self.target.node_coordinates

@@ -24,8 +24,10 @@ class SGrid(object):
     topology_dimension = 2
 
     def __init__(self,
-                 nodes=None,
-                 centers=None,
+                 node_lon=None,
+                 node_lat=None,
+                 center_lon=None,
+                 center_lat=None,
                  edges=None,
                  node_padding=None,
                  edge1_padding=None,
@@ -50,8 +52,10 @@ class SGrid(object):
                  *args,
                  **kwargs):
 
-        self.nodes = nodes
-        self.centers = centers
+        self.node_lon = node_lon
+        self.node_lat = node_lat
+        self.center_lon = center_lon
+        self.center_lat = center_lat
         self.edges = edges
         self.node_padding = node_padding
         self.edge1_padding = edge1_padding
@@ -91,12 +95,13 @@ class SGrid(object):
         edge2_coordinates = sa.get_attr_coordinates('edge2_coordinates')
         angles = sa.get_angles()
         vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')  # noqa
-        centers = sa.get_cell_center_lat_lon()
+        node_lon, node_lat = sa.get_cell_node_lat_lon()
+        center_lon, center_lat = sa.get_cell_center_lat_lon()
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')  # noqa
         face_coordinates = sa.get_attr_coordinates('face_coordinates')
-        nodes = sa.get_cell_node_lat_lon()
         sgrid = cls(angles=angles,
-                    centers=centers,
+                    center_lon=center_lon,
+                    center_lat=center_lat,
                     dimensions=dimensions,
                     edge1_coordinates=edge1_coordinates,
                     edge1_dimensions=edge1_dimensions,
@@ -114,11 +119,11 @@ class SGrid(object):
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
                     node_padding=None,
-                    nodes=nodes,
+                    node_lon=node_lon,
+                    node_lat=node_lat,
                     variables=None,
                     vertical_dimensions=vertical_dimensions,
-                    vertical_padding=vertical_padding
-                    )
+                    vertical_padding=vertical_padding)
         sa.get_variable_attributes(sgrid)
         return sgrid
 
@@ -161,24 +166,22 @@ class SGrid(object):
 
     def _save_common_components(self, nc_file):
         grid_var = self.grid_topology_var
-        # create dimensions
+        # Create dimensions.
         for grid_dim in self.dimensions:
             dim_name, dim_size = grid_dim
             nc_file.createDimension(dim_name, dim_size)
-        # create variables
+        # Create variables.
         center_lon, center_lat = self.face_coordinates
         center_lon_obj = getattr(self, center_lon)
         center_lat_obj = getattr(self, center_lat)
-        grid_center_lon = nc_file.createVariable(center_lon_obj.variable,
-                                                 center_lon_obj.dtype,
-                                                 center_lon_obj.dimensions
-                                                 )
-        grid_center_lat = nc_file.createVariable(center_lat_obj.variable,
-                                                 center_lat_obj.dtype,
-                                                 center_lat_obj.dimensions
-                                                 )
-        grid_center_lon[:] = self.centers[..., 0]
-        grid_center_lat[:] = self.centers[..., 1]
+        center_lon = nc_file.createVariable(center_lon_obj.variable,
+                                            center_lon_obj.dtype,
+                                            center_lon_obj.dimensions)
+        center_lat = nc_file.createVariable(center_lat_obj.variable,
+                                            center_lat_obj.dtype,
+                                            center_lat_obj.dimensions)
+        center_lon[:] = self.center_lon[:]
+        center_lat[:] = self.center_lat[:]
         try:
             node_lon, node_lat = self.node_coordinates
         except TypeError:
@@ -187,15 +190,13 @@ class SGrid(object):
             node_lon_obj = getattr(self, node_lon)
             grid_node_lon = nc_file.createVariable(node_lon_obj.variable,
                                                    node_lon_obj.dtype,
-                                                   node_lon_obj.dimensions
-                                                   )
+                                                   node_lon_obj.dimensions)
             node_lat_obj = getattr(self, node_lat)
             grid_node_lat = nc_file.createVariable(node_lat_obj.variable,
                                                    node_lat_obj.dtype,
-                                                   node_lat_obj.dimensions
-                                                   )
-            grid_node_lon[:] = self.nodes[..., 0]
-            grid_node_lat[:] = self.nodes[..., 1]
+                                                   node_lat_obj.dimensions)
+            grid_node_lon[:] = self.node_lon[:]
+            grid_node_lat[:] = self.node_lat[:]
         grid_var_obj = getattr(self, grid_var)
         grid_vars = nc_file.createVariable(grid_var_obj.variable,
                                            grid_var_obj.dtype)
@@ -326,7 +327,9 @@ class SGridAttributes(object):
     def get_angles(self):
         angles = self.nc.variables.get('angle')
         if not angles:
-            cell_centers = self.get_cell_center_lat_lon()
+            # FIXME: Get rid of pair_arrays.
+            center_lon, center_lat = self.get_cell_center_lat_lon()
+            cell_centers = pair_arrays(center_lon, center_lat)
             centers_start = cell_centers[..., :-1, :]
             centers_end = cell_centers[..., 1:, :]
             angles = calculate_angle_from_true_east(centers_start, centers_end)
@@ -334,20 +337,19 @@ class SGridAttributes(object):
 
     def get_cell_center_lat_lon(self):
         grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')  # noqa
-        grid_cell_center_lat = self.nc[grid_cell_center_lat_var]
-        grid_cell_center_lon = self.nc[grid_cell_center_lon_var]
-        return pair_arrays(grid_cell_center_lon, grid_cell_center_lat)
+        center_lat = self.nc[grid_cell_center_lat_var]
+        center_lon = self.nc[grid_cell_center_lon_var]
+        return center_lon, center_lat
 
     def get_cell_node_lat_lon(self):
         try:
-            grid_cell_nodes_lon_var, grid_cell_nodes_lat_var = self.get_node_coordinates()[1]  # noqa
+            node_lon_var, node_lat_var = self.get_node_coordinates()[1]
         except TypeError:
-            cell_nodes = None
+            node_lon, node_lat = None, None
         else:
-            grid_cell_nodes_lat = self.nc[grid_cell_nodes_lat_var]
-            grid_cell_nodes_lon = self.nc[grid_cell_nodes_lon_var]
-            cell_nodes = pair_arrays(grid_cell_nodes_lon, grid_cell_nodes_lat)
-        return cell_nodes
+            node_lat = self.nc[node_lat_var]
+            node_lon = self.nc[node_lon_var]
+        return node_lon, node_lat
 
 
 def load_sgrid(nc):
