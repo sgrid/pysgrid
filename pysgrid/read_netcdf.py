@@ -70,8 +70,8 @@ def parse_padding(padding_str, mesh_topology_var):
         raw_dim, raw_sub_dim, raw_padding_var = padding_match
         dim = raw_dim.split(':')[0]
         sub_dim = raw_sub_dim
-        # Remove parentheses. (That is why regular expressions are bad!  You
-        # need a commend to explain what is going on.)
+        # Remove parentheses. (That is why regular expressions are bad!
+        # You need a commend to explain what is going on!!)
         cleaned_padding_var = re.sub('[\(\)]', '', raw_padding_var)
         # Get the padding value and remove spaces.
         padding_type = cleaned_padding_var.split(':')[1].strip()
@@ -124,11 +124,11 @@ def parse_vector_axis(variable_standard_name):
 
 class NetCDFDataset(object):
 
-    def __init__(self, nc_dataset_obj):
-        self.ncd = nc_dataset_obj
+    def __init__(self, nc):
+        self.nc = nc
         # in case a user as a version netcdf C library < 4.1.2
         try:
-            self._filepath = nc_dataset_obj.filepath()
+            self._filepath = nc.filepath()
         except ValueError:
             self._filepath = None
         self.sgrid_compliant_file()
@@ -139,7 +139,7 @@ class NetCDFDataset(object):
         cell vertices.
 
         """
-        nc_vars = self.ncd.variables
+        nc_vars = self.nc.variables
         node_dims = node_dimensions.split(' ')
         node_dim_set = set(node_dims)
         x_node_coordinate = None
@@ -169,7 +169,7 @@ class NetCDFDataset(object):
             return None
 
     def find_variables_by_attr(self, **kwargs):
-        nc_vars = self.ncd.variables
+        nc_vars = self.nc.variables
         matches = []
         keys = kwargs.keys()
         for nc_var in nc_vars.keys():
@@ -198,7 +198,7 @@ class NetCDFDataset(object):
         :param int topology_dim: the topology dimension of the grid
 
         """
-        nc_vars = self.ncd.variables
+        nc_vars = self.nc.variables
         vars_with_location = self.find_variables_by_attr(location=location_str)
         x_coordinate = None
         y_coordinate = None
@@ -276,7 +276,7 @@ class NetCDFDataset(object):
 
         """
         try:
-            find_grid_topology_var(self.ncd)
+            find_grid_topology_var(self.nc)
         except ValueError as e:
             raise e
 
