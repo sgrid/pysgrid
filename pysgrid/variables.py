@@ -3,6 +3,9 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 from .read_netcdf import parse_axes, parse_vector_axis
 from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_location
 
@@ -58,8 +61,7 @@ class SGridVariable(object):
             center_axis, node_axis = infer_avg_axes(sgrid_obj, nc_var_obj)
         center_slicing = determine_variable_slicing(sgrid_obj,
                                                     nc_var_obj,
-                                                    method='center'
-                                                    )
+                                                    method='center')
         dimensions = nc_var_obj.dimensions
         dtype = nc_var_obj.dtype
         try:
@@ -108,6 +110,5 @@ class SGridVariable(object):
                         location=location,
                         standard_name=standard_name,
                         vector_axis=vector_axis,
-                        coordinates=coordinates
-                        )
+                        coordinates=coordinates)
         return sgrid_var

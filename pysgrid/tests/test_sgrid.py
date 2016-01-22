@@ -3,6 +3,9 @@ Created on Apr 7, 2015
 
 @author: ayan
 '''
+
+from __future__ import (absolute_import, division, print_function)
+
 import os
 import unittest
 
@@ -14,11 +17,11 @@ except ImportError:
 from netCDF4 import Dataset
 import numpy as np
 
-from ..custom_exceptions import SGridNonCompliantError
-from ..sgrid import SGrid2D, SGrid3D, from_ncfile, from_nc_dataset
-from ..utils import GridPadding
-from .write_nc_test_files import (deltares_sgrid, deltares_sgrid_no_optional_attr,
-                                  non_compliant_sgrid, roms_sgrid, wrf_sgrid,
+from ..sgrid import SGrid, load_sgrid
+from .write_nc_test_files import (deltares_sgrid,
+                                  deltares_sgrid_no_optional_attr,
+                                  non_compliant_sgrid,
+                                  roms_sgrid,
                                   wrf_sgrid_2d)
 
 
@@ -37,8 +40,8 @@ class TestSGridCompliant(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def test_exception_raised(self):
-        self.assertRaises(SGridNonCompliantError,
-                          from_ncfile,
+        self.assertRaises(ValueError,
+                          load_sgrid,
                           self.sgrid_test_file
                           )
 
@@ -60,12 +63,12 @@ class TestSGridCreate(unittest.TestCase):
         self.ds.close()
 
     def test_load_from_file(self):
-        sg_obj = from_ncfile(self.sgrid_test_file)
-        self.assertIsInstance(sg_obj, SGrid2D)
+        sg_obj = load_sgrid(self.sgrid_test_file)
+        self.assertIsInstance(sg_obj, SGrid)
 
     def test_load_from_dataset(self):
-        sg_obj = from_nc_dataset(self.ds)
-        self.assertIsInstance(sg_obj, SGrid2D)
+        sg_obj = load_sgrid(self.ds)
+        self.assertIsInstance(sg_obj, SGrid)
 
 
 class TestSGridRomsDataset(unittest.TestCase):
@@ -82,14 +85,16 @@ class TestSGridRomsDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        self.sg_obj = load_sgrid(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
 
-    def test_centers(self):
-        centers = self.sg_obj.centers
-        centers_shape = centers.shape
-        expected_shape = (4, 4, 2)
-        self.assertEqual(centers_shape, expected_shape)
+    def test_center_lon(self):
+        center_lon = self.sg_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
+
+    def test_center_lat(self):
+        center_lat = self.sg_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
 
     def test_variables(self):
         dataset_vars = self.sg_obj.variables
@@ -125,8 +130,10 @@ class TestSGridRomsDataset(unittest.TestCase):
     def test_grid_variables(self):
         dataset_grid_variables = self.sg_obj.grid_variables
         expected_grid_variables = [u'u', u'v', u'fake_u', u'salt']
-        self.assertEqual(len(dataset_grid_variables), len(expected_grid_variables))
-        self.assertEqual(set(dataset_grid_variables), set(expected_grid_variables))
+        self.assertEqual(len(dataset_grid_variables),
+                         len(expected_grid_variables))
+        self.assertEqual(set(dataset_grid_variables),
+                         set(expected_grid_variables))
 
     def test_non_grid_variables(self):
         dataset_non_grid_variables = self.sg_obj.non_grid_variables
@@ -152,8 +159,10 @@ class TestSGridRomsDataset(unittest.TestCase):
                                        u'lon_v',
                                        u'zeta'
                                        ]
-        self.assertEqual(len(dataset_non_grid_variables), len(expected_non_grid_variables))
-        self.assertEqual(set(dataset_non_grid_variables), set(expected_non_grid_variables))
+        self.assertEqual(len(dataset_non_grid_variables),
+                         len(expected_non_grid_variables))
+        self.assertEqual(set(dataset_non_grid_variables),
+                         set(expected_non_grid_variables))
 
     def test_variable_slicing(self):
         u_center_slices = self.sg_obj.u.center_slicing
@@ -212,22 +221,28 @@ class TestSGridNoCoordinates(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sgrid_obj = from_ncfile(self.sgrid_test_file)
+        self.sgrid_obj = load_sgrid(self.sgrid_test_file)
 
     def test_face_coordinate_inference(self):
         face_coordinates = self.sgrid_obj.face_coordinates
         expected_face_coordinates = (u'XZ', u'YZ')
         self.assertEqual(face_coordinates, expected_face_coordinates)
 
-    def test_grid_cell_centers(self):
-        centers = self.sgrid_obj.centers
-        centers_shape = (4, 4, 2)
-        self.assertEqual(centers.shape, centers_shape)
+    def test_center_lon(self):
+        center_lon = self.sgrid_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
 
-    def test_grid_cell_nodes(self):
-        nodes = self.sgrid_obj.nodes
-        nodes_shape = (4, 4, 2)
-        self.assertEqual(nodes.shape, nodes_shape)
+    def test_center_lat(self):
+        center_lat = self.sgrid_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
+
+    def test_node_lon(self):
+        node_lon = self.sgrid_obj.node_lon
+        self.assertEqual(node_lon.shape, (4, 4))
+
+    def test_node_lat(self):
+        node_lat = self.sgrid_obj.node_lat
+        self.assertEqual(node_lat.shape, (4, 4))
 
     def test_grid_angles(self):
         angles = self.sgrid_obj.angles
@@ -249,7 +264,7 @@ class TestSGridWRFDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        self.sg_obj = load_sgrid(self.sgrid_test_file)
 
     def test_topology_dimension(self):
         topology_dim = self.sg_obj.topology_dimension
@@ -287,13 +302,15 @@ class TestSGridDelft3dDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        self.sg_obj = load_sgrid(self.sgrid_test_file)
 
-    def test_centers(self):
-        centers = self.sg_obj.centers
-        centers_shape = centers.shape
-        expected_shape = (4, 4, 2)
-        self.assertEqual(centers_shape, expected_shape)
+    def test_center_lon(self):
+        center_lon = self.sg_obj.center_lon
+        self.assertEqual(center_lon.shape, (4, 4))
+
+    def test_center_lat(self):
+        center_lat = self.sg_obj.center_lat
+        self.assertEqual(center_lat.shape, (4, 4))
 
     def test_topology_dimension(self):
         topology_dim = self.sg_obj.topology_dimension
@@ -308,7 +325,7 @@ class TestSGridDelft3dDataset(unittest.TestCase):
         xz_center_slices = self.sg_obj.XZ.center_slicing
         xcor_center_slices = self.sg_obj.XCOR.center_slicing
         xz_center_expected = (np.s_[1:], np.s_[1:])
-        xcor_center_expected  = (np.s_[:], np.s_[:])
+        xcor_center_expected = (np.s_[:], np.s_[:])
         self.assertEqual(u_center_slices, u_center_expected)
         self.assertEqual(v_center_slices, v_center_expected)
         self.assertEqual(xz_center_slices, xz_center_expected)
@@ -390,19 +407,20 @@ class TestSGridSaveNoNodeCoordinates(unittest.TestCase):
 
     def setUp(self):
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        self.sg_obj = load_sgrid(self.sgrid_test_file)
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = from_ncfile(self.sgrid_target)
+        self.target = load_sgrid(self.sgrid_target)
 
     def tearDown(self):
         os.remove(self.sgrid_target)
 
     def test_sgrid(self):
-        self.assertIsInstance(self.target, SGrid2D)
+        self.assertIsInstance(self.target, SGrid)
 
     def test_nodes(self):
-        nodes = self.target.nodes
-        self.assertIsNone(nodes)
+        node_lon = self.target.node_lon
+        node_lat = self.target.node_lat
+        self.assertIsNone(node_lon) and self.assertIsNone(node_lat)
 
     def test_node_coordinates(self):
         node_coordinates = self.target.node_coordinates
@@ -433,9 +451,9 @@ class TestSGridSaveNodeCoordinates(unittest.TestCase):
 
     def setUp(self):
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
+        self.sg_obj = load_sgrid(self.sgrid_test_file)
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = from_ncfile(self.sgrid_target)
+        self.target = load_sgrid(self.sgrid_target)
 
     def tearDown(self):
         os.remove(self.sgrid_target)
@@ -481,14 +499,15 @@ class TestSGridSaveNodeCoordinates(unittest.TestCase):
                                      ]
         target_face_coordinates = self.target.face_coordinates
         expected_target_face_coordinates = (u'XZ', u'YZ')
-        self.assertIsInstance(self.target, SGrid2D)
+        self.assertIsInstance(self.target, SGrid)
         self.assertEqual(len(target_dims), len(expected_target_dims))
         self.assertEqual(set(target_dims), set(expected_target_dims))
         self.assertEqual(len(target_vars), len(expected_target_vars))
         self.assertEqual(set(target_vars), set(expected_target_vars))
         self.assertEqual(len(target_grid_vars), len(expected_target_grid_vars))
         self.assertEqual(set(target_grid_vars), set(expected_target_grid_vars))
-        self.assertEqual(target_face_coordinates, expected_target_face_coordinates)
+        self.assertEqual(target_face_coordinates,
+                         expected_target_face_coordinates)
 
     def test_saved_sgrid_attributes(self):
         """
@@ -505,89 +524,4 @@ class TestSGridSaveNodeCoordinates(unittest.TestCase):
         saved_angles = self.target.angles
         self.assertEqual(u1_var_center_avg_axis, expected_u1_center_axis)
         self.assertEqual(u1_vector_axis, expected_u1_vector_axis)
-        np.testing.assert_almost_equal(original_angles, saved_angles, decimal=3)
-
-
-class Test3DimensionalSGrid(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = wrf_sgrid()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def setUp(self):
-        self.sg_obj = from_ncfile(self.sgrid_test_file)
-
-    def test_sgrid_instance(self):
-        self.assertIsInstance(self.sg_obj, SGrid3D)
-
-    def test_variables(self):
-        sg_vars = self.sg_obj.variables
-        sg_vars_expected = [u'Times',
-                            u'XTIME',
-                            u'U',
-                            u'V',
-                            u'W',
-                            u'T',
-                            u'XLAT',
-                            u'XLONG',
-                            u'ZNU',
-                            u'ZNW',
-                            u'grid'
-                            ]
-        self.assertEqual(len(sg_vars), len(sg_vars_expected))
-        self.assertEqual(set(sg_vars), set(sg_vars_expected))
-
-    def test_volume_padding(self):
-        volume_padding = self.sg_obj.volume_padding
-        volume_padding_expected = [GridPadding(mesh_topology_var=u'grid', face_dim=u'west_east', node_dim=u'west_east_stag', padding=u'none'),
-                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'south_north', node_dim=u'south_north_stag', padding=u'none'),
-                                   GridPadding(mesh_topology_var=u'grid', face_dim=u'bottom_top', node_dim=u'bottom_top_stag', padding=u'none')
-                                   ]
-        self.assertEqual(volume_padding, volume_padding_expected)
-
-    def test_volume_coordinates(self):
-        volume_coordinates = self.sg_obj.volume_coordinates
-        volume_coordinates_expected = (u'XLONG', u'XLAT', u'ZNU')
-        self.assertEqual(volume_coordinates, volume_coordinates_expected)
-
-    def test_slicing_assignment(self):
-        u_center_slice = self.sg_obj.U.center_slicing
-        u_center_slice_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
-        self.assertEqual(u_center_slice, u_center_slice_expected)
-
-    def test_sgrid_centers(self):
-        centers_shape = self.sg_obj.centers.shape
-        expected_shape = (2, 5, 4, 2)
-        self.assertEqual(centers_shape, expected_shape)
-
-    def test_topology_dimension(self):
-        topology_dim = self.sg_obj.topology_dimension
-        expected_topology_dim = 3
-        self.assertEqual(topology_dim, expected_topology_dim)
-
-    def test_no_2d_attributes(self):
-        self.assertFalse(hasattr(self.sg_obj, 'face_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'face_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'face_dimensions'))
-        self.assertFalse(hasattr(self.sg_obj, 'vertical_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'vertical_dimensions'))
-
-    def test_3d_attributes(self):
-        self.assertTrue(hasattr(self.sg_obj, 'volume_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'volume_dimensions'))
-        self.assertTrue(hasattr(self.sg_obj, 'volume_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'face1_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'face1_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'face1_dimensions'))
-        self.assertTrue(hasattr(self.sg_obj, 'face2_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'face2_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'face2_dimensions'))
-        self.assertTrue(hasattr(self.sg_obj, 'face3_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'face3_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'edge3_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'edge3_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'edge3_dimensions'))
+        np.testing.assert_almost_equal(original_angles, saved_angles, decimal=3)  # noqa
