@@ -17,7 +17,7 @@ except ImportError:
 from netCDF4 import Dataset
 import numpy as np
 
-from ..sgrid import SGrid, load_sgrid
+from ..sgrid import SGrid, load_grid
 from .write_nc_test_files import (deltares_sgrid,
                                   deltares_sgrid_no_optional_attr,
                                   non_compliant_sgrid,
@@ -41,7 +41,7 @@ class TestSGridCompliant(unittest.TestCase):
 
     def test_exception_raised(self):
         self.assertRaises(ValueError,
-                          load_sgrid,
+                          load_grid,
                           self.sgrid_test_file
                           )
 
@@ -63,11 +63,11 @@ class TestSGridCreate(unittest.TestCase):
         self.ds.close()
 
     def test_load_from_file(self):
-        sg_obj = load_sgrid(self.sgrid_test_file)
+        sg_obj = load_grid(self.sgrid_test_file)
         self.assertIsInstance(sg_obj, SGrid)
 
     def test_load_from_dataset(self):
-        sg_obj = load_sgrid(self.ds)
+        sg_obj = load_grid(self.ds)
         self.assertIsInstance(sg_obj, SGrid)
 
 
@@ -85,7 +85,7 @@ class TestSGridRomsDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = load_sgrid(self.sgrid_test_file)
+        self.sg_obj = load_grid(self.sgrid_test_file)
         self.write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
 
     def test_center_lon(self):
@@ -221,7 +221,7 @@ class TestSGridNoCoordinates(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sgrid_obj = load_sgrid(self.sgrid_test_file)
+        self.sgrid_obj = load_grid(self.sgrid_test_file)
 
     def test_face_coordinate_inference(self):
         face_coordinates = self.sgrid_obj.face_coordinates
@@ -264,7 +264,7 @@ class TestSGridWRFDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = load_sgrid(self.sgrid_test_file)
+        self.sg_obj = load_grid(self.sgrid_test_file)
 
     def test_topology_dimension(self):
         topology_dim = self.sg_obj.topology_dimension
@@ -302,7 +302,7 @@ class TestSGridDelft3dDataset(unittest.TestCase):
         os.remove(cls.sgrid_test_file)
 
     def setUp(self):
-        self.sg_obj = load_sgrid(self.sgrid_test_file)
+        self.sg_obj = load_grid(self.sgrid_test_file)
 
     def test_center_lon(self):
         center_lon = self.sg_obj.center_lon
@@ -407,9 +407,9 @@ class TestSGridSaveNoNodeCoordinates(unittest.TestCase):
 
     def setUp(self):
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = load_sgrid(self.sgrid_test_file)
+        self.sg_obj = load_grid(self.sgrid_test_file)
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = load_sgrid(self.sgrid_target)
+        self.target = load_grid(self.sgrid_target)
 
     def tearDown(self):
         os.remove(self.sgrid_target)
@@ -451,9 +451,9 @@ class TestSGridSaveNodeCoordinates(unittest.TestCase):
 
     def setUp(self):
         self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = load_sgrid(self.sgrid_test_file)
+        self.sg_obj = load_grid(self.sgrid_test_file)
         self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = load_sgrid(self.sgrid_target)
+        self.target = load_grid(self.sgrid_target)
 
     def tearDown(self):
         os.remove(self.sgrid_target)

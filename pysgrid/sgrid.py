@@ -79,7 +79,7 @@ class SGrid(object):
         self.vertical_dimensions = vertical_dimensions
 
     @classmethod
-    def load_sgrid(cls, nc):
+    def load_grid(cls, nc):
         if isinstance(nc, Dataset):
             pass
         else:
@@ -352,7 +352,7 @@ class SGridAttributes(object):
         return node_lon, node_lat
 
 
-def load_sgrid(nc):
+def load_grid(nc):
     """
     Get a SGrid object from a netCDF4.Dataset or file/URL.
 
@@ -367,4 +367,4 @@ def load_sgrid(nc):
     else:
         nc = Dataset(nc, 'r')
 
-    return SGrid.load_sgrid(nc)
+    return SGrid.load_grid(nc)
