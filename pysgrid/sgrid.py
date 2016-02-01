@@ -252,6 +252,209 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
+    def locate_faces(self, points):
+        """
+        Returns the face indices, one per point.
+
+        Points that are not in the mesh will have an index of -1
+
+        If a single point is passed in, a single index will be returned
+        If a sequence of points is passed in an array of indexes will be returned.
+
+        :param points:  The points that you want to locate -- (lon, lat). If the shape of point
+                        is 1D, function will return a scalar index. If it is 2D, it will return
+                        a 1D array of indices
+        :type points: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
+                     for more than one point.
+
+        This version utilizes the CellTree data structure.
+
+        """
+        points = np.asarray(points, dtype=np.float64)
+        just_one = (points.ndim == 1)
+        points.shape = (-1, 2)
+
+        try:
+            import cell_tree2d
+        except ImportError:
+            raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                              "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
+        if self._tree is None:
+            self.build_celltree()
+        indices = self._tree.multi_locate(points)
+        psi_x = indices % (self.nodes.shape[1] - 1)
+        psi_y = indices / (self.nodes.shape[1] - 1)
+        psi_ind = np.column_stack((psi_y, psi_x))
+        if just_one:
+            return psi_ind[0]
+        else:
+            return psi_ind
+
+    def get_variable_by_index(self, var, index):
+        '''
+        Function to get the node values of a given face index.
+        Emulates the self.grid.nodes[self.grid.nodes.faces[index]] paradigm of unstructured grids
+        '''
+
+        arr = var[:]
+        x = index[:, 0]
+        y = index[:, 1]
+        return np.stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]), axis=1)
+
+    def build_celltree(self):
+        """
+        Tries to build the celltree for the current UGrid. Will fail if nodes
+        or faces is not defined.
+        """
+        from cell_tree2d import CellTree
+        if self.nodes is None:
+            raise ValueError(
+                "Nodes must be defined in order to create and use CellTree")
+        if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
+            self._lin_nodes = np.ascontiguousarray(
+                self.nodes.reshape(-1, 2))
+            y_size = self.nodes.shape[0]
+            x_size = self.nodes.shape[1]
+            self._lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
+                                                  for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
+            self._lin_faces = np.ascontiguousarray(
+                self._lin_faces.reshape(-1, 4).astype(np.int32))
+        self._tree = CellTree(self._lin_nodes, self._lin_faces)
+
+    def interpolation_alphas(self, points, indices=None):
+        """
+        Given an array of points, this function will return the bilinear interpolation alphas
+        for each of the four nodes of the face that the point is located in. If the point is
+        not located on the grid, the alphas are set to 0
+        :param points: Nx2 numpy array of lat/lon coordinates
+
+        :param indices: If the face indices of the points is already known, it can be passed in to save
+        repeating the effort.
+
+        :return: Nx4 numpy array of interpolation factors
+
+        TODO: mask the indices that aren't on the grid properly.
+        """
+        if indices is None:
+            indices = self.locate_faces(points)
+
+        arr = self.nodes
+        x = indices[:, 0]
+        y = indices[:, 1]
+        node_positions = np.stack(
+            (arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]), axis=1)
+
+        (lon0, lon1, lon2, lon3) = node_positions[:, :, 0].T
+        (lat0, lat1, lat2, lat3) = node_positions[:, :, 1].T
+
+        (a, b) = self.compute_coeffs(
+            node_positions[:, :, 0], node_positions[:, :, 1])
+
+        reflats = points[:, 1]
+        reflons = points[:, 0]
+
+        (l, m) = self.XtoL(reflons, reflats, a, b)
+
+        aa = 1 - l - m + l * m
+        ab = m + l * m
+        ac = l * m
+        ad = l - l * m
+        return np.array((aa, ab, ac, ad)).T
+
+    def interpolate_scalar_to_points(self, points, grid, variable):
+        grids = ['psi', 'rho', 'u', 'v']
+        if grid not in grids:
+            raise ValueError("Must specify one of {0}".format(grids))
+        if grid == 'psi':
+            grid = self
+        elif grid == 'u':
+            grid = SGrid2D(nodes=np.stack((self.lon_u[:], self.lat_u[:]), -1))
+        elif grid == 'v':
+            grid = SGrid2D(nodes=np.stack((self.lon_v[:], self.lat_v[:]), -1))
+        else:
+            grid = SGrid2D(
+                nodes=np.stack((self.lon_rho[:], self.lat_rho[:]), -1))
+
+        ind = grid.locate_faces(points)
+        alphas = grid.interpolation_alphas(points, ind)
+        vals = self.get_variable_by_index(variable, ind)
+        return np.sum(vals * alphas, axis=1)
+
+    def compute_coeffs(self, px, py):
+        '''
+        Params:
+        px, py: x, y coordinates of the polygon. Order matters(?) (br, tr, tl, bl
+        '''
+        px = np.matrix(px)
+        py = np.matrix(py)
+        A = np.array(([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
+        AI = np.linalg.inv(A)
+        a = np.dot(AI, px.getH())
+        b = np.dot(AI, py.getH())
+        return (np.array(a), np.array(b))
+
+    def XtoL(self, x, y, a, b):
+        '''
+        Params:
+        a: x coefficients
+        b: y coefficients
+        x: x coordinate of point
+        y: y coordinate of point
+
+        Returns:
+        (l,m) - coordinate in logical space to use for interpolation
+
+        Eqns:
+        m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
+        l = (l-a1 - a3*m)/(a2 + a4*m)
+        '''
+        def lin_eqn(l, m, ind_arr, aa, bb, cc):
+            '''
+            AB is parallel to CD...need to solve linear equation instead.
+            m = -cc/bb
+            bb = Ei*Fj - Ej*Fi + Hi*Gj - Hj*Gi
+            k0 = Hi*Ej - Hj*Ei
+            '''
+            m[ind_arr] = -cc / bb
+            l[ind_arr] = (x - a[0] - a[2] * m) / (a[1] + a[3] * m)
+
+        def quad_eqn(l, m, ind_arr, aa, bb, cc):
+            '''
+
+            '''
+            k = bb * bb - 4 * aa * cc
+            k = np.ma.array(k, mask=(k < 0))
+
+            det = np.ma.sqrt(k)
+            m1 = (-bb - det) / (2 * aa)
+            l1 = (x - a[0] - a[2] * m1) / (a[1] + a[3] * m1)
+
+            m2 = (-bb + det) / (2 * aa)
+            l2 = (x - a[0] - a[2] * m2) / (a[1] + a[3] * m2)
+
+            m[ind_arr] = m1
+            l[ind_arr] = l1
+
+            t1 = np.logical_and(l >= 0, m >= 0)
+            t2 = np.logical_and(l <= 1, m <= 1)
+            t3 = np.logical_and(t1, t2)
+
+            m[~t3[ind_arr]] = m2[ind_arr]
+            l[~t3[ind_arr]] = l2[ind_arr]
+
+        aa = a[3] * b[2] - a[2] * b[3]
+        bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
+            b[2] - a[2] * b[1] + x * b[3] - y * a[3]
+        cc = a[1] * b[0] - a[0] * b[1] + x * b[1] - y * a[1]
+
+        m = np.zeros(bb.shape)
+        l = np.zeros(bb.shape)
+        t = aa[:] == 0
+        lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
+        quad_eqn(l, m, np.where(~t)[0], aa[~t], bb[~t], cc[~t])
+
+        return (l, m)
+
 
 class SGridAttributes(object):
     """
