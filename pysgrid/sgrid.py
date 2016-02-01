@@ -252,6 +252,20 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
+    def build_edges(self):
+        """
+        Builds the edges array: all the edges defined by the nodes
+
+        This will replace the existing edge array, if there is one.
+
+        NOTE: arbitrary order -- should the order be preserved?
+        """
+
+#         self.edges = np.vsplit(
+# self.nodes, self.nodes.shape[0]) + np.hsplit(self.nodes,
+# self.nodes.shape[1])
+        self.edges = np.column_stack((self.node_lon, self.node_lat))
+
     def locate_faces(self, points):
         """
         Returns the face indices, one per point.
@@ -282,8 +296,8 @@ class SGrid(object):
         if self._tree is None:
             self.build_celltree()
         indices = self._tree.multi_locate(points)
-        psi_x = indices % (self.nodes.shape[1] - 1)
-        psi_y = indices / (self.nodes.shape[1] - 1)
+        psi_x = indices % (self.node_lat.shape[1] - 1)
+        psi_y = indices / (self.node_lat.shape[1] - 1)
         psi_ind = np.column_stack((psi_y, psi_x))
         if just_one:
             return psi_ind[0]
@@ -338,14 +352,10 @@ class SGrid(object):
         if indices is None:
             indices = self.locate_faces(points)
 
-        arr = self.nodes
-        x = indices[:, 0]
-        y = indices[:, 1]
-        node_positions = np.stack(
-            (arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]), axis=1)
-
-        (lon0, lon1, lon2, lon3) = node_positions[:, :, 0].T
-        (lat0, lat1, lat2, lat3) = node_positions[:, :, 1].T
+        (lon0, lon1, lon2, lon3) = (self.node_lon[x, y], self.node_lons[
+            x + 1, y], self.node_lons[x + 1, y + 1], self.node_lons[x, y + 1])
+        (lat0, lat1, lat2, lat3) = (self.node_lat[x, y], self.node_lats[
+            x + 1, y], self.node_lats[x + 1, y + 1], self.node_lats[x, y + 1])
 
         (a, b) = self.compute_coeffs(
             node_positions[:, :, 0], node_positions[:, :, 1])
@@ -462,6 +472,7 @@ class SGridAttributes(object):
     attributes for either SGrid.
 
     """
+
     def __init__(self, nc, topology_dim, topology_variable):
         self.nc = nc
         self.ncd = NetCDFDataset(self.nc)
