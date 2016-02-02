@@ -138,17 +138,17 @@ class SGridVariable(object):
         Transfers responsibility to the data's __getitem__
         Does not flatten any underlying data
         """
-#         if not hasattr(self, "_cache"):
-#             self._cache = OrderedDict()
-#         rv = None
-#         if str(item) in self._cache:
-#             rv = self._cache[str(item)]
-#         else:
-#             rv = self._data.__getitem__(item)
-#             self._cache[str(item)] = rv
-#             if len(self._cache) > 3:
-#                 self._cache.popitem(last=False)
-        return self._data.__getitem__(item)
+        if not hasattr(self, "_cache"):
+            self._cache = OrderedDict()
+        rv = None
+        if str(item) in self._cache:
+            rv = self._cache[str(item)]
+        else:
+            rv = self._data.__getitem__(item)
+            self._cache[str(item)] = rv
+            if len(self._cache) > 3:
+                self._cache.popitem(last=False)
+        return rv
 
     def __str__(self):
         return "UVar object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)

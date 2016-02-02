@@ -252,7 +252,7 @@ def translate_index(points, ind, dest_grid, translation=None):
 
     offsets = translations[translation]
     new_ind = np.copy(ind)
-    test_polys = s_poly(new_ind, dest_grid.nodes)
+    test_poly = s_poly(new_ind, dest_grid.nodes)
     not_found = np.where(~points_in_polys(points, test_polys))[0]
     for offset in offsets:
         # for every not found, update the cell to be checked
@@ -274,26 +274,30 @@ def translate_index(points, ind, dest_grid, translation=None):
     return new_ind
 
 
-def points_in_polys(points, polys):
+def points_in_polys(points, polys, polyy=None):
     '''
     :param points: Numpy array of Nx2 points
     :param polys: Numpy array of N polygons of degree M represented by Mx2 points (NxMx2)
     for each point, see if respective poly contains it. Returns array of True/False
     '''
+
     result = np.zeros((points.shape[0],), dtype=bool)
     pointsx = points[:, 0]
     pointsy = points[:, 1]
+    v1x = v1y = v2x = v2y = -1
     for i in range(0, polys.shape[1]):
-        v1x = polys[:, i - 1, 0]
-        v1y = polys[:, i - 1, 1]
-        v2x = polys[:, i, 0]
-        v2y = polys[:, i, 1]
+        if polyy is not None:
+            v1x = polys[:, i - 1]
+            v1y = polyy[:, i - 1]
+            v2x = polys[:, i]
+            v2y = polyy[:, i]
+        else:
+            v1x = polys[:, i - 1, 0]
+            v1y = polys[:, i - 1, 1]
+            v2x = polys[:, i, 0]
+            v2y = polys[:, i, 1]
         test1 = (v2y >= pointsy) != (v1y >= pointsy)
         test2 = pointsx < (v1x - v2x) * (pointsy - v2y) / (v1y - v2y) + v2x
         np.logical_and(test1, test2, test1)
         np.logical_xor(result, test1, result)
     return result
-
-#     if ( ( (vertices[2*i+1]>point[1]) != (vertices[2*j+1]>point[1]) ) &&
-#             (point[0] < (vertices[2*j]-vertices[2*i]) * (point[1]-vertices[2*i+1]) / (vertices[2*j+1]-vertices[2*i+1]) + vertices[2*i]) )
-#             c = !c;

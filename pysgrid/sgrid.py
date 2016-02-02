@@ -7,9 +7,10 @@ Created on Apr 20, 2015
 from __future__ import (absolute_import, division, print_function)
 
 from netCDF4 import Dataset
+import numpy as np
 
 from .read_netcdf import NetCDFDataset, parse_padding, find_grid_topology_var
-from .utils import calculate_angle_from_true_east, pair_arrays
+from .utils import calculate_angle_from_true_east, pair_arrays, points_in_polys
 from .variables import SGridVariable
 
 
@@ -125,6 +126,10 @@ class SGrid(object):
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding)
         sa.get_variable_attributes(sgrid)
+        sgrid.lon_u = sgrid.lon_u[:]
+        sgrid.lon_v = sgrid.lon_v[:]
+        sgrid.lat_u = sgrid.lat_u[:]
+        sgrid.lat_v = sgrid.lat_v[:]
         return sgrid
 
     def get_all_face_padding(self):
@@ -293,11 +298,11 @@ class SGrid(object):
         except ImportError:
             raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
                               "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
-        if self._tree is None:
+        if not hasattr(self, '_tree') or self._tree is None:
             self.build_celltree()
         indices = self._tree.multi_locate(points)
         psi_x = indices % (self.node_lat.shape[1] - 1)
-        psi_y = indices / (self.node_lat.shape[1] - 1)
+        psi_y = indices // (self.node_lat.shape[1] - 1)
         psi_ind = np.column_stack((psi_y, psi_x))
         if just_one:
             return psi_ind[0]
@@ -321,21 +326,115 @@ class SGrid(object):
         or faces is not defined.
         """
         from cell_tree2d import CellTree
-        if self.nodes is None:
+        if self.node_lon is None or self.node_lat is None:
             raise ValueError(
                 "Nodes must be defined in order to create and use CellTree")
         if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
             self._lin_nodes = np.ascontiguousarray(
-                self.nodes.reshape(-1, 2))
-            y_size = self.nodes.shape[0]
-            x_size = self.nodes.shape[1]
+                np.stack((self.node_lon, self.node_lat), axis=-1).reshape(-1, 2))
+            y_size = self.node_lon.shape[0]
+            x_size = self.node_lon.shape[1]
             self._lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
                                                   for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
             self._lin_faces = np.ascontiguousarray(
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolation_alphas(self, points, indices=None):
+    def interpolate_var_to_points(self, points, variable):
+        ind = self.locate_faces(points)
+        translation = self.infer_grid(variable)
+        lons = self.node_lon
+        lats = self.node_lat
+        if translation is not None:
+            if translation == 'psi2rho':
+                lons, lats = self.center_lon, self.center_lat
+            elif translation == 'psi2u':
+                lons, lats = self.lon_u[:], self.lat_u[:]
+            elif translation == 'psi2v':
+                lons, lats = self.lon_v[:], self.lon_v[:]
+            else:
+                raise ValueError("Invalid translation from infer grid")
+            ind = self.translate_index(points, ind, lons, lats, translation)
+
+        alphas = self.interpolation_alphas(points, ind, lons, lats)
+        vals = self.get_variable_by_index(variable, ind)
+        return np.sum(vals * alphas, axis=1)
+
+    def infer_grid(self, variable):
+        """
+        Assuming default is psi grid, check variable dimensions to determine which grid
+        it is on
+        """
+        shape = np.array(variable.shape)
+        difference = (shape - self.node_lon.shape).tolist()
+        if difference == [1, 1]:
+            return 'psi2rho'
+        elif difference == [1, 0]:
+            return 'psi2u'
+        elif difference == [0, 1]:
+            return 'psi2v'
+        else:
+            return None
+
+    def translate_index(self, points, ind, lons, lats, translation):
+        """
+        :param points: Array of points on grid 1
+        :param ind: Array of x,y indicices of the points on grid 1
+        :param dest_grid: SGrid representing the destination grid
+        translates indices from one grid to another
+        """
+
+        def s_poly(index, var):
+            x = index[:, 0]
+            y = index[:, 1]
+            return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
+
+        translations = {'psi2rho': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+                        'u2v': np.array([[0, 0], [0, -1], [1, 0], [1, -1]]),
+                        'u2rho': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
+                        'u2psi': np.array([[-1, 0], [0, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]]),
+                        'psi2u': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
+                        'v2rho': np.array([[0, 0], [1, 0], [0, -1], [1, -1], [0, 1], [1, 1]]),
+                        'v2psi': np.array([[0, -1], [0, 0], [-1, -1], [-1, 0], [1, -1], [1, 0]]),
+                        }
+        translations.update({'rho2psi': -translations['psi2rho'],
+                             'v2u': -translations['u2v'],
+                             'rho2u': -translations['u2rho'],
+                             'psi2u': -translations['u2psi'],
+                             'rho2v': -translations['v2rho'],
+                             'psi2v': -translations['v2psi']
+                             })
+        if translation not in translations.keys():
+            raise ValueError(
+                "Translation must be of: {0}".format(translations.keys()))
+
+        offsets = translations[translation]
+        new_ind = np.copy(ind)
+        test_polyx = s_poly(new_ind, lons)
+        test_polyy = s_poly(new_ind, lats)
+        not_found = np.where(
+            ~points_in_polys(points, test_polyx, test_polyy))[0]
+        for offset in offsets:
+            # for every not found, update the cell to be checked
+            test_polyx[not_found] = s_poly(new_ind[not_found] + offset, lons)
+            test_polyy[not_found] = s_poly(new_ind[not_found] + offset, lats)
+            # retest the missing points. Some might be found, and will not appear
+            # in still_not_found
+            still_not_found = np.where(
+                ~points_in_polys(points[not_found], test_polyx[not_found], test_polyy[not_found]))[0]
+            # therefore the points that were found is the intersection of the
+            # two
+            found = np.setdiff1d(not_found, still_not_found)
+            # update the indices of the ones that were found
+            not_found = still_not_found
+            new_ind[found] += offset
+            if len(not_found) == 0:
+                break
+
+        # There aren't any boundary issues thanks to numpy's indexing
+        return new_ind
+
+    def interpolation_alphas(self, points, indices=None, lons=None, lats=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -349,121 +448,105 @@ class SGrid(object):
 
         TODO: mask the indices that aren't on the grid properly.
         """
+
+        def compute_coeffs(px, py):
+            '''
+            Params:
+            px, py: x, y coordinates of the polygon. Order matters(?) (br, tr, tl, bl
+            '''
+            px = np.matrix(px)
+            py = np.matrix(py)
+            A = np.array(
+                ([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
+            AI = np.linalg.inv(A)
+            a = np.dot(AI, px.getH())
+            b = np.dot(AI, py.getH())
+            return (np.array(a), np.array(b))
+
+        def XtoL(x, y, a, b):
+            '''
+            Params:
+            a: x coefficients
+            b: y coefficients
+            x: x coordinate of point
+            y: y coordinate of point
+
+            Returns:
+            (l,m) - coordinate in logical space to use for interpolation
+
+            Eqns:
+            m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
+            l = (l-a1 - a3*m)/(a2 + a4*m)
+            '''
+            def lin_eqn(l, m, ind_arr, aa, bb, cc):
+                '''
+                AB is parallel to CD...need to solve linear equation instead.
+                m = -cc/bb
+                bb = Ei*Fj - Ej*Fi + Hi*Gj - Hj*Gi
+                k0 = Hi*Ej - Hj*Ei
+                '''
+                m[ind_arr] = -cc / bb
+                l[ind_arr] = (x - a[0] - a[2] * m) / (a[1] + a[3] * m)
+
+            def quad_eqn(l, m, ind_arr, aa, bb, cc):
+                '''
+
+                '''
+                k = bb * bb - 4 * aa * cc
+                k = np.ma.array(k, mask=(k < 0))
+
+                det = np.ma.sqrt(k)
+                m1 = (-bb - det) / (2 * aa)
+                l1 = (x - a[0] - a[2] * m1) / (a[1] + a[3] * m1)
+
+                m2 = (-bb + det) / (2 * aa)
+                l2 = (x - a[0] - a[2] * m2) / (a[1] + a[3] * m2)
+
+                m[ind_arr] = m1
+                l[ind_arr] = l1
+
+                t1 = np.logical_and(l >= 0, m >= 0)
+                t2 = np.logical_and(l <= 1, m <= 1)
+                t3 = np.logical_and(t1, t2)
+
+                m[~t3[ind_arr]] = m2[ind_arr]
+                l[~t3[ind_arr]] = l2[ind_arr]
+
+            aa = a[3] * b[2] - a[2] * b[3]
+            bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
+                b[2] - a[2] * b[1] + x * b[3] - y * a[3]
+            cc = a[1] * b[0] - a[0] * b[1] + x * b[1] - y * a[1]
+
+            m = np.zeros(bb.shape)
+            l = np.zeros(bb.shape)
+            t = aa[:] == 0
+            lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
+            quad_eqn(l, m, np.where(~t)[0], aa[~t], bb[~t], cc[~t])
+
+            return (l, m)
+
+        if lons is None or lats is None:
+            lons = self.node_lon
+            lats = self.node_lat
+
         if indices is None:
             indices = self.locate_faces(points)
 
-        (lon0, lon1, lon2, lon3) = (self.node_lon[x, y], self.node_lons[
-            x + 1, y], self.node_lons[x + 1, y + 1], self.node_lons[x, y + 1])
-        (lat0, lat1, lat2, lat3) = (self.node_lat[x, y], self.node_lats[
-            x + 1, y], self.node_lats[x + 1, y + 1], self.node_lats[x, y + 1])
+        polyx = self.get_variable_by_index(lons, indices)
+        polyy = self.get_variable_by_index(lats, indices)
 
-        (a, b) = self.compute_coeffs(
-            node_positions[:, :, 0], node_positions[:, :, 1])
+        (a, b) = compute_coeffs(polyx, polyy)
 
         reflats = points[:, 1]
         reflons = points[:, 0]
 
-        (l, m) = self.XtoL(reflons, reflats, a, b)
+        (l, m) = XtoL(reflons, reflats, a, b)
 
         aa = 1 - l - m + l * m
         ab = m + l * m
         ac = l * m
         ad = l - l * m
         return np.array((aa, ab, ac, ad)).T
-
-    def interpolate_scalar_to_points(self, points, grid, variable):
-        grids = ['psi', 'rho', 'u', 'v']
-        if grid not in grids:
-            raise ValueError("Must specify one of {0}".format(grids))
-        if grid == 'psi':
-            grid = self
-        elif grid == 'u':
-            grid = SGrid2D(nodes=np.stack((self.lon_u[:], self.lat_u[:]), -1))
-        elif grid == 'v':
-            grid = SGrid2D(nodes=np.stack((self.lon_v[:], self.lat_v[:]), -1))
-        else:
-            grid = SGrid2D(
-                nodes=np.stack((self.lon_rho[:], self.lat_rho[:]), -1))
-
-        ind = grid.locate_faces(points)
-        alphas = grid.interpolation_alphas(points, ind)
-        vals = self.get_variable_by_index(variable, ind)
-        return np.sum(vals * alphas, axis=1)
-
-    def compute_coeffs(self, px, py):
-        '''
-        Params:
-        px, py: x, y coordinates of the polygon. Order matters(?) (br, tr, tl, bl
-        '''
-        px = np.matrix(px)
-        py = np.matrix(py)
-        A = np.array(([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
-        AI = np.linalg.inv(A)
-        a = np.dot(AI, px.getH())
-        b = np.dot(AI, py.getH())
-        return (np.array(a), np.array(b))
-
-    def XtoL(self, x, y, a, b):
-        '''
-        Params:
-        a: x coefficients
-        b: y coefficients
-        x: x coordinate of point
-        y: y coordinate of point
-
-        Returns:
-        (l,m) - coordinate in logical space to use for interpolation
-
-        Eqns:
-        m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
-        l = (l-a1 - a3*m)/(a2 + a4*m)
-        '''
-        def lin_eqn(l, m, ind_arr, aa, bb, cc):
-            '''
-            AB is parallel to CD...need to solve linear equation instead.
-            m = -cc/bb
-            bb = Ei*Fj - Ej*Fi + Hi*Gj - Hj*Gi
-            k0 = Hi*Ej - Hj*Ei
-            '''
-            m[ind_arr] = -cc / bb
-            l[ind_arr] = (x - a[0] - a[2] * m) / (a[1] + a[3] * m)
-
-        def quad_eqn(l, m, ind_arr, aa, bb, cc):
-            '''
-
-            '''
-            k = bb * bb - 4 * aa * cc
-            k = np.ma.array(k, mask=(k < 0))
-
-            det = np.ma.sqrt(k)
-            m1 = (-bb - det) / (2 * aa)
-            l1 = (x - a[0] - a[2] * m1) / (a[1] + a[3] * m1)
-
-            m2 = (-bb + det) / (2 * aa)
-            l2 = (x - a[0] - a[2] * m2) / (a[1] + a[3] * m2)
-
-            m[ind_arr] = m1
-            l[ind_arr] = l1
-
-            t1 = np.logical_and(l >= 0, m >= 0)
-            t2 = np.logical_and(l <= 1, m <= 1)
-            t3 = np.logical_and(t1, t2)
-
-            m[~t3[ind_arr]] = m2[ind_arr]
-            l[~t3[ind_arr]] = l2[ind_arr]
-
-        aa = a[3] * b[2] - a[2] * b[3]
-        bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
-            b[2] - a[2] * b[1] + x * b[3] - y * a[3]
-        cc = a[1] * b[0] - a[0] * b[1] + x * b[1] - y * a[1]
-
-        m = np.zeros(bb.shape)
-        l = np.zeros(bb.shape)
-        t = aa[:] == 0
-        lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
-        quad_eqn(l, m, np.where(~t)[0], aa[~t], bb[~t], cc[~t])
-
-        return (l, m)
 
 
 class SGridAttributes(object):
