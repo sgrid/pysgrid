@@ -98,12 +98,18 @@ class SGrid(object):
         vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')  # noqa
         node_lon, node_lat = sa.get_cell_node_lat_lon()
         center_lon, center_lat = sa.get_cell_center_lat_lon()
+        edge1_lon, edge1_lat = sa.get_cell_edge1_lat_lon()
+        edge2_lon, edge2_lat = sa.get_cell_edge2_lat_lon()
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')  # noqa
         face_coordinates = sa.get_attr_coordinates('face_coordinates')
         sgrid = cls(angles=angles,
                     center_lon=center_lon,
                     center_lat=center_lat,
                     dimensions=dimensions,
+                    edge1_lon=edge1_lon,
+                    edge1_lat=edge1_lat,
+                    edge2_lon=edge2_lon,
+                    edge2_lat=edge2_lat,
                     edge1_coordinates=edge1_coordinates,
                     edge1_dimensions=edge1_dimensions,
                     edge1_padding=edge1_padding,
@@ -126,10 +132,6 @@ class SGrid(object):
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding)
         sa.get_variable_attributes(sgrid)
-        sgrid.lon_u = sgrid.lon_u[:]
-        sgrid.lon_v = sgrid.lon_v[:]
-        sgrid.lat_u = sgrid.lat_u[:]
-        sgrid.lat_v = sgrid.lat_v[:]
         return sgrid
 
     def get_all_face_padding(self):
@@ -257,6 +259,14 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
+    def load_vars(self, names):
+        for name in names:
+            if not hasattr(self, name):
+                raise ValueError(
+                    "The variable {0} is not recognized by the grid".format(name))
+            var = getattr(self, name)
+            var.load()
+
     def build_edges(self):
         """
         Builds the edges array: all the edges defined by the nodes
@@ -340,14 +350,19 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points, variable):
+    def interpolate_var_to_points(self, points, variable, alphas=None):
+
+        if alphas is not None:
+            vals = self.get_variable_by_index(variable, ind)
+            return np.sum(vals * alphas, axis=1)
+
         ind = self.locate_faces(points)
         translation = self.infer_grid(variable)
-        lons = self.node_lon
-        lats = self.node_lat
+        lons = self.node_lon[:]
+        lats = self.node_lat[:]
         if translation is not None:
             if translation == 'psi2rho':
-                lons, lats = self.center_lon, self.center_lat
+                lons, lats = self.center_lon[:], self.center_lat[:]
             elif translation == 'psi2u':
                 lons, lats = self.lon_u[:], self.lat_u[:]
             elif translation == 'psi2v':
@@ -526,8 +541,11 @@ class SGrid(object):
             return (l, m)
 
         if lons is None or lats is None:
-            lons = self.node_lon
-            lats = self.node_lat
+            lons = self.node_lon[:]
+            lats = self.node_lat[:]
+        else:
+            lons = lons[:]
+            lats = lats[:]
 
         if indices is None:
             indices = self.locate_faces(points)
@@ -647,6 +665,20 @@ class SGridAttributes(object):
             node_lat = self.nc[node_lat_var]
             node_lon = self.nc[node_lon_var]
         return node_lon, node_lat
+
+    def get_edge1_lat_lon(self):
+        edge1_lon_var, edge1_lat_var = self.get_attr_coordinates(
+            'edge1_coordinates')
+        edge1_lon = self.nc[edge1_lon_var]
+        edge1_lat = self.nc[edge1_lon_var]
+        return edge1_lon, edge1_lat
+
+    def get_edge2_lat_lon(self):
+        edge2_lon_var, edge2_lat_var = self.get_attr_coordinates(
+            'edge2_coordinates')
+        edge1_lon = self.nc[edge2_lon_var]
+        edge1_lat = self.nc[edge2_lon_var]
+        return edge2_lon, edge2_lat
 
 
 def load_grid(nc):

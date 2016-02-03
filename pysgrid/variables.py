@@ -49,6 +49,7 @@ class SGridVariable(object):
         self.y_axis = y_axis
         self.z_axis = z_axis
         self._data = data
+        self._loaded = False
 
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
@@ -133,11 +134,19 @@ class SGridVariable(object):
     def ndim(self):
         return self._data.ndim
 
+    @property
+    def data(self):
+        if self._loaded:
+            return self._var
+        else:
+            return self._data
+
     def __getitem__(self, item):
         """
         Transfers responsibility to the data's __getitem__
         Does not flatten any underlying data
         """
+
         if not hasattr(self, "_cache"):
             self._cache = OrderedDict()
         rv = None
