@@ -57,6 +57,10 @@ class SGrid(object):
         self.node_lat = node_lat
         self.center_lon = center_lon
         self.center_lat = center_lat
+        self.edge1_lon = edge1_lon
+        self.edge1_lat = edge1_lat
+        self.edge2_lon = edge2_lon
+        self.edge2_lat = edge2_lat
         self.edges = edges
         self.node_padding = node_padding
         self.edge1_padding = edge1_padding
