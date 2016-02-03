@@ -111,13 +111,15 @@ class SGrid(object):
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')  # noqa
         face_coordinates = sa.get_attr_coordinates('face_coordinates')
         sgrid = cls(angles=angles,
+                    node_lon=node_lon,
+                    node_lat=node_lat,
                     center_lon=center_lon,
                     center_lat=center_lat,
-                    dimensions=dimensions,
                     edge1_lon=edge1_lon,
                     edge1_lat=edge1_lat,
                     edge2_lon=edge2_lon,
                     edge2_lat=edge2_lat,
+                    dimensions=dimensions,
                     edge1_coordinates=edge1_coordinates,
                     edge1_dimensions=edge1_dimensions,
                     edge1_padding=edge1_padding,
@@ -134,8 +136,6 @@ class SGrid(object):
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
                     node_padding=None,
-                    node_lon=node_lon,
-                    node_lat=node_lat,
                     variables=None,
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding)
@@ -320,7 +320,7 @@ class SGrid(object):
         arr = var[:]
         x = index[:, 0]
         y = index[:, 1]
-        return np.stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]), axis=1)
+        return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
 
     def build_celltree(self):
         """
@@ -342,30 +342,31 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points, variable, alphas=None):
+    def interpolate_var_to_points(self, points, variable, indices=None, alphas=None, mask=None):
 
-        if alphas is not None:
-            vals = self.get_variable_by_index(variable, ind)
-            return np.sum(vals * alphas, axis=1)
-
-        ind = self.locate_faces(points)
+        ind = indices
+        if ind is None:
+            ind = self.locate_faces(points)
         translation = self.infer_grid(variable)
         lons = self.node_lon[:]
         lats = self.node_lat[:]
         if translation is not None:
             if translation == 'face':
                 lons, lats = self.center_lon[:], self.center_lat[:]
-            elif translation == 'edge1':
+            if translation == 'edge1':
                 lons, lats = self.edge1_lon[:], self.edge1_lat[:]
-            elif translation == 'edge2':
+            if translation == 'edge2':
                 lons, lats = self.edge2_lon[:], self.edge2_lat[:]
-            else:
-                raise ValueError("Invalid translation from infer grid")
             ind = self.translate_index(points, ind, lons, lats, translation)
 
-        alphas = self.interpolation_alphas(points, ind, lons, lats)
+        if alphas is None:
+            alphas = self.interpolation_alphas(points, ind, lons, lats)
         vals = self.get_variable_by_index(variable, ind)
-        return np.sum(vals * alphas, axis=1)
+        result = np.ma.sum(vals * alphas, axis=1)
+        if mask is not None:
+            # REVISIT LATER
+            result.mask = mask[ind[:, 0], ind[:, 1]]
+        return result
 
     def infer_grid(self, variable):
         """
@@ -524,7 +525,7 @@ class SGrid(object):
         if lons is None or lats is None:
             lons = self.node_lon[:]
             lats = self.node_lat[:]
-        else:
+        if type(lons) is not np.ndarray or type(lats) is not np.ndarray:
             lons = lons[:]
             lats = lats[:]
 
