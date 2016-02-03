@@ -29,6 +29,10 @@ class SGrid(object):
                  node_lat=None,
                  center_lon=None,
                  center_lat=None,
+                 edge1_lon=None,
+                 edge1_lat=None,
+                 edge2_lon=None,
+                 edge2_lat=None,
                  edges=None,
                  node_padding=None,
                  edge1_padding=None,
@@ -263,27 +267,11 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
-    def load_vars(self, names):
-        for name in names:
-            if not hasattr(self, name):
-                raise ValueError(
-                    "The variable {0} is not recognized by the grid".format(name))
-            var = getattr(self, name)
-            var.load()
-
     def build_edges(self):
-        """
-        Builds the edges array: all the edges defined by the nodes
-
-        This will replace the existing edge array, if there is one.
-
-        NOTE: arbitrary order -- should the order be preserved?
-        """
-
-#         self.edges = np.vsplit(
-# self.nodes, self.nodes.shape[0]) + np.hsplit(self.nodes,
-# self.nodes.shape[1])
-        self.edges = np.column_stack((self.node_lon, self.node_lat))
+        '''
+        TODO: This should produce something that would allow a drawing library to graph all the lines
+        '''
+        pass
 
     def locate_faces(self, points):
         """
@@ -315,13 +303,13 @@ class SGrid(object):
         if not hasattr(self, '_tree') or self._tree is None:
             self.build_celltree()
         indices = self._tree.multi_locate(points)
-        psi_x = indices % (self.node_lat.shape[1] - 1)
-        psi_y = indices // (self.node_lat.shape[1] - 1)
-        psi_ind = np.column_stack((psi_y, psi_x))
+        node_x = indices % (self.node_lat.shape[1] - 1)
+        node_y = indices // (self.node_lat.shape[1] - 1)
+        node_ind = np.column_stack((node_y, node_x))
         if just_one:
-            return psi_ind[0]
+            return node_ind[0]
         else:
-            return psi_ind
+            return node_ind
 
     def get_variable_by_index(self, var, index):
         '''
@@ -365,12 +353,12 @@ class SGrid(object):
         lons = self.node_lon[:]
         lats = self.node_lat[:]
         if translation is not None:
-            if translation == 'psi2rho':
+            if translation == 'face':
                 lons, lats = self.center_lon[:], self.center_lat[:]
-            elif translation == 'psi2u':
-                lons, lats = self.lon_u[:], self.lat_u[:]
-            elif translation == 'psi2v':
-                lons, lats = self.lon_v[:], self.lon_v[:]
+            elif translation == 'edge1':
+                lons, lats = self.edge1_lon[:], self.edge1_lat[:]
+            elif translation == 'edge2':
+                lons, lats = self.edge2_lon[:], self.edge2_lat[:]
             else:
                 raise ValueError("Invalid translation from infer grid")
             ind = self.translate_index(points, ind, lons, lats, translation)
@@ -387,11 +375,11 @@ class SGrid(object):
         shape = np.array(variable.shape)
         difference = (shape - self.node_lon.shape).tolist()
         if difference == [1, 1]:
-            return 'psi2rho'
+            return 'face'
         elif difference == [1, 0]:
-            return 'psi2u'
+            return 'edge1'
         elif difference == [0, 1]:
-            return 'psi2v'
+            return 'edge2'
         else:
             return None
 
@@ -408,21 +396,10 @@ class SGrid(object):
             y = index[:, 1]
             return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
 
-        translations = {'psi2rho': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
-                        'u2v': np.array([[0, 0], [0, -1], [1, 0], [1, -1]]),
-                        'u2rho': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
-                        'u2psi': np.array([[-1, 0], [0, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]]),
-                        'psi2u': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
-                        'v2rho': np.array([[0, 0], [1, 0], [0, -1], [1, -1], [0, 1], [1, 1]]),
-                        'v2psi': np.array([[0, -1], [0, 0], [-1, -1], [-1, 0], [1, -1], [1, 0]]),
+        translations = {'face': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+                        'edge1': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
                         }
-        translations.update({'rho2psi': -translations['psi2rho'],
-                             'v2u': -translations['u2v'],
-                             'rho2u': -translations['u2rho'],
-                             'psi2u': -translations['u2psi'],
-                             'rho2v': -translations['v2rho'],
-                             'psi2v': -translations['v2psi']
-                             })
+        translations.update({'edge2': -translations['edge1']})
         if translation not in translations.keys():
             raise ValueError(
                 "Translation must be of: {0}".format(translations.keys()))
@@ -670,18 +647,18 @@ class SGridAttributes(object):
             node_lon = self.nc[node_lon_var]
         return node_lon, node_lat
 
-    def get_edge1_lat_lon(self):
+    def get_cell_edge1_lat_lon(self):
         edge1_lon_var, edge1_lat_var = self.get_attr_coordinates(
             'edge1_coordinates')
         edge1_lon = self.nc[edge1_lon_var]
-        edge1_lat = self.nc[edge1_lon_var]
+        edge1_lat = self.nc[edge1_lat_var]
         return edge1_lon, edge1_lat
 
-    def get_edge2_lat_lon(self):
+    def get_cell_edge2_lat_lon(self):
         edge2_lon_var, edge2_lat_var = self.get_attr_coordinates(
             'edge2_coordinates')
-        edge1_lon = self.nc[edge2_lon_var]
-        edge1_lat = self.nc[edge2_lon_var]
+        edge2_lon = self.nc[edge2_lon_var]
+        edge2_lat = self.nc[edge2_lat_var]
         return edge2_lon, edge2_lat
 
 
