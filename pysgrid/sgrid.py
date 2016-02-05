@@ -16,6 +16,7 @@ from .variables import SGridVariable
 
 class SGrid(object):
 
+    grid_names = ['node', 'face', 'edge1', 'edge2']
     padding_slices = {'both': (1, -1),
                       'none': (None, None),
                       'low': (1, None),
@@ -267,24 +268,26 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
-    def build_edges(self):
-        '''
-        TODO: This should produce something that would allow a drawing library to graph all the lines
-        '''
-        pass
+    def get_grid(self, grid='node'):
+        if grid not in SGrid.grid_names:
+            raise ValueError(
+                'Name not recognized. Grid must be in {0}'.format(grid_names))
+        lons = getattr(self, grid + '_lon')
+        lats = getattr(self, grid + '_lat')
+        return np.ma.dstack((lons[:], lats[:]))
 
     def locate_faces(self, points):
         """
-        Returns the face indices, one per point.
+        Returns the node grid indices, one per point.
 
-        Points that are not in the mesh will have an index of -1
+        Points that are not on the node grid will have an index of -1
 
-        If a single point is passed in, a single index will be returned
+        If a single point is passed in, a single index will be returned.
         If a sequence of points is passed in an array of indexes will be returned.
 
         :param points:  The points that you want to locate -- (lon, lat). If the shape of point
                         is 1D, function will return a scalar index. If it is 2D, it will return
-                        a 1D array of indices
+                        a 1D array of indices.
         :type points: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
                      for more than one point.
 
@@ -312,10 +315,10 @@ class SGrid(object):
             return node_ind
 
     def get_variable_by_index(self, var, index):
-        '''
+        """
         Function to get the node values of a given face index.
-        Emulates the self.grid.nodes[self.grid.nodes.faces[index]] paradigm of unstructured grids
-        '''
+        Emulates the 'self.grid.nodes[self.grid.nodes.faces[index]]' paradigm of unstructured grids.
+        """
 
         arr = var[:]
         x = index[:, 0]
@@ -324,13 +327,13 @@ class SGrid(object):
 
     def build_celltree(self):
         """
-        Tries to build the celltree for the current UGrid. Will fail if nodes
-        or faces is not defined.
+        Tries to build the celltree for grid defined by the node coordinates.
+
         """
         from cell_tree2d import CellTree
         if self.node_lon is None or self.node_lat is None:
             raise ValueError(
-                "Nodes must be defined in order to create and use CellTree")
+                "node_lon and node_lat must be defined in order to create and use CellTree")
         if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
             self._lin_nodes = np.ascontiguousarray(
                 np.stack((self.node_lon, self.node_lat), axis=-1).reshape(-1, 2))
@@ -343,7 +346,15 @@ class SGrid(object):
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
     def interpolate_var_to_points(self, points, variable, indices=None, alphas=None, mask=None):
+        """
+        Interpolates a variable on one of the grids to an array of points.
+        :param points: Array of points to be interpolated to.
+        :param variable: Variable data array with the same shape as one of the grids.
+        :param indices: If computed already, array of indices can be passed in to increase speed.
+        :param alphas: If computed already, array of alphas can be passed in to increase speed.
+        :param mask: under development.
 
+        """
         ind = indices
         if ind is None:
             ind = self.locate_faces(points)
@@ -371,7 +382,7 @@ class SGrid(object):
     def infer_grid(self, variable):
         """
         Assuming default is psi grid, check variable dimensions to determine which grid
-        it is on
+        it is on.
         """
         shape = np.array(variable.shape)
         difference = (shape - self.node_lon.shape).tolist()
@@ -386,10 +397,10 @@ class SGrid(object):
 
     def translate_index(self, points, ind, lons, lats, translation):
         """
-        :param points: Array of points on grid 1
-        :param ind: Array of x,y indicices of the points on grid 1
-        :param dest_grid: SGrid representing the destination grid
-        translates indices from one grid to another
+        :param points: Array of points on grid 1.
+        :param ind: Array of x,y indicices of the points on grid 1.
+        :param dest_grid: SGrid representing the destination grid.
+        translates indices from one grid to another.
         """
 
         def s_poly(index, var):
@@ -436,12 +447,12 @@ class SGrid(object):
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
         not located on the grid, the alphas are set to 0
-        :param points: Nx2 numpy array of lat/lon coordinates
+        :param points: Nx2 numpy array of lat/lon coordinates.
 
         :param indices: If the face indices of the points is already known, it can be passed in to save
         repeating the effort.
 
-        :return: Nx4 numpy array of interpolation factors
+        :return: Nx4 numpy array of interpolation factors.
 
         TODO: mask the indices that aren't on the grid properly.
         """
@@ -460,8 +471,8 @@ class SGrid(object):
             b = np.dot(AI, py.getH())
             return (np.array(a), np.array(b))
 
-        def XtoL(x, y, a, b):
-            '''
+        def x_tp_l(x, y, a, b):
+            """
             Params:
             a: x coefficients
             b: y coefficients
@@ -474,7 +485,7 @@ class SGrid(object):
             Eqns:
             m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
             l = (l-a1 - a3*m)/(a2 + a4*m)
-            '''
+            """
             def lin_eqn(l, m, ind_arr, aa, bb, cc):
                 '''
                 AB is parallel to CD...need to solve linear equation instead.
@@ -540,7 +551,7 @@ class SGrid(object):
         reflats = points[:, 1]
         reflons = points[:, 0]
 
-        (l, m) = XtoL(reflons, reflats, a, b)
+        (l, m) = x_to_l(reflons, reflats, a, b)
 
         aa = 1 - l - m + l * m
         ab = m + l * m

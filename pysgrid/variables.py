@@ -143,8 +143,8 @@ class SGridVariable(object):
 
     def __getitem__(self, item):
         """
-        Transfers responsibility to the data's __getitem__
-        Does not flatten any underlying data
+        Transfers responsibility to the data's __getitem__.
+        Does not flatten any underlying data.
         """
 
         if not hasattr(self, "_cache"):
@@ -160,4 +160,4 @@ class SGridVariable(object):
         return rv
 
     def __str__(self):
-        return "UVar object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
+        return "SGridVariable object: {0:s}, on the {1:s}s".format(self.standard_name, self.location)
