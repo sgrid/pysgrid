@@ -360,19 +360,10 @@ class SGrid(object):
         if ind is None:
             ind = self.locate_faces(points)
         translation = self.infer_grid(variable)
-        lons = self.node_lon[:]
-        lats = self.node_lat[:]
-        if translation is not None:
-            if translation == 'face':
-                lons, lats = self.center_lon[:], self.center_lat[:]
-            if translation == 'edge1':
-                lons, lats = self.edge1_lon[:], self.edge1_lat[:]
-            if translation == 'edge2':
-                lons, lats = self.edge2_lon[:], self.edge2_lat[:]
-            ind = self.translate_index(points, ind, lons, lats, translation)
+        ind = self.translate_index(points, ind, translation)
 
         if alphas is None:
-            alphas = self.interpolation_alphas(points, ind, lons, lats)
+            alphas = self.interpolation_alphas(points, ind, translation)
         vals = self.get_variable_by_index(variable, ind)
         result = np.ma.sum(vals * alphas, axis=1)
         if mask is not None:
@@ -389,7 +380,7 @@ class SGrid(object):
         shape = np.array(variable.shape)
         difference = (shape - self.node_lon.shape).tolist()
         if difference == [1, 1]:
-            return 'face'
+            return 'center'
         elif difference == [1, 0]:
             return 'edge1'
         elif difference == [0, 1]:
@@ -397,11 +388,23 @@ class SGrid(object):
         else:
             return None
 
-    def translate_index(self, points, ind, lons, lats, translation):
+    def _get_grid_vars(self, name):
+        if name is 'node':
+            return (self.node_lon, self.node_lat)
+        elif name is 'center':
+            return (self.center_lon, self.center_lat)
+        elif name is 'edge1':
+            return (self.edge1_lon, self.edge1_lat)
+        elif name is 'edge2':
+            return (self.edge2_lon, self.edge2_lat)
+        else:
+            raise ValueError('Invalid grid name')
+
+    def translate_index(self, points, ind, translation):
         """
-        :param points: Array of points on grid 1.
-        :param ind: Array of x,y indicices of the points on grid 1.
-        :param dest_grid: SGrid representing the destination grid.
+        :param points: Array of points on node grid.
+        :param ind: Array of x,y indicices of the points on node grid.
+        :param translation: string to describe destination grid
         translates indices from one grid to another.
         """
 
@@ -410,11 +413,14 @@ class SGrid(object):
             y = index[:, 1]
             return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
 
-        if type(lons) is not np.ndarray or type(lats) is not np.ndarray:
-            lons = lons[:]
-            lats = lats[:]
+        if translation is 'node':
+            return
 
-        translations = {'face': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+        lons, lats = self._get_grid_vars(translation)
+        lons = lons[:]
+        lats = lats[:]
+
+        translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
                         'edge1': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
                         }
         translations.update({'edge2': -translations['edge1']})
@@ -448,7 +454,7 @@ class SGrid(object):
         # There aren't any boundary issues thanks to numpy's indexing
         return new_ind
 
-    def interpolation_alphas(self, points, indices=None, lons=None, lats=None):
+    def interpolation_alphas(self, points, indices=None, location='center'):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -539,15 +545,13 @@ class SGrid(object):
 
             return (l, m)
 
-        if lons is None or lats is None:
-            lons = self.node_lon[:]
-            lats = self.node_lat[:]
-        if type(lons) is not np.ndarray or type(lats) is not np.ndarray:
-            lons = lons[:]
-            lats = lats[:]
+        lons, lats = self._get_grid_vars(location)
+        lons = lons[:]
+        lats = lats[:]
 
         if indices is None:
             indices = self.locate_faces(points)
+            indices = self.translate_index(points, indices, location)
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
