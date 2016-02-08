@@ -8,6 +8,7 @@ env:
     - PYTHON="3.5"
 
 before_install:
+    - apt-get update
     - wget http://bit.ly/miniconda -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
