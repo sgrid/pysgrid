@@ -23,3 +23,7 @@ before_install:
 script:
     - nosetests
     - find . -type f -name "*.py" | xargs flake8 --max-line-length=100
+
+branches:
+    only:
+        - master
