@@ -12,8 +12,8 @@ before_install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes --all
-    - travis_retry conda create --yes -n test python=$PYTHON --file requirements.txt
-    - source activate test
+    - travis_retry conda create --yes -n TEST python=$PYTHON --file requirements.txt
+    - source activate TEST
     - travis_retry conda install --yes --file requirements-dev.txt
     - if [[ "$PYTHON" != "3.5" ]]; then
         travis_retry conda install --yes mock ;
@@ -21,5 +21,5 @@ before_install:
     - travis_retry pip install
 
 script:
-    - nosetests
+    - python setup.py test -a "--verbose"
     - find . -type f -name "*.py" | xargs flake8 --max-line-length=100
