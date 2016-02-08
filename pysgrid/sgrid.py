@@ -309,6 +309,7 @@ class SGrid(object):
         node_x = indices % (self.node_lat.shape[1] - 1)
         node_y = indices // (self.node_lat.shape[1] - 1)
         node_ind = np.column_stack((node_y, node_x))
+        node_ind[node_ind[:, 0] == -1] = [-1, -1]
         if just_one:
             return node_ind[0]
         else:
@@ -377,6 +378,7 @@ class SGrid(object):
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
+        result[np.where(ind[:, 0] == -1)] = [np.nan, ]
         return result
 
     def infer_grid(self, variable):
@@ -407,6 +409,10 @@ class SGrid(object):
             x = index[:, 0]
             y = index[:, 1]
             return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
+
+        if type(lons) is not np.ndarray or type(lats) is not np.ndarray:
+            lons = lons[:]
+            lats = lats[:]
 
         translations = {'face': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
                         'edge1': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
@@ -471,7 +477,7 @@ class SGrid(object):
             b = np.dot(AI, py.getH())
             return (np.array(a), np.array(b))
 
-        def x_tp_l(x, y, a, b):
+        def x_to_l(x, y, a, b):
             """
             Params:
             a: x coefficients
