@@ -104,8 +104,8 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next((info for info in padding if
-                                     info.face_dim == var_dim))
+                padding_info = next(
+                    (info for info in padding if info.face_dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)
@@ -171,7 +171,7 @@ def infer_variable_location(sgrid, variable):
         edge_dims = []
     var_dims = variable.dimensions
     if (does_intersection_exist(var_dims, face_dims) and not
-       does_intersection_exist(var_dims, node_dims)):
+            does_intersection_exist(var_dims, node_dims)):
         inferred_location = 'face'
     elif ((does_intersection_exist(var_dims, face_dims) and
            does_intersection_exist(var_dims, node_dims)) or
@@ -187,16 +187,16 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
     return bearing from true north in degrees
 
     """
-    lon_lat_1_radians = lon_lat_1 * np.pi/180
-    lon_lat_2_radians = lon_lat_2 * np.pi/180
+    lon_lat_1_radians = lon_lat_1 * np.pi / 180
+    lon_lat_2_radians = lon_lat_2 * np.pi / 180
     lon_1 = lon_lat_1_radians[..., 0]
     lat_1 = lon_lat_1_radians[..., 1]
     lon_2 = lon_lat_2_radians[..., 0]
     lat_2 = lon_lat_2_radians[..., 1]
-    x1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
-    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)  # noqa
+    x1 = np.sin(lon_2 - lon_1) * np.cos(lat_2)
+    x2 = np.cos(lat_1) * np.sin(lat_2) - np.sin(lat_1) * np.cos(lat_2) * np.cos(lon_2 - lon_1)  # noqa
     bearing_radians = np.arctan2(x1, x2)
-    bearing_degrees = bearing_radians * 180/np.pi
+    bearing_degrees = bearing_radians * 180 / np.pi
     return (bearing_degrees + 360) % 360
 
 
@@ -207,9 +207,97 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     """
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
     bearing_from_true_east = 90 - bearing
-    bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
-    # Unsure if this is the appropriate thing to do for the last grid cell.
+    bearing_from_true_east_radians = bearing_from_true_east * np.pi / 180
+    # not sure if this is the most appropriate thing to do for the last grid
+    # cell
     angles = np.append(bearing_from_true_east_radians,
                        bearing_from_true_east_radians[..., -1:],
                        axis=-1)
     return angles
+
+
+def translate_index(points, ind, dest_grid, translation=None):
+    """
+    :param points: Array of points on grid 1
+    :param ind: Array of x,y indicices of the points on grid 1
+    :param grid1: SGrid representing the source grid
+    :param dest_grid: SGrid representing the destination grid
+    Takes two sgrid objects and a list of x,y indices on grid 1
+    Translates the indices to what they would be on the other grid
+    """
+
+    def s_poly(index, var):
+        x = index[:, 0]
+        y = index[:, 1]
+        return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
+
+    translations = {'psi2rho': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+                    'u2v': np.array([[0, 0], [0, -1], [1, 0], [1, -1]]),
+                    'u2rho': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
+                    'u2psi': np.array([[-1, 0], [0, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]]),
+                    'psi2u': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
+                    'v2rho': np.array([[0, 0], [1, 0], [0, -1], [1, -1], [0, 1], [1, 1]]),
+                    'v2psi': np.array([[0, -1], [0, 0], [-1, -1], [-1, 0], [1, -1], [1, 0]]),
+                    }
+    translations.update({'rho2psi': -translations['psi2rho'],
+                         'v2u': -translations['u2v'],
+                         'rho2u': -translations['u2rho'],
+                         'psi2u': -translations['u2psi'],
+                         'rho2v': -translations['v2rho'],
+                         'psi2v': -translations['v2psi']
+                         })
+    if translation is None or translation not in translations.keys():
+        raise ValueError(
+            "Translation must be of: {0}".format(translations.keys()))
+
+    offsets = translations[translation]
+    new_ind = np.copy(ind)
+    test_poly = s_poly(new_ind, dest_grid.nodes)
+    not_found = np.where(~points_in_polys(points, test_polys))[0]
+    for offset in offsets:
+        # for every not found, update the cell to be checked
+        test_polys[not_found] = s_poly(
+            new_ind[not_found] + offset, dest_grid.nodes)
+        # retest the missing points. Some might be found, and will not appear
+        # in still_not_found
+        still_not_found = np.where(
+            ~points_in_polys(points[not_found], test_polys[not_found]))[0]
+        # therefore the points that were found is the intersection of the two
+        found = np.setdiff1d(not_found, still_not_found)
+        # update the indices of the ones that were found
+        not_found = still_not_found
+        new_ind[found] += offset
+        if len(not_found) == 0:
+            break
+
+    # There aren't any boundary issues thanks to numpy's indexing
+    return new_ind
+
+
+def points_in_polys(points, polys, polyy=None):
+    '''
+    :param points: Numpy array of Nx2 points
+    :param polys: Numpy array of N polygons of degree M represented by Mx2 points (NxMx2)
+    for each point, see if respective poly contains it. Returns array of True/False
+    '''
+
+    result = np.zeros((points.shape[0],), dtype=bool)
+    pointsx = points[:, 0]
+    pointsy = points[:, 1]
+    v1x = v1y = v2x = v2y = -1
+    for i in range(0, polys.shape[1]):
+        if polyy is not None:
+            v1x = polys[:, i - 1]
+            v1y = polyy[:, i - 1]
+            v2x = polys[:, i]
+            v2y = polyy[:, i]
+        else:
+            v1x = polys[:, i - 1, 0]
+            v1y = polys[:, i - 1, 1]
+            v2x = polys[:, i, 0]
+            v2y = polys[:, i, 1]
+        test1 = (v2y >= pointsy) != (v1y >= pointsy)
+        test2 = pointsx < (v1x - v2x) * (pointsy - v2y) / (v1y - v2y) + v2x
+        np.logical_and(test1, test2, test1)
+        np.logical_xor(result, test1, result)
+    return result

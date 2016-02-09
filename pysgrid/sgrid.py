@@ -7,14 +7,16 @@ Created on Apr 20, 2015
 from __future__ import (absolute_import, division, print_function)
 
 from netCDF4 import Dataset
+import numpy as np
 
 from .read_netcdf import NetCDFDataset, parse_padding, find_grid_topology_var
-from .utils import calculate_angle_from_true_east, pair_arrays
+from .utils import calculate_angle_from_true_east, pair_arrays, points_in_polys
 from .variables import SGridVariable
 
 
 class SGrid(object):
 
+    grid_names = ['node', 'face', 'edge1', 'edge2']
     padding_slices = {'both': (1, -1),
                       'none': (None, None),
                       'low': (1, None),
@@ -28,6 +30,10 @@ class SGrid(object):
                  node_lat=None,
                  center_lon=None,
                  center_lat=None,
+                 edge1_lon=None,
+                 edge1_lat=None,
+                 edge2_lon=None,
+                 edge2_lat=None,
                  edges=None,
                  node_padding=None,
                  edge1_padding=None,
@@ -56,6 +62,10 @@ class SGrid(object):
         self.node_lat = node_lat
         self.center_lon = center_lon
         self.center_lat = center_lat
+        self.edge1_lon = edge1_lon
+        self.edge1_lat = edge1_lat
+        self.edge2_lon = edge2_lon
+        self.edge2_lat = edge2_lat
         self.edges = edges
         self.node_padding = node_padding
         self.edge1_padding = edge1_padding
@@ -97,11 +107,19 @@ class SGrid(object):
         vertical_dimensions, vertical_padding = sa.get_attr_dimension('vertical_dimensions')  # noqa
         node_lon, node_lat = sa.get_cell_node_lat_lon()
         center_lon, center_lat = sa.get_cell_center_lat_lon()
+        edge1_lon, edge1_lat = sa.get_cell_edge1_lat_lon()
+        edge2_lon, edge2_lat = sa.get_cell_edge2_lat_lon()
         face_dimensions, face_padding = sa.get_attr_dimension('face_dimensions')  # noqa
         face_coordinates = sa.get_attr_coordinates('face_coordinates')
         sgrid = cls(angles=angles,
+                    node_lon=node_lon,
+                    node_lat=node_lat,
                     center_lon=center_lon,
                     center_lat=center_lat,
+                    edge1_lon=edge1_lon,
+                    edge1_lat=edge1_lat,
+                    edge2_lon=edge2_lon,
+                    edge2_lat=edge2_lat,
                     dimensions=dimensions,
                     edge1_coordinates=edge1_coordinates,
                     edge1_dimensions=edge1_dimensions,
@@ -119,8 +137,6 @@ class SGrid(object):
                     node_coordinates=node_coordinates,
                     node_dimensions=node_dimensions,
                     node_padding=None,
-                    node_lon=node_lon,
-                    node_lat=node_lat,
                     variables=None,
                     vertical_dimensions=vertical_dimensions,
                     vertical_padding=vertical_padding)
@@ -252,6 +268,307 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
+    def get_grid(self, grid='node'):
+        if grid not in SGrid.grid_names:
+            raise ValueError(
+                'Name not recognized. Grid must be in {0}'.format(grid_names))
+        lons = getattr(self, grid + '_lon')
+        lats = getattr(self, grid + '_lat')
+        return np.ma.dstack((lons[:], lats[:]))
+
+    def locate_faces(self, points):
+        """
+        Returns the node grid indices, one per point.
+
+        Points that are not on the node grid will have an index of -1
+
+        If a single point is passed in, a single index will be returned.
+        If a sequence of points is passed in an array of indexes will be returned.
+
+        :param points:  The points that you want to locate -- (lon, lat). If the shape of point
+                        is 1D, function will return a scalar index. If it is 2D, it will return
+                        a 1D array of indices.
+        :type points: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
+                     for more than one point.
+
+        This version utilizes the CellTree data structure.
+
+        """
+        points = np.asarray(points, dtype=np.float64)
+        just_one = (points.ndim == 1)
+        points.shape = (-1, 2)
+
+        try:
+            import cell_tree2d
+        except ImportError:
+            raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                              "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
+        if not hasattr(self, '_tree') or self._tree is None:
+            self.build_celltree()
+        indices = self._tree.multi_locate(points)
+        node_x = indices % (self.node_lat.shape[1] - 1)
+        node_y = indices // (self.node_lat.shape[1] - 1)
+        node_ind = np.column_stack((node_y, node_x))
+        node_ind[node_ind[:, 0] == -1] = [-1, -1]
+        if just_one:
+            return node_ind[0]
+        else:
+            return node_ind
+
+    def get_variable_by_index(self, var, index):
+        """
+        Function to get the node values of a given face index.
+        Emulates the 'self.grid.nodes[self.grid.nodes.faces[index]]' paradigm of unstructured grids.
+        """
+
+        arr = var[:]
+        x = index[:, 0]
+        y = index[:, 1]
+        return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
+
+    def build_celltree(self):
+        """
+        Tries to build the celltree for grid defined by the node coordinates.
+
+        """
+        from cell_tree2d import CellTree
+        if self.node_lon is None or self.node_lat is None:
+            raise ValueError(
+                "node_lon and node_lat must be defined in order to create and use CellTree")
+        if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
+            self._lin_nodes = np.ascontiguousarray(
+                np.stack((self.node_lon, self.node_lat), axis=-1).reshape(-1, 2))
+            y_size = self.node_lon.shape[0]
+            x_size = self.node_lon.shape[1]
+            self._lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
+                                                  for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
+            self._lin_faces = np.ascontiguousarray(
+                self._lin_faces.reshape(-1, 4).astype(np.int32))
+        self._tree = CellTree(self._lin_nodes, self._lin_faces)
+
+    def interpolate_var_to_points(self, points, variable, indices=None, alphas=None, mask=None):
+        """
+        Interpolates a variable on one of the grids to an array of points.
+        :param points: Array of points to be interpolated to.
+        :param variable: Variable data array with the same shape as one of the grids.
+        :param indices: If computed already, array of indices can be passed in to increase speed.
+        :param alphas: If computed already, array of alphas can be passed in to increase speed.
+        :param mask: under development.
+
+        """
+        ind = indices
+        if ind is None:
+            ind = self.locate_faces(points)
+        translation = self.infer_grid(variable)
+        ind = self.translate_index(points, ind, translation)
+
+        if alphas is None:
+            alphas = self.interpolation_alphas(points, ind, translation)
+        vals = self.get_variable_by_index(variable, ind)
+        result = np.ma.sum(vals * alphas, axis=1)
+        if mask is not None:
+            # REVISIT LATER
+            result.mask = mask[ind[:, 0], ind[:, 1]]
+        result[np.where(ind[:, 0] == -1)] = [np.nan, ]
+        return result
+
+    def infer_grid(self, variable):
+        """
+        Assuming default is psi grid, check variable dimensions to determine which grid
+        it is on.
+        """
+        shape = np.array(variable.shape)
+        difference = (shape - self.node_lon.shape).tolist()
+        if difference == [1, 1]:
+            return 'center'
+        elif difference == [1, 0]:
+            return 'edge1'
+        elif difference == [0, 1]:
+            return 'edge2'
+        else:
+            return None
+
+    def _get_grid_vars(self, name):
+        if name is 'node':
+            return (self.node_lon, self.node_lat)
+        elif name is 'center':
+            return (self.center_lon, self.center_lat)
+        elif name is 'edge1':
+            return (self.edge1_lon, self.edge1_lat)
+        elif name is 'edge2':
+            return (self.edge2_lon, self.edge2_lat)
+        else:
+            raise ValueError('Invalid grid name')
+
+    def translate_index(self, points, ind, translation):
+        """
+        :param points: Array of points on node grid.
+        :param ind: Array of x,y indicices of the points on node grid.
+        :param translation: string to describe destination grid
+        translates indices from one grid to another.
+        """
+
+        def s_poly(index, var):
+            x = index[:, 0]
+            y = index[:, 1]
+            return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
+
+        if translation is 'node':
+            return
+
+        lons, lats = self._get_grid_vars(translation)
+        lons = lons[:]
+        lats = lats[:]
+
+        translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+                        'edge1': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
+                        }
+        translations.update({'edge2': -translations['edge1']})
+        if translation not in translations.keys():
+            raise ValueError(
+                "Translation must be of: {0}".format(translations.keys()))
+
+        offsets = translations[translation]
+        new_ind = np.copy(ind)
+        test_polyx = s_poly(new_ind, lons)
+        test_polyy = s_poly(new_ind, lats)
+        not_found = np.where(
+            ~points_in_polys(points, test_polyx, test_polyy))[0]
+        for offset in offsets:
+            # for every not found, update the cell to be checked
+            test_polyx[not_found] = s_poly(new_ind[not_found] + offset, lons)
+            test_polyy[not_found] = s_poly(new_ind[not_found] + offset, lats)
+            # retest the missing points. Some might be found, and will not appear
+            # in still_not_found
+            still_not_found = np.where(
+                ~points_in_polys(points[not_found], test_polyx[not_found], test_polyy[not_found]))[0]
+            # therefore the points that were found is the intersection of the
+            # two
+            found = np.setdiff1d(not_found, still_not_found)
+            # update the indices of the ones that were found
+            not_found = still_not_found
+            new_ind[found] += offset
+            if len(not_found) == 0:
+                break
+
+        # There aren't any boundary issues thanks to numpy's indexing
+        return new_ind
+
+    def interpolation_alphas(self, points, indices=None, location='center'):
+        """
+        Given an array of points, this function will return the bilinear interpolation alphas
+        for each of the four nodes of the face that the point is located in. If the point is
+        not located on the grid, the alphas are set to 0
+        :param points: Nx2 numpy array of lat/lon coordinates.
+
+        :param indices: If the face indices of the points is already known, it can be passed in to save
+        repeating the effort.
+
+        :return: Nx4 numpy array of interpolation factors.
+
+        TODO: mask the indices that aren't on the grid properly.
+        """
+
+        def compute_coeffs(px, py):
+            '''
+            Params:
+            px, py: x, y coordinates of the polygon. Order matters(?) (br, tr, tl, bl
+            '''
+            px = np.matrix(px)
+            py = np.matrix(py)
+            A = np.array(
+                ([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
+            AI = np.linalg.inv(A)
+            a = np.dot(AI, px.getH())
+            b = np.dot(AI, py.getH())
+            return (np.array(a), np.array(b))
+
+        def x_to_l(x, y, a, b):
+            """
+            Params:
+            a: x coefficients
+            b: y coefficients
+            x: x coordinate of point
+            y: y coordinate of point
+
+            Returns:
+            (l,m) - coordinate in logical space to use for interpolation
+
+            Eqns:
+            m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
+            l = (l-a1 - a3*m)/(a2 + a4*m)
+            """
+            def lin_eqn(l, m, ind_arr, aa, bb, cc):
+                '''
+                AB is parallel to CD...need to solve linear equation instead.
+                m = -cc/bb
+                bb = Ei*Fj - Ej*Fi + Hi*Gj - Hj*Gi
+                k0 = Hi*Ej - Hj*Ei
+                '''
+                m[ind_arr] = -cc / bb
+                l[ind_arr] = (x - a[0] - a[2] * m) / (a[1] + a[3] * m)
+
+            def quad_eqn(l, m, ind_arr, aa, bb, cc):
+                '''
+
+                '''
+                k = bb * bb - 4 * aa * cc
+                k = np.ma.array(k, mask=(k < 0))
+
+                det = np.ma.sqrt(k)
+                m1 = (-bb - det) / (2 * aa)
+                l1 = (x - a[0] - a[2] * m1) / (a[1] + a[3] * m1)
+
+                m2 = (-bb + det) / (2 * aa)
+                l2 = (x - a[0] - a[2] * m2) / (a[1] + a[3] * m2)
+
+                m[ind_arr] = m1
+                l[ind_arr] = l1
+
+                t1 = np.logical_and(l >= 0, m >= 0)
+                t2 = np.logical_and(l <= 1, m <= 1)
+                t3 = np.logical_and(t1, t2)
+
+                m[~t3[ind_arr]] = m2[ind_arr]
+                l[~t3[ind_arr]] = l2[ind_arr]
+
+            aa = a[3] * b[2] - a[2] * b[3]
+            bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
+                b[2] - a[2] * b[1] + x * b[3] - y * a[3]
+            cc = a[1] * b[0] - a[0] * b[1] + x * b[1] - y * a[1]
+
+            m = np.zeros(bb.shape)
+            l = np.zeros(bb.shape)
+            t = aa[:] == 0
+            lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
+            quad_eqn(l, m, np.where(~t)[0], aa[~t], bb[~t], cc[~t])
+
+            return (l, m)
+
+        lons, lats = self._get_grid_vars(location)
+        lons = lons[:]
+        lats = lats[:]
+
+        if indices is None:
+            indices = self.locate_faces(points)
+            indices = self.translate_index(points, indices, location)
+
+        polyx = self.get_variable_by_index(lons, indices)
+        polyy = self.get_variable_by_index(lats, indices)
+
+        (a, b) = compute_coeffs(polyx, polyy)
+
+        reflats = points[:, 1]
+        reflons = points[:, 0]
+
+        (l, m) = x_to_l(reflons, reflats, a, b)
+
+        aa = 1 - l - m + l * m
+        ab = m + l * m
+        ac = l * m
+        ad = l - l * m
+        return np.array((aa, ab, ac, ad)).T
+
 
 class SGridAttributes(object):
     """
@@ -259,6 +576,7 @@ class SGridAttributes(object):
     attributes for either SGrid.
 
     """
+
     def __init__(self, nc, topology_dim, topology_variable):
         self.nc = nc
         self.ncd = NetCDFDataset(self.nc)
@@ -350,6 +668,20 @@ class SGridAttributes(object):
             node_lat = self.nc[node_lat_var]
             node_lon = self.nc[node_lon_var]
         return node_lon, node_lat
+
+    def get_cell_edge1_lat_lon(self):
+        edge1_lon_var, edge1_lat_var = self.get_attr_coordinates(
+            'edge1_coordinates')
+        edge1_lon = self.nc[edge1_lon_var]
+        edge1_lat = self.nc[edge1_lat_var]
+        return edge1_lon, edge1_lat
+
+    def get_cell_edge2_lat_lon(self):
+        edge2_lon_var, edge2_lat_var = self.get_attr_coordinates(
+            'edge2_coordinates')
+        edge2_lon = self.nc[edge2_lon_var]
+        edge2_lat = self.nc[edge2_lat_var]
+        return edge2_lon, edge2_lat
 
 
 def load_grid(nc):
