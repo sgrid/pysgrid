@@ -3,8 +3,9 @@ Created on Apr 15, 2015
 
 @author: ayan
 '''
+
 from __future__ import (absolute_import, division, print_function)
-from collections import OrderedDict
+
 from .read_netcdf import parse_axes, parse_vector_axis
 from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_location
 
@@ -15,7 +16,6 @@ class SGridVariable(object):
     from an SGRID compliant dataset.
 
     """
-
     def __init__(self,
                  center_axis=None,
                  center_slicing=None,
@@ -31,8 +31,7 @@ class SGridVariable(object):
                  vector_axis=None,
                  x_axis=None,
                  y_axis=None,
-                 z_axis=None,
-                 data=None):
+                 z_axis=None,):
         self.center_axis = center_axis
         self.center_slicing = center_slicing
         self.coordinates = coordinates
@@ -48,8 +47,6 @@ class SGridVariable(object):
         self.x_axis = x_axis
         self.y_axis = y_axis
         self.z_axis = z_axis
-        self._data = data
-        self._loaded = False
 
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
@@ -113,51 +110,5 @@ class SGridVariable(object):
                         location=location,
                         standard_name=standard_name,
                         vector_axis=vector_axis,
-                        coordinates=coordinates,
-                        data=nc_var_obj
-                        )
+                        coordinates=coordinates)
         return sgrid_var
-
-    @property
-    def shape(self):
-        return self._data.shape
-
-    @property
-    def max(self):
-        return np.max(self._data)
-
-    @property
-    def min(self):
-        return np.min(self._data)
-
-    @property
-    def ndim(self):
-        return self._data.ndim
-
-    @property
-    def data(self):
-        if self._loaded:
-            return self._var
-        else:
-            return self._data
-
-    def __getitem__(self, item):
-        """
-        Transfers responsibility to the data's __getitem__.
-        Does not flatten any underlying data.
-        """
-
-        if not hasattr(self, "_cache"):
-            self._cache = OrderedDict()
-        rv = None
-        if str(item) in self._cache:
-            rv = self._cache[str(item)]
-        else:
-            rv = self._data.__getitem__(item)
-            self._cache[str(item)] = rv
-            if len(self._cache) > 3:
-                self._cache.popitem(last=False)
-        return rv
-
-    def __str__(self):
-        return "SGridVariable object: {0:s}, on the {1:s}s".format(self.standard_name, self.location)
