@@ -7,3 +7,5 @@
 *.egg-info
 dist
 build
+
+*.nc
