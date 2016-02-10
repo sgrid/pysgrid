@@ -18,7 +18,6 @@ before_install:
     - if [[ "$PYTHON" != "3.5" ]]; then
         travis_retry conda install --yes mock ;
       fi
-    - travis_retry pip install
 
 script:
     - python setup.py test -a "--verbose"
