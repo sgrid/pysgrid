@@ -296,7 +296,7 @@ class SGrid(object):
         """
         points = np.asarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
-        points.shape = (-1, 2)
+        points = points.reshape(-1, 2)
 
         try:
             import cell_tree2d
@@ -356,6 +356,7 @@ class SGrid(object):
         :param mask: under development.
 
         """
+        points = points.reshape(-1, 2)
         ind = indices
         if ind is None:
             ind = self.locate_faces(points)
@@ -369,7 +370,9 @@ class SGrid(object):
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
-        result[np.where(ind[:, 0] == -1)] = [np.nan, ]
+        off_grids = np.where(ind[:, 0] == -1)
+        result[off_grids] = [np.nan, ]
+        result.mask[off_grids] = True
         return result
 
     def infer_grid(self, variable):
@@ -385,6 +388,8 @@ class SGrid(object):
             return 'edge1'
         elif difference == [0, 1]:
             return 'edge2'
+        elif difference == [0, 0]:
+            return 'node'
         else:
             return None
 
@@ -408,50 +413,68 @@ class SGrid(object):
         translates indices from one grid to another.
         """
 
-        def s_poly(index, var):
+        def s_poly(var, index):
+            arr = var[:]
             x = index[:, 0]
             y = index[:, 1]
-            return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
+            x[x < 0] = 0
+            y[y < 0] = 0
+            x1 = x + 1
+            y1 = y + 1
+            x1[x1 >= arr.shape[0]] -= 1
+            y1[y1 >= arr.shape[1]] -= 1
+            return np.ma.column_stack((arr[x, y], arr[x1, y], arr[x1, y1], arr[x, y1]))
 
         if translation is 'node':
-            return
+            return ind
 
         lons, lats = self._get_grid_vars(translation)
         lons = lons[:]
         lats = lats[:]
 
         translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
-                        'edge1': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
+                        'edge1': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
+                        'edge2': np.array([[0, 0], [1, 0], [0, -1], [0, 1], [0, 1], [1, 1]]),
                         }
-        translations.update({'edge2': -translations['edge1']})
         if translation not in translations.keys():
             raise ValueError(
                 "Translation must be of: {0}".format(translations.keys()))
-
+        ind = np.ma.array(ind, mask=ind == -1)
+        points = np.ma.array(points, mask=ind.mask)
         offsets = translations[translation]
-        new_ind = np.copy(ind)
-        test_polyx = s_poly(new_ind, lons)
-        test_polyy = s_poly(new_ind, lats)
-        not_found = np.where(
-            ~points_in_polys(points, test_polyx, test_polyy))[0]
+        new_ind = np.ma.copy(ind)
+        test_polyx = s_poly(lons, new_ind)
+        test_polyy = s_poly(lats, new_ind)
+#         not_found = np.logical_and(
+#             ~ind.mask[:, 0], ~points_in_polys(points, test_polyx, test_polyy))
+        not_found = np.where(~ind.mask[:, 0])[0]
+#         not_found = np.where(not_in_polys)[0]
         for offset in offsets:
             # for every not found, update the cell to be checked
-            test_polyx[not_found] = s_poly(new_ind[not_found] + offset, lons)
-            test_polyy[not_found] = s_poly(new_ind[not_found] + offset, lats)
+            test_polyx[not_found] = s_poly(lons, new_ind[not_found] + offset)
+            test_polyy[not_found] = s_poly(lats, new_ind[not_found] + offset)
             # retest the missing points. Some might be found, and will not appear
             # in still_not_found
-            still_not_found = np.where(
-                ~points_in_polys(points[not_found], test_polyx[not_found], test_polyy[not_found]))[0]
+#             found = np.where(points_in_polys(points, test_polyx, test_polyy))[0]
+
+            found = points_in_polys(
+                points[not_found], test_polyx[not_found], test_polyy[not_found])
+            found = not_found[found]
+
+#             still_not_found = np.logical_and(
+#                 ~ind.mask[:, 0][not_found], ~points_in_polys(points[not_found], test_polyx[not_found], test_polyy[not_found]))
+#             still_not_found = np.where(still_not_found)[0]
             # therefore the points that were found is the intersection of the
             # two
-            found = np.setdiff1d(not_found, still_not_found)
+            not_found = np.setdiff1d(not_found, found)
             # update the indices of the ones that were found
-            not_found = still_not_found
             new_ind[found] += offset
             if len(not_found) == 0:
                 break
 
         # There aren't any boundary issues thanks to numpy's indexing
+        new_ind.mask[not_found] = True
+        new_ind[not_found] = [-1, -1]
         return new_ind
 
     def interpolation_alphas(self, points, indices=None, location='center'):
@@ -512,6 +535,8 @@ class SGrid(object):
                 '''
 
                 '''
+                if len(aa) is 0:
+                    return
                 k = bb * bb - 4 * aa * cc
                 k = np.ma.array(k, mask=(k < 0))
 
@@ -552,6 +577,7 @@ class SGrid(object):
         if indices is None:
             indices = self.locate_faces(points)
             indices = self.translate_index(points, indices, location)
+        indices = indices.data
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
@@ -564,7 +590,7 @@ class SGrid(object):
         (l, m) = x_to_l(reflons, reflats, a, b)
 
         aa = 1 - l - m + l * m
-        ab = m + l * m
+        ab = m - l * m
         ac = l * m
         ad = l - l * m
         return np.array((aa, ab, ac, ad)).T
