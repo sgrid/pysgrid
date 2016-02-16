@@ -268,6 +268,34 @@ class SGrid(object):
                     dataset_grid_var.axes = ' '.join(axes)
         return grid_vars
 
+    def _get_grid_vars(self, name):
+        if name is 'node':
+            return (self.node_lon, self.node_lat)
+        elif name is 'center':
+            return (self.center_lon, self.center_lat)
+        elif name is 'edge1':
+            return (self.edge1_lon, self.edge1_lat)
+        elif name is 'edge2':
+            return (self.edge2_lon, self.edge2_lat)
+        else:
+            raise ValueError('Invalid grid name')
+
+    def _get_efficient_slice(self, lon_bounds, lat_bounds, name):
+        '''
+        given minimum and maximum longitudes and latitudes, find
+        the most efficient slice for the specified grid that covers the
+        entire specified area. 
+        '''
+        lons, lats = self._get_grid_vars(name)
+        t = np.logical_and(lons >= lon_bounds[0], lons <= lon_bounds[1])
+        np.logical_and(
+            t, np.logical_and(lats >= lat_bounds[0], lats <= lat_bounds[1]), t)
+        s = np.where(t)
+        x_slice = slice(s[0].min(), s[0].max() + 1)
+        y_slice = slice(s[1].min(), s[1].max() + 1)
+
+        return (x_slice, y_slice)
+
     def get_grid(self, grid='node'):
         if grid not in SGrid.grid_names:
             raise ValueError(
@@ -360,11 +388,11 @@ class SGrid(object):
         ind = indices
         if ind is None:
             ind = self.locate_faces(points)
-        translation = self.infer_grid(variable)
-        ind = self.translate_index(points, ind, translation)
+        grid = self.infer_grid(variable)
+        ind = self.translate_index(points, ind, grid)
 
         if alphas is None:
-            alphas = self.interpolation_alphas(points, ind, translation)
+            alphas = self.interpolation_alphas(points, ind, grid)
         vals = self.get_variable_by_index(variable, ind)
         result = np.ma.sum(vals * alphas, axis=1)
         if mask is not None:
@@ -384,26 +412,14 @@ class SGrid(object):
         difference = (shape - self.node_lon.shape).tolist()
         if difference == [1, 1]:
             return 'center'
-        elif difference == [1, 0]:
-            return 'edge1'
         elif difference == [0, 1]:
+            return 'edge1'
+        elif difference == [1, 0]:
             return 'edge2'
         elif difference == [0, 0]:
             return 'node'
         else:
             return None
-
-    def _get_grid_vars(self, name):
-        if name is 'node':
-            return (self.node_lon, self.node_lat)
-        elif name is 'center':
-            return (self.center_lon, self.center_lat)
-        elif name is 'edge1':
-            return (self.edge1_lon, self.edge1_lat)
-        elif name is 'edge2':
-            return (self.edge2_lon, self.edge2_lat)
-        else:
-            raise ValueError('Invalid grid name')
 
     def translate_index(self, points, ind, translation):
         """
@@ -426,7 +442,7 @@ class SGrid(object):
             return np.ma.column_stack((arr[x, y], arr[x1, y], arr[x1, y1], arr[x, y1]))
 
         if translation is 'node':
-            return ind
+            return np.ma.array(ind, mask=False)
 
         lons, lats = self._get_grid_vars(translation)
         lons = lons[:]
@@ -434,7 +450,7 @@ class SGrid(object):
 
         translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
                         'edge1': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
-                        'edge2': np.array([[0, 0], [1, 0], [0, -1], [0, 1], [0, 1], [1, 1]]),
+                        'edge2': np.array([[0, 0], [1, 0], [0, -1], [0, 1], [1, 1], [1, -1]]),
                         }
         if translation not in translations.keys():
             raise ValueError(
@@ -577,7 +593,7 @@ class SGrid(object):
         if indices is None:
             indices = self.locate_faces(points)
             indices = self.translate_index(points, indices, location)
-        indices = indices.data
+#         indices = indices.data
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
