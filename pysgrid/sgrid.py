@@ -413,9 +413,9 @@ class SGrid(object):
         if difference == [1, 1]:
             return 'center'
         elif difference == [0, 1]:
-            return 'edge1'
-        elif difference == [1, 0]:
             return 'edge2'
+        elif difference == [1, 0]:
+            return 'edge1'
         elif difference == [0, 0]:
             return 'node'
         else:
@@ -593,7 +593,8 @@ class SGrid(object):
         if indices is None:
             indices = self.locate_faces(points)
             indices = self.translate_index(points, indices, location)
-#         indices = indices.data
+        if type(indices) is np.ma.MaskedArray:
+            indices = indices.data
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
