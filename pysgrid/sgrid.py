@@ -438,7 +438,7 @@ class SGrid(object):
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
         off_grids = None
-        if ind.mask == False:
+        if isinstance(ind.mask, bool):
             return result
         if isinstance(ind, np.ma.MaskedArray):
             off_grids = np.where(ind.mask[:, 0])
