@@ -191,7 +191,7 @@ class SGrid(object):
         center_lon_obj = getattr(self, center_lon)
         center_lat_obj = getattr(self, center_lat)
         center_lon = nc_file.createVariable(center_lon_obj.variable,
-                                            center_lon_obj.dtype,
+                                            center_lon_obj.d,
                                             center_lon_obj.dimensions)
         center_lat = nc_file.createVariable(center_lat_obj.variable,
                                             center_lat_obj.dtype,
@@ -359,7 +359,7 @@ class SGrid(object):
         if just_one:
             return node_ind[0]
         else:
-            return node_ind
+            return np.ma.masked_less(node_ind, 0)
 
     def get_variable_by_index(self, var, index):
         """
@@ -422,6 +422,8 @@ class SGrid(object):
         if slice is not None:
             slice.append(x_slice)
             slice.append(y_slice)
+            if len(variable.shape) < 3:
+                slice = slice[-2:]
             ind -= [x_slice.start, y_slice.start]
         else:
             slice = Ellipsis
@@ -435,8 +437,14 @@ class SGrid(object):
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
-        off_grids = np.where(ind[:, 0] < 0)
-        result[off_grids] = [np.nan, ]
+        off_grids = None
+        if ind.mask == False:
+            return result
+        if isinstance(ind, np.ma.MaskedArray):
+            off_grids = np.where(ind.mask[:, 0])
+        else:
+            off_grids = np.where(ind[:, 0] < 0)
+        result[off_grids] = [np.nan, np.nan]
         result.mask[off_grids] = True
         return result
 
@@ -479,7 +487,7 @@ class SGrid(object):
             return np.ma.column_stack((arr[x, y], arr[x1, y], arr[x1, y1], arr[x, y1]))
 
         if translation is 'node':
-            return np.ma.array(ind, mask=False)
+            return ind
 
         lons, lats = self._get_grid_vars(translation)
         lons = lons[:]
@@ -634,7 +642,7 @@ class SGrid(object):
         if indices is None:
             indices = self.locate_faces(points)
             indices = self.translate_index(points, indices, location)
-        if type(indices) is np.ma.MaskedArray:
+        if isinstance(indices, np.ma.MaskedArray):
             indices = indices.data
 
         polyx = self.get_variable_by_index(lons, indices)
