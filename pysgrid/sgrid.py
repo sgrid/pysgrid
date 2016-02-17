@@ -280,19 +280,37 @@ class SGrid(object):
         else:
             raise ValueError('Invalid grid name')
 
-    def _get_efficient_slice(self, lon_bounds, lat_bounds, name):
+    def _get_efficient_slice(self, name, lon_bounds=None, lat_bounds=None, indices=None):
         '''
         given minimum and maximum longitudes and latitudes, find
         the most efficient slice for the specified grid that covers the
         entire specified area. 
         '''
+        if indices is not None:
+            xmin = indices[:, 0][indices[:, 0] != -1].min()
+            ymin = indices[:, 1][indices[:, 1] != -1].min()
+            x_slice = slice(xmin, indices[:, 0].max() + 2)
+            y_slice = slice(ymin, indices[:, 1].max() + 2)
+            return (x_slice, y_slice)
+
+        lons, lats = None
         lons, lats = self._get_grid_vars(name)
+        lons = lons[:]
+        lats = lats[:]
         t = np.logical_and(lons >= lon_bounds[0], lons <= lon_bounds[1])
         np.logical_and(
             t, np.logical_and(lats >= lat_bounds[0], lats <= lat_bounds[1]), t)
         s = np.where(t)
-        x_slice = slice(s[0].min(), s[0].max() + 1)
-        y_slice = slice(s[1].min(), s[1].max() + 1)
+        x_slice = None
+        y_slice = None
+        if len(s[0]) is 0:
+            x_slice = slice(0, 0)
+        else:
+            x_slice = slice(s[0].min(), s[0].max() + 1)
+        if len(s[1]) is 0:
+            y_slice = slice(0, 0)
+        else:
+            y_slice = slice(s[1].min(), s[1].max() + 1)
 
         return (x_slice, y_slice)
 
@@ -374,7 +392,7 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points, variable, indices=None, alphas=None, mask=None):
+    def interpolate_var_to_points(self, points, variable, indices=None, grid=None, alphas=None, mask=None, slice=[Ellipsis]):
         """
         Interpolates a variable on one of the grids to an array of points.
         :param points: Array of points to be interpolated to.
@@ -384,21 +402,40 @@ class SGrid(object):
         :param mask: under development.
 
         """
+        # eventually should remove next line one celltree can support it
         points = points.reshape(-1, 2)
+
         ind = indices
+
+        if slice is None:
+            if ind is None or grid is None or alphas is None:
+                raise ValueError(
+                    "If slice=None, variable, indices, grid, and alphas must be provided and already pre-sliced")
         if ind is None:
             ind = self.locate_faces(points)
-        grid = self.infer_grid(variable)
-        ind = self.translate_index(points, ind, grid)
+        if grid is None:
+            grid = self.infer_grid(variable)
+            ind = self.translate_index(points, ind, grid)
+
+        xyslice = [x_slice, y_slice] = self._get_efficient_slice(
+            grid, indices=ind)
+        if slice is not None:
+            slice.append(x_slice)
+            slice.append(y_slice)
+            ind -= [x_slice.start, y_slice.start]
+        else:
+            slice = Ellipsis
 
         if alphas is None:
-            alphas = self.interpolation_alphas(points, ind, grid)
+            alphas = self.interpolation_alphas(points, ind, grid, xyslice)
+
+        variable = variable[slice]
         vals = self.get_variable_by_index(variable, ind)
         result = np.ma.sum(vals * alphas, axis=1)
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
-        off_grids = np.where(ind[:, 0] == -1)
+        off_grids = np.where(ind[:, 0] < 0)
         result[off_grids] = [np.nan, ]
         result.mask[off_grids] = True
         return result
@@ -409,12 +446,12 @@ class SGrid(object):
         it is on.
         """
         shape = np.array(variable.shape)
-        difference = (shape - self.node_lon.shape).tolist()
+        difference = (shape[-2:] - self.node_lon.shape).tolist()
         if difference == [1, 1]:
             return 'center'
-        elif difference == [0, 1]:
-            return 'edge1'
         elif difference == [1, 0]:
+            return 'edge1'
+        elif difference == [0, 1]:
             return 'edge2'
         elif difference == [0, 0]:
             return 'node'
@@ -493,7 +530,7 @@ class SGrid(object):
         new_ind[not_found] = [-1, -1]
         return new_ind
 
-    def interpolation_alphas(self, points, indices=None, location='center'):
+    def interpolation_alphas(self, points, indices=None, location='center', slice=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -587,13 +624,18 @@ class SGrid(object):
             return (l, m)
 
         lons, lats = self._get_grid_vars(location)
-        lons = lons[:]
-        lats = lats[:]
+        if slice is None:
+            lons = lons[:]
+            lats = lats[:]
+        else:
+            lons = lons[slice]
+            lats = lats[slice]
 
         if indices is None:
             indices = self.locate_faces(points)
             indices = self.translate_index(points, indices, location)
-#         indices = indices.data
+        if type(indices) is np.ma.MaskedArray:
+            indices = indices.data
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
