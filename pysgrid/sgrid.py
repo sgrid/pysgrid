@@ -287,11 +287,11 @@ class SGrid(object):
         entire specified area. 
         '''
         if indices is not None:
-            xmin = indices[:, 0][indices[:, 0] != -1].min()
-            ymin = indices[:, 1][indices[:, 1] != -1].min()
-            x_slice = slice(xmin, indices[:, 0].max() + 2)
-            y_slice = slice(ymin, indices[:, 1].max() + 2)
-            return (x_slice, y_slice)
+            ymin = indices[:, 0][indices[:, 0] != -1].min()
+            xmin = indices[:, 1][indices[:, 1] != -1].min()
+            y_slice = slice(ymin, indices[:, 0].max() + 2)
+            x_slice = slice(xmin, indices[:, 1].max() + 2)
+            return (y_slice, x_slice)
 
         lons, lats = None
         lons, lats = self._get_grid_vars(name)
@@ -392,7 +392,7 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self._tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points, variable, indices=None, grid=None, alphas=None, mask=None, slice=[Ellipsis]):
+    def interpolate_var_to_points(self, points, variable, indices=None, grid=None, alphas=None, mask=None, slices=None):
         """
         Interpolates a variable on one of the grids to an array of points.
         :param points: Array of points to be interpolated to.
@@ -407,37 +407,33 @@ class SGrid(object):
 
         ind = indices
 
-        if slice is None:
-            if ind is None or grid is None or alphas is None:
-                raise ValueError(
-                    "If slice=None, variable, indices, grid, and alphas must be provided and already pre-sliced")
         if ind is None:
             ind = self.locate_faces(points)
         if grid is None:
             grid = self.infer_grid(variable)
-            ind = self.translate_index(points, ind, grid)
-
-        xyslice = [x_slice, y_slice] = self._get_efficient_slice(
-            grid, indices=ind)
-        if slice is not None:
-            slice.append(x_slice)
-            slice.append(y_slice)
-            if len(variable.shape) < 3:
-                slice = slice[-2:]
-            ind -= [x_slice.start, y_slice.start]
-        else:
-            slice = Ellipsis
-
         if alphas is None:
-            alphas = self.interpolation_alphas(points, ind, grid, xyslice)
+            alphas = self.interpolation_alphas(points, ind, grid)
+        ind = self.translate_index(points, ind, grid)
 
-        variable = variable[slice]
+        yxslice = [yslice, xslice] = self._get_efficient_slice(
+            grid, indices=ind)
+        if slices is not None:
+            slices.append(yslice)
+            slices.append(xslice)
+        else:
+            slices = [Ellipsis]
+
+        variable = variable[slices]
+        if len(variable.shape) > 2:
+            raise ValueError("Variable has too many dimensions to \
+            associate with grid. Please specify slices.")
+        ind -= [yslice.start, xslice.start]
         vals = self.get_variable_by_index(variable, ind)
         result = np.ma.sum(vals * alphas, axis=1)
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
-        off_grids = None
+        off_grids = []
         if isinstance(ind.mask, bool):
             return result
         if isinstance(ind, np.ma.MaskedArray):
@@ -466,6 +462,7 @@ class SGrid(object):
         else:
             return None
 
+#     @profile
     def translate_index(self, points, ind, translation):
         """
         :param points: Array of points on node grid.
@@ -478,32 +475,43 @@ class SGrid(object):
             arr = var[:]
             x = index[:, 0]
             y = index[:, 1]
-            x[x < 0] = 0
-            y[y < 0] = 0
-            x1 = x + 1
-            y1 = y + 1
-            x1[x1 >= arr.shape[0]] -= 1
-            y1[y1 >= arr.shape[1]] -= 1
-            return np.ma.column_stack((arr[x, y], arr[x1, y], arr[x1, y1], arr[x, y1]))
+            return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
 
         if translation is 'node':
             return ind
-
         lons, lats = self._get_grid_vars(translation)
-        lons = lons[:]
-        lats = lats[:]
+        yslice, xslice = self._get_efficient_slice(
+            translation, indices=ind)
+
+        ind = np.ma.array(ind, mask=ind == -1)
+        xoff, yoff = xslice.start, yslice.start
+
+        if xslice.start != 0:
+            xslice = slice(xslice.start - 1, xslice.stop)
+        if xslice.stop < lons.shape[1] + 1:
+            xslice = slice(xslice.start, xslice.stop + 1)
+        if yslice.start != 0:
+            yslice = slice(yslice.start - 1, yslice.stop)
+        if yslice.stop < lons.shape[0] + 1:
+            yslice = slice(yslice.start, yslice.stop + 1)
+
+        sl = [yslice, xslice]
+
+        lons = lons[sl]
+        lats = lats[sl]
 
         translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
-                        'edge1': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
-                        'edge2': np.array([[0, 0], [1, 0], [0, -1], [0, 1], [1, 1], [1, -1]]),
+                        'edge1': np.array([[0, 0], [0, 1], [0, -1], [1, -1], [1, 0], [1, 1]]),
+                        'edge2': np.array([[0, 0], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]]),
                         }
         if translation not in translations.keys():
             raise ValueError(
                 "Translation must be of: {0}".format(translations.keys()))
-        ind = np.ma.array(ind, mask=ind == -1)
         points = np.ma.array(points, mask=ind.mask)
         offsets = translations[translation]
         new_ind = np.ma.copy(ind)
+        new_ind[:, 0] -= yslice.start
+        new_ind[:, 1] -= xslice.start
         test_polyx = s_poly(lons, new_ind)
         test_polyy = s_poly(lats, new_ind)
 #         not_found = np.logical_and(
@@ -512,8 +520,14 @@ class SGrid(object):
 #         not_found = np.where(not_in_polys)[0]
         for offset in offsets:
             # for every not found, update the cell to be checked
-            test_polyx[not_found] = s_poly(lons, new_ind[not_found] + offset)
-            test_polyy[not_found] = s_poly(lats, new_ind[not_found] + offset)
+            new_ind[not_found] += offset
+            oob = np.where(np.logical_or(
+                new_ind[not_found] + [1, 1] >= lons.shape, new_ind[not_found] < 0))[0]
+            if oob.size > 0:
+                new_ind[not_found[oob]] -= offset
+
+            test_polyx[not_found] = s_poly(lons, new_ind[not_found])
+            test_polyy[not_found] = s_poly(lats, new_ind[not_found])
             # retest the missing points. Some might be found, and will not appear
             # in still_not_found
 #             found = np.where(points_in_polys(points, test_polyx, test_polyy))[0]
@@ -529,16 +543,17 @@ class SGrid(object):
             # two
             not_found = np.setdiff1d(not_found, found)
             # update the indices of the ones that were found
-            new_ind[found] += offset
+            new_ind[not_found] -= offset
+            new_ind[not_found[oob]] += offset
             if len(not_found) == 0:
                 break
 
         # There aren't any boundary issues thanks to numpy's indexing
-        new_ind.mask[not_found] = True
         new_ind[not_found] = [-1, -1]
-        return new_ind
+        new_ind.mask[not_found] = True
+        return new_ind + [yslice.start, xslice.start]
 
-    def interpolation_alphas(self, points, indices=None, location='center', slice=None):
+    def interpolation_alphas(self, points, indices=None, location='center'):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -615,8 +630,8 @@ class SGrid(object):
                 t2 = np.logical_and(l <= 1, m <= 1)
                 t3 = np.logical_and(t1, t2)
 
-                m[~t3[ind_arr]] = m2[ind_arr]
-                l[~t3[ind_arr]] = l2[ind_arr]
+                m[~t3[ind_arr]] = m2[~t3[ind_arr]]
+                l[~t3[ind_arr]] = l2[~t3[ind_arr]]
 
             aa = a[3] * b[2] - a[2] * b[3]
             bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
@@ -632,18 +647,19 @@ class SGrid(object):
             return (l, m)
 
         lons, lats = self._get_grid_vars(location)
-        if slice is None:
-            lons = lons[:]
-            lats = lats[:]
-        else:
-            lons = lons[slice]
-            lats = lats[slice]
-
         if indices is None:
             indices = self.locate_faces(points)
-            indices = self.translate_index(points, indices, location)
+        indices = self.translate_index(points, indices, location)
         if isinstance(indices, np.ma.MaskedArray):
             indices = indices.data
+
+        sl = [yslice, xslice] = self._get_efficient_slice(
+            location, indices=indices)
+
+        lons = lons[sl]
+        lats = lats[sl]
+
+        indices -= [sl[0].start, sl[1].start]
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
