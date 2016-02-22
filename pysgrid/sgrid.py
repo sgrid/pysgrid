@@ -405,6 +405,22 @@ class SGrid(object):
         :param indices: If computed already, array of indices can be passed in to increase speed.
         :param alphas: If computed already, array of alphas can be passed in to increase speed.
         :param mask: under development.
+        :param _translated_indices: For advanced users to minimize recomputation of information
+
+
+        - With a numpy array:  
+        sgrid.interpolate_var_to_points(points, sgrid.u[time_idx, depth_idx])  
+        - With a raw netCDF Variable:  
+        sgrid.interpolate_var_to_points(points, nc.variables['u'], slices=[time_idx, depth_idx])  
+
+        If you have pre-computed information, you can pass it in to avoid unnecessary
+        computation and increase performance.  
+        - ind = # precomputed indices of points  
+        - alphas = # precomputed alphas (useful if interpolating to the same points frequently)  
+        - _translated_indices = # precomputed translated indices (advanced)
+
+        sgrid.interpolate_var_to_points(points, sgrid.u, indices=ind, alphas=alphas, 
+        slices=[time_idx, depth_idx])
 
         """
         # eventually should remove next line one celltree can support it
