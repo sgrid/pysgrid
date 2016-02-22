@@ -274,6 +274,7 @@ def translate_index(points, ind, dest_grid, translation=None):
     return new_ind
 
 
+# @profile
 def points_in_polys(points, polys, polyy=None):
     '''
     :param points: Numpy array of Nx2 points
@@ -296,11 +297,26 @@ def points_in_polys(points, polys, polyy=None):
             v1y = polys[:, i - 1, 1]
             v2x = polys[:, i, 0]
             v2y = polys[:, i, 1]
-        test1 = (v2y >= pointsy) != (v1y >= pointsy)
+        test1 = (v2y > pointsy) != (v1y > pointsy)
         test2 = np.zeros(points.shape[0], dtype=bool)
         m = np.where(test1 == True)[0]
-        test2[m] = pointsx[m] < (
-            v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / (v1y[m] - v2y[m]) + v2x[m]
+        test2[m] = pointsx[m] < \
+            (v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / \
+            (v1y[m] - v2y[m]) + v2x[m]
         np.logical_and(test1, test2, test1)
         np.logical_xor(result, test1, result)
     return result
+'''
+        bool CellTree2D::point_in_poly (int bb, double* test){
+    int* f = faces[bb];
+    int i, j = 0;
+    bool c = 0; /*really need a bool here...*/
+    for (i = 0, j = poly-1; i < poly; j = i++) {
+        double* v1 = vertices[f[i]];
+        double* v2 = vertices[f[j]];
+        if ( ((v1[1]>test[1]) != (v2[1]>test[1])) &&
+                (test[0] < (v2[0]-v1[0]) * (test[1]-v1[1]) / (v2[1]-v1[1]) + v1[0]) )
+            c = !c;
+    }
+    return c;
+}'''
