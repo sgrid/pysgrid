@@ -274,6 +274,7 @@ def translate_index(points, ind, dest_grid, translation=None):
     return new_ind
 
 
+# @profile
 def points_in_polys(points, polys, polyy=None):
     '''
     :param points: Numpy array of Nx2 points
@@ -299,8 +300,9 @@ def points_in_polys(points, polys, polyy=None):
         test1 = (v2y > pointsy) != (v1y > pointsy)
         test2 = np.zeros(points.shape[0], dtype=bool)
         m = np.where(test1 == True)[0]
-        test2[m] = pointsx[m] < (
-            v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / (v1y[m] - v2y[m]) + v2x[m]
+        test2[m] = pointsx[m] < \
+            (v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / \
+            (v1y[m] - v2y[m]) + v2x[m]
         np.logical_and(test1, test2, test1)
         np.logical_xor(result, test1, result)
     return result
