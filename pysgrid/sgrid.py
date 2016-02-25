@@ -280,12 +280,13 @@ class SGrid(object):
         else:
             raise ValueError('Invalid grid name')
 
-    def _get_efficient_slice(self, name, lon_bounds=None, lat_bounds=None, indices=None):
-        '''
+    def _get_efficient_slice(self, name, indices=None, lon_bounds=None, lat_bounds=None):
+        """
         given minimum and maximum longitudes and latitudes, find
         the most efficient slice for the specified grid that covers the
         entire specified area. 
-        '''
+        IN DEVELOPMENT
+        """
         if indices is not None:
             ymin = indices[:, 0][indices[:, 0] != -1].min()
             xmin = indices[:, 1][indices[:, 1] != -1].min()
@@ -315,6 +316,9 @@ class SGrid(object):
         return (x_slice, y_slice)
 
     def get_grid(self, grid='node'):
+        """
+        TEMPORARY
+        """
         if grid not in SGrid.grid_names:
             raise ValueError(
                 'Name not recognized. Grid must be in {0}'.format(grid_names))
@@ -400,10 +404,10 @@ class SGrid(object):
                                   _translated_indices=None):
         """
         Interpolates a variable on one of the grids to an array of points.
-        :param points: Array of points to be interpolated to.
+        :param points: Nx2 Array of points to be interpolated to.
         :param variable: Variable data array with the same shape as one of the grids.
-        :param indices: If computed already, array of indices can be passed in to increase speed.
-        :param alphas: If computed already, array of alphas can be passed in to increase speed.
+        :param indices: If computed already, array of Nx2 indices can be passed in to increase speed.
+        :param alphas: If computed already, array of Nx4 alphas can be passed in to increase speed.
         :param mask: under development.
         :param _translated_indices: For advanced users to minimize recomputation of information
 
@@ -447,7 +451,8 @@ class SGrid(object):
         else:
             slices = [yslice, xslice]
 
-        variable = variable[slices]
+        if self.infer_grid(variable) is not None:
+            variable = variable[slices]
         if len(variable.shape) > 2:
             raise ValueError("Variable has too many dimensions to \
             associate with grid. Please specify slices.")
@@ -491,6 +496,8 @@ class SGrid(object):
         :param points: Array of points on node grid.
         :param ind: Array of x,y indicices of the points on node grid.
         :param translation: string to describe destination grid
+        :param slice_grid: Boolean to specify whether to slice the grid during translation
+        in some instances this can be faster
         translates indices from one grid to another.
         """
 
@@ -539,36 +546,29 @@ class SGrid(object):
         new_ind[:, 1] -= xslice.start
         test_polyx = s_poly(lons, new_ind)
         test_polyy = s_poly(lats, new_ind)
-#         not_found = np.logical_and(
-#             ~ind.mask[:, 0], ~points_in_polys(points, test_polyx, test_polyy))
         not_found = np.where(~ind.mask[:, 0])[0]
-#         not_found = np.where(not_in_polys)[0]
         for offset in offsets:
-            # for every not found, update the cell to be checked
+            # for every not found, update the index to be checked
             new_ind[not_found] += offset
+            # locate situations where the indices are now out of bounds
             oob = np.where(np.logical_or(
                 new_ind[not_found] + [1, 1] >= lons.shape, new_ind[not_found] < 0))[0]
             if oob.size > 0:
+                # reset problem indices
                 new_ind[not_found[oob]] -= offset
 
+            # Generate candidate polygons that could contain the points
             test_polyx[not_found] = s_poly(lons, new_ind[not_found])
             test_polyy[not_found] = s_poly(lats, new_ind[not_found])
-            # retest the missing points. Some might be found, and will not appear
-            # in still_not_found
-#             found = np.where(points_in_polys(points, test_polyx, test_polyy))[0]
 
             found = points_in_polys(
                 points[not_found], test_polyx[not_found], test_polyy[not_found])
             found = not_found[found]
 
-#             still_not_found = np.logical_and(
-#                 ~ind.mask[:, 0][not_found], ~points_in_polys(points[not_found], test_polyx[not_found], test_polyy[not_found]))
-#             still_not_found = np.where(still_not_found)[0]
-            # therefore the points that were found is the intersection of the
-            # two
             oob = not_found[oob]
+            # remove the found items from the not found list
             not_found = np.setdiff1d(not_found, found)
-            # update the indices of the ones that were found
+            # update the indices of the ones that were not found
             new_ind[not_found] -= offset
             new_ind[oob] += offset
             if len(not_found) == 0:
@@ -595,10 +595,10 @@ class SGrid(object):
         """
 
         def compute_coeffs(px, py):
-            '''
+            """
             Params:
             px, py: x, y coordinates of the polygon. Order matters(?) (br, tr, tl, bl
-            '''
+            """
             px = np.matrix(px)
             py = np.matrix(py)
             A = np.array(
@@ -624,20 +624,20 @@ class SGrid(object):
             l = (l-a1 - a3*m)/(a2 + a4*m)
             """
             def lin_eqn(l, m, ind_arr, aa, bb, cc):
-                '''
+                """
                 AB is parallel to CD...need to solve linear equation instead.
                 m = -cc/bb
                 bb = Ei*Fj - Ej*Fi + Hi*Gj - Hj*Gi
                 k0 = Hi*Ej - Hj*Ei
-                '''
+                """
                 m[ind_arr] = -cc / bb
                 l[ind_arr] = (x[ind_arr] - a[0][ind_arr] - a[2][ind_arr]
                               * m[ind_arr]) / (a[1][ind_arr] + a[3][ind_arr] * m[ind_arr])
 
             def quad_eqn(l, m, ind_arr, aa, bb, cc):
-                '''
+                """
 
-                '''
+                """
                 if len(aa) is 0:
                     return
                 k = bb * bb - 4 * aa * cc
