@@ -49,7 +49,6 @@ class SGridVariable(object):
         self.y_axis = y_axis
         self.z_axis = z_axis
         self._data = data
-        self._loaded = False
 
     @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
@@ -136,10 +135,7 @@ class SGridVariable(object):
 
     @property
     def data(self):
-        if self._loaded:
-            return self._var
-        else:
-            return self._data
+        return self._data
 
     def __getitem__(self, item):
         """

@@ -104,8 +104,8 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
     if method == 'center':
         for var_dim in var_dims:
             try:
-                padding_info = next(
-                    (info for info in padding if info.face_dim == var_dim))
+                padding_info = next((info for info in padding if
+                                     info.face_dim == var_dim))
             except StopIteration:
                 slice_index = np.s_[:]
                 slice_indices += (slice_index,)

@@ -19,8 +19,11 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 url = (
     'http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
+# url =
+# ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
 lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
-maxslice = 200
+# lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
+maxslice = 2
 fps = 10
 
 
@@ -116,14 +119,29 @@ def make_map(projection=ccrs.PlateCarree(), figsize=(9, 9)):
     gl.yformatter = LATITUDE_FORMATTER
     return fig, ax
 
-fig, ax = make_map()
 
 nc = nc4.Dataset(url)
-timeobj = Time(nc['ocean_time'])
+timeobj = sgrid = None
+if ('ocean_time' in nc.variables.keys()):
+    timeobj = Time(nc['ocean_time'])
+else:
+    timeobj = Time(nc['time'])
 
-t0 = 0
-axcolor = 'lightgoldenrodyellow'
-sgrid = pysgrid.load_grid(nc)
+
+if 'grid' in nc.variables.keys():
+    sgrid = pysgrid.load_grid(nc)
+else:
+    sgrid = pysgrid.SGrid(node_lon=nc['lon_psi'],
+                          node_lat=nc['lat_psi'],
+                          edge1_lon=nc['lon_u'],
+                          edge1_lat=nc['lat_u'],
+                          edge2_lon=nc['lon_v'],
+                          edge2_lat=nc['lat_v'],
+                          )
+    sgrid.u = pysgrid.variables.SGridVariable(data=nc['u'])
+    sgrid.v = pysgrid.variables.SGridVariable(data=nc['v'])
+    sgrid.angles = pysgrid.variables.SGridVariable(data=nc['angle'])
+
 
 points = np.stack((lons, lats), axis=-1).reshape(-1, 2)
 
@@ -148,9 +166,11 @@ angles = sgrid.angles[:][ang_ind[:, 0], ang_ind[:, 1]]
 # ims is a list of lists, each row is a list of artists to draw in the
 # current frame; here we are just animating one artist, the image, in
 # each frame
+fig, ax = make_map()
 print fig
 print ax
 index = 0
+ax.coastlines('10m')
 
 t = np.linspace(0, maxslice, maxslice * fps)
 cs = qv = tl = None

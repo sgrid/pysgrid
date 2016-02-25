@@ -1,2 +1,2 @@
-netCDF4 >=1.2.0
+netCDF4 >=1.2.0,<1.2.2
 numpy
