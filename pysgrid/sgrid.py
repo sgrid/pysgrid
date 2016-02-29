@@ -350,7 +350,7 @@ class SGrid(object):
         just_one = (points.ndim == 1)
         points = points.reshape(-1, 2)
 
-        if not hasattr(self, 'tree') or self.tree is None:
+        if self.tree is None:
             self.build_celltree()
         indices = self.tree.multi_locate(points)
         node_x = indices % (self.node_lat.shape[1] - 1)
@@ -395,7 +395,7 @@ class SGrid(object):
                                                   for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
             self._lin_faces = np.ascontiguousarray(
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
-        self._tree = CellTree(self._lin_nodes, self._lin_faces)
+        self.tree = CellTree(self._lin_nodes, self._lin_faces)
 
     def interpolate_var_to_points(self, points, variable,
                                   indices=None,
