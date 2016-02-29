@@ -55,6 +55,7 @@ class SGrid(object):
                  face_dimensions=None,
                  vertical_padding=None,
                  vertical_dimensions=None,
+                 tree=None,
                  *args,
                  **kwargs):
 
@@ -87,6 +88,7 @@ class SGrid(object):
         self.face_dimensions = face_dimensions
         self.vertical_padding = vertical_padding
         self.vertical_dimensions = vertical_dimensions
+        self.tree = tree
 
     @classmethod
     def load_grid(cls, nc):
@@ -348,9 +350,9 @@ class SGrid(object):
         just_one = (points.ndim == 1)
         points = points.reshape(-1, 2)
 
-        if not hasattr(self, '_tree') or self._tree is None:
+        if not hasattr(self, 'tree') or self.tree is None:
             self.build_celltree()
-        indices = self._tree.multi_locate(points)
+        indices = self.tree.multi_locate(points)
         node_x = indices % (self.node_lat.shape[1] - 1)
         node_y = indices // (self.node_lat.shape[1] - 1)
         node_ind = np.column_stack((node_y, node_x))
