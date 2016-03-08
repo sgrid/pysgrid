@@ -280,7 +280,7 @@ class SGrid(object):
         elif name is 'edge2':
             return (self.edge2_lon, self.edge2_lat)
         else:
-            raise ValueError('Invalid grid name')
+            raise ValueError('Invalid grid name {0}'.format(name))
 
     def _get_efficient_slice(self, name, indices=None, lon_bounds=None, lat_bounds=None):
         """
@@ -321,7 +321,7 @@ class SGrid(object):
         """
         TEMPORARY
         """
-        if grid not in SGrid.grid_names:
+        if grid not in ['node', 'center', 'edge1', 'edge2']:
             raise ValueError(
                 'Name not recognized. Grid must be in {0}'.format(grid_names))
         lons = getattr(self, grid + '_lon')
@@ -397,7 +397,8 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self.tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points, variable,
+    def interpolate_var_to_points(self, points,
+                                  variable,
                                   indices=None,
                                   grid=None,
                                   alphas=None,
@@ -581,7 +582,7 @@ class SGrid(object):
         new_ind.mask[not_found] = True
         return new_ind + [yslice.start, xslice.start]
 
-    def interpolation_alphas(self, points, indices=None, location='center', _translated_indices=None):
+    def interpolation_alphas(self, points, indices=None, location='center', _translated_indices=None, _memo_key=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -595,6 +596,15 @@ class SGrid(object):
 
         TODO: mask the indices that aren't on the grid properly.
         """
+        if not hasattr(self, '_alpha_memo_dict'):
+            self._alpha_memo_dict = {'node': None,
+                                     'edge1': None,
+                                     'edge2': None,
+                                     'center': None}
+        if _memo_key is not None:
+            if (self._alpha_memo_dict[location] is not None and
+                    _memo_key in self._alpha_memo_dict[location]):
+                return self._alpha_memo_dict[location][_memo_key]
 
         def compute_coeffs(px, py):
             """
@@ -688,8 +698,8 @@ class SGrid(object):
             indices = self.translate_index(points, indices, location)
         elif _translated_indices is not None:
             indices = np.ma.copy(_translated_indices)
-        if isinstance(indices, np.ma.MaskedArray):
-            indices = indices.data
+#         if isinstance(indices, np.ma.MaskedArray):
+#             indices = indices.data
 
         sl = [yslice, xslice] = self._get_efficient_slice(
             location, indices=indices)
@@ -713,7 +723,10 @@ class SGrid(object):
         ab = m - l * m
         ac = l * m
         ad = l - l * m
-        return np.array((aa, ab, ac, ad)).T
+        alphas = np.array((aa, ab, ac, ad)).T
+        if _memo_key is not None:
+            self._alpha_memo_dict[location] = {_memo_key: alphas}
+        return alphas
 
 
 class SGridAttributes(object):
