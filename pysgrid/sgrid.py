@@ -16,7 +16,6 @@ from .variables import SGridVariable
 
 class SGrid(object):
 
-    grid_names = ['node', 'face', 'edge1', 'edge2']
     padding_slices = {'both': (1, -1),
                       'none': (None, None),
                       'low': (1, None),
@@ -321,7 +320,8 @@ class SGrid(object):
         """
         TEMPORARY
         """
-        if grid not in SGrid.grid_names:
+        grid_names = ['node', 'face', 'edge1', 'edge2']
+        if grid not in grid_names:
             raise ValueError(
                 'Name not recognized. Grid must be in {0}'.format(grid_names))
         lons = getattr(self, grid + '_lon')
@@ -495,12 +495,18 @@ class SGrid(object):
 
     def translate_index(self, points, ind, translation, slice_grid=True):
         """
+        A function to translate indices from one grid to another. For example:
+
+        Point p is located in cell (x, y) on the node grid.
+        On the centers grid, it could be in (x, y), (x+1, y), (x, y+1), or (x+1,y+1)
+
+        This is important when trying to find the correct four points to use for interpolation.
+
         :param points: Array of points on node grid.
         :param ind: Array of x,y indicices of the points on node grid.
         :param translation: string to describe destination grid
         :param slice_grid: Boolean to specify whether to slice the grid during translation
         in some instances this can be faster
-        translates indices from one grid to another.
         """
 
         def s_poly(var, index):

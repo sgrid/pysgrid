@@ -17,25 +17,35 @@ import cartopy.crs as ccrs
 from cartopy.io import shapereader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-url = (
-    'http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
-# url =
-# ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
-lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
+"""
+~~HOW TO USE THIS~~
+
+The four lines below are the primary 'controls'.
+`url`: filename or URL of dataset
+`lons,lats` mesh of points that cover the specified bounds
+`maxslice` The number of slices from 0 to turn into an animation
+`fps` The number of frames in between each data slice.
+
+This is a WIP. Reader beware.
+"""
+
+# url = ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
+url = ('http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
+lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
 maxslice = 2
 fps = 10
 
 
 def interpolated_velocities(grid, points, timeobj, tindex, u, v, u_alphas, v_alphas, u_ind, v_ind, depth=-1.):
-    '''
+    """
     Finds velocities at the points at the time specified, interpolating in 2D
     over the u and v grids to do so.
     :param time: The time in the simulation
     :param points: a numpy array of points that you want to find interpolated velocities for
     :param indices: Numpy array of indices of the points, if already known.
     :return: interpolated velocities at the specified points
-    '''
+    """
     t_alphas = timeobj.ialphas(tindex)
     t_index = int(np.floor(tindex))
 
