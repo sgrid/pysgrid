@@ -23,11 +23,11 @@ url = (
 # ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
 lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
-maxslice = 2
+maxslice = 20
 fps = 10
 
 
-def interpolated_velocities(grid, points, timeobj, tindex, u, v, u_alphas, v_alphas, u_ind, v_ind, depth=-1.):
+def interpolated_velocities(grid, points, ind, timeobj, tindex, u, v, depth=-1.):
     '''
     Finds velocities at the points at the time specified, interpolating in 2D
     over the u and v grids to do so.
@@ -38,11 +38,12 @@ def interpolated_velocities(grid, points, timeobj, tindex, u, v, u_alphas, v_alp
     '''
     t_alphas = timeobj.ialphas(tindex)
     t_index = int(np.floor(tindex))
+    u_grid = grid.infer_grid(u)
+    v_grid = grid.infer_grid(v)
 
-    yu_slice, xu_slice = grid._get_efficient_slice(u_grid, indices=u_ind)
+    yu_slice, xu_slice = grid.get_efficient_slice(points, u_grid, ind, memo=True)
     u_slice = [slice(t_index, t_index + 2), depth, yu_slice, xu_slice]
-    yv_slice, xv_slice = grid._get_efficient_slice(
-        v_grid, indices=v_ind)
+    yv_slice, xv_slice = grid.get_efficient_slice(points, v_grid, ind, memo=True)
     v_slice = [slice(t_index, t_index + 2), depth, yv_slice, xv_slice]
 
     u0, u1 = grid.u[u_slice]
@@ -50,10 +51,8 @@ def interpolated_velocities(grid, points, timeobj, tindex, u, v, u_alphas, v_alp
     u_vels = u0 + (u1 - u0) * t_alphas
     v_vels = v0 + (v1 - v0) * t_alphas
 
-    u_interp = grid.interpolate_var_to_points(
-        points, u_vels, ind, alphas=u_alphas, grid=u_grid, slices=None, _translated_indices=u_ind)
-    v_interp = grid.interpolate_var_to_points(
-        points, v_vels, ind, alphas=v_alphas, grid=v_grid, slices=None, _translated_indices=v_ind)
+    u_interp = grid.interpolate_var_to_points(points, u_vels, grid=u_grid, slices=None, memo=True)
+    v_interp = grid.interpolate_var_to_points(points, v_vels, grid=v_grid, slices=None, memo=True)
 
     return u_interp, v_interp
 
@@ -147,19 +146,6 @@ points = np.stack((lons, lats), axis=-1).reshape(-1, 2)
 
 ind = sgrid.locate_faces(points)
 
-u_grid = sgrid.infer_grid(sgrid.u)
-v_grid = sgrid.infer_grid(sgrid.v)
-
-u_ind = sgrid.translate_index(
-    points, ind, u_grid, slice_grid=False)
-v_ind = sgrid.translate_index(
-    points, ind, v_grid, slice_grid=False)
-
-u_alphas = sgrid.interpolation_alphas(
-    points, None, u_grid, _translated_indices=u_ind)
-v_alphas = sgrid.interpolation_alphas(
-    points, None, v_grid, _translated_indices=v_ind)
-
 ang_ind = ind + [1, 1]
 angles = sgrid.angles[:][ang_ind[:, 0], ang_ind[:, 1]]
 
@@ -195,8 +181,7 @@ def gen_map(k):
 
     print tindex
     print time_str
-    u_rot, v_rot = interpolated_velocities(
-        sgrid, points, timeobj, tindex, sgrid.u, sgrid.v, u_alphas, v_alphas, u_ind, v_ind)
+    u_rot, v_rot = interpolated_velocities(sgrid, points, ind, timeobj, tindex, sgrid.u, sgrid.v)
     u_rot, v_rot = rotate_vectors(u_rot, v_rot, angles)
     u_rot = u_rot.reshape(600, -1)
     v_rot = v_rot.reshape(600, -1)
