@@ -286,22 +286,22 @@ class SGrid(object):
     def _hash_of_pts(self, points):
         return hashlib.sha1(points.tobytes()).hexdigest()
 
-    def _add_memo(self, points, item, location, D, hash=None):
-        if hash is None:
-            hash = self._hash_of_pts(points)
+    def _add_memo(self, points, item, location, D, _hash=None):
+        if _hash is None:
+            _hash = self._hash_of_pts(points)
         if D[location] is not None and len(D[location]) > 0:
             D[location].pop(D[location].keys()[0])
-        D[location] = {hash: item}
+        D[location] = {_hash: item}
 
-    def _get_memoed(self, points, location, D, hash=None):
-        if hash is None:
-            hash = self._hash_of_pts(points)
-        if (D[location] is not None and hash in D[location]):
-            return D[location][hash]
+    def _get_memoed(self, points, location, D, _hash=None):
+        if _hash is None:
+            _hash = self._hash_of_pts(points)
+        if (D[location] is not None and _hash in D[location]):
+            return D[location][_hash]
         else:
             return None
 
-    def get_efficient_slice(self, points, grid='node', indices=None, memo=False):
+    def get_efficient_slice(self, points, grid='node', indices=None, memo=False, _hash=None):
         """
         given minimum and maximum longitudes and latitudes, find
         the most efficient slice for the specified grid that covers the
@@ -310,8 +310,11 @@ class SGrid(object):
         """
         t_ind = None
         if indices is None:
-            indices = self.locate_faces(points, memo)
-        t_ind = self.translate_index(points, indices, grid, memo=memo)
+            indices = self.locate_faces(points, memo, _hash)
+        if grid != 'node':
+            t_ind = self.translate_index(points, indices, grid, memo, _hash)
+        else:
+            t_ind = indices
         ymin = t_ind[:, 0][t_ind[:, 0] != -1].min()
         xmin = t_ind[:, 1][t_ind[:, 1] != -1].min()
         y_slice = slice(ymin, t_ind[:, 0].max() + 2)
@@ -329,7 +332,7 @@ class SGrid(object):
         lats = getattr(self, grid + '_lat')
         return np.ma.dstack((lons[:], lats[:]))
 
-    def locate_faces(self, points, memo=False):
+    def locate_faces(self, points, memo=False, _hash=None):
         """
         Returns the node grid indices, one per point.
 
@@ -348,13 +351,13 @@ class SGrid(object):
 
         """
 
-        hash = None
         if not hasattr(self, '_ind_memo_dict'):
             self._ind_memo_dict = {0: 0}
         if memo:
-            hash = self._hash_of_pts(points)
-            if hash in self._ind_memo_dict:
-                return self._ind_memo_dict[hash]
+            if _hash is None:
+                _hash = self._hash_of_pts(points)
+            if _hash in self._ind_memo_dict:
+                return self._ind_memo_dict[_hash]
 
         points = np.asarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
@@ -374,7 +377,7 @@ class SGrid(object):
             res = np.ma.masked_less(node_ind, 0)
             if memo:
                 self._ind_memo_dict.pop(self._ind_memo_dict.keys()[0])
-                self._ind_memo_dict[hash] = np.ma.copy(res)
+                self._ind_memo_dict[_hash] = np.ma.copy(res)
             return res
 
     def get_variable_by_index(self, var, index):
@@ -422,6 +425,7 @@ class SGrid(object):
                                   memo=False,
                                   slice_grid=False,
                                   _translated_indices=None,
+                                  _hash=None
                                   ):
         """
         Interpolates a variable on one of the grids to an array of points.
@@ -452,19 +456,21 @@ class SGrid(object):
         points = points.reshape(-1, 2)
 
         ind = indices
+        if hash is None:
+            _hash = self._hash_of_pts(points)
 
         if ind is None and _translated_indices is None:
-            ind = self.locate_faces(points, memo)
+            ind = self.locate_faces(points, memo, _hash)
         if grid is None:
             grid = self.infer_grid(variable)
         if _translated_indices is None:
-            ind = self.translate_index(points, ind, grid, memo=memo)
+            ind = self.translate_index(points, ind, grid, slice_grid, memo, _hash)
         else:
             ind = np.ma.copy(_translated_indices)
         if alphas is None:
-            alphas = self.interpolation_alphas(points, None, grid, ind, memo=memo)
+            alphas = self.interpolation_alphas(points, None, grid, ind, memo=memo, _hash=hash)
 
-        yxslice = [yslice, xslice] = self.get_efficient_slice(points, grid, ind, memo=memo)
+        yxslice = [yslice, xslice] = self.get_efficient_slice(points, grid, ind, memo=memo, _hash=hash)
         if slices is not None:
             slices.append(yslice)
             slices.append(xslice)
@@ -511,8 +517,8 @@ class SGrid(object):
         else:
             return None
 
-#     @profile
-    def translate_index(self, points, ind, translation, slice_grid=False, memo=False):
+    @profile
+    def translate_index(self, points, ind, translation, slice_grid=True, memo=False, _hash=None):
         """
         :param points: Array of points on node grid.
         :param ind: Array of x,y indicices of the points on node grid.
@@ -528,7 +534,6 @@ class SGrid(object):
             y = index[:, 1]
             return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
 
-        hash = None
         if not hasattr(self, '_t_ind_memo_dict'):
             self._t_ind_memo_dict = {'node': None,
                                      'edge1': None,
@@ -536,8 +541,9 @@ class SGrid(object):
                                      'center': None}
 
         if memo:
-            hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, translation, self._t_ind_memo_dict, hash)
+            if _hash is None:
+                _hash = self._hash_of_pts(points)
+            result = self._get_memoed(points, translation, self._t_ind_memo_dict, _hash)
             if result is not None:
                 return result
 
@@ -552,7 +558,7 @@ class SGrid(object):
             yslice = slice(0, lons.shape[0])
             xslice = slice(0, lons.shape[1])
         else:
-            yslice, xslice = self.get_efficient_slice(points, 'node', ind, memo)
+            yslice, xslice = self.get_efficient_slice(points, 'node', ind, memo, _hash)
             if xslice.start != 0:
                 xslice = slice(xslice.start - 1, xslice.stop)
             if xslice.stop < lons.shape[1] + 1:
@@ -612,10 +618,10 @@ class SGrid(object):
         new_ind.mask[not_found] = True
         new_ind += [yslice.start, xslice.start]
         if memo:
-            self._add_memo(points, new_ind, translation, self._t_ind_memo_dict, hash)
+            self._add_memo(points, new_ind, translation, self._t_ind_memo_dict, _hash)
         return new_ind
 
-    def interpolation_alphas(self, points, indices=None, location='center', _translated_indices=None, memo=False):
+    def interpolation_alphas(self, points, indices=None, location='center', _translated_indices=None, memo=False, _hash=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -629,15 +635,14 @@ class SGrid(object):
 
         TODO: mask the indices that aren't on the grid properly.
         """
-        hash = None
         if not hasattr(self, '_alpha_memo_dict'):
             self._alpha_memo_dict = {'node': None,
                                      'edge1': None,
                                      'edge2': None,
                                      'center': None}
         if memo:
-            hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, location, self._alpha_memo_dict, hash)
+            _hash = self._hash_of_pts(points)
+            result = self._get_memoed(points, location, self._alpha_memo_dict, _hash)
             if result is not None:
                 return result
 
@@ -728,15 +733,15 @@ class SGrid(object):
         lons, lats = self._get_grid_vars(location)
         if indices is None and _translated_indices is None:
             indices = self.locate_faces(points)
-            indices = self.translate_index(points, indices, location)
+            indices = self.translate_index(points, indices, location, memo, _hash)
         elif indices is not None:
-            indices = self.translate_index(points, indices, location)
+            indices = self.translate_index(points, indices, location, memo, _hash)
         elif _translated_indices is not None:
             indices = np.ma.copy(_translated_indices)
 #         if isinstance(indices, np.ma.MaskedArray):
 #             indices = indices.data
 
-        sl = [yslice, xslice] = self.get_efficient_slice(points, location, indices, memo)
+        sl = [yslice, xslice] = self.get_efficient_slice(points, location, indices, memo, _hash)
 
         lons = lons[sl]
         lats = lats[sl]
@@ -760,7 +765,7 @@ class SGrid(object):
         alphas = np.array((aa, ab, ac, ad)).T
 
         if memo:
-            self._add_memo(points, alphas, location, self._alpha_memo_dict, hash)
+            self._add_memo(points, alphas, location, self._alpha_memo_dict, _hash)
         return alphas
 
 
