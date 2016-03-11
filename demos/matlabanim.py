@@ -23,7 +23,7 @@ url = (
 # ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
 lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
-maxslice = 20
+maxslice = 3
 fps = 10
 
 
@@ -38,23 +38,19 @@ def interpolated_velocities(grid, points, ind, timeobj, tindex, u, v, depth=-1.)
     '''
     t_alphas = timeobj.ialphas(tindex)
     t_index = int(np.floor(tindex))
-    u_grid = grid.infer_grid(u)
-    v_grid = grid.infer_grid(v)
+    mem = True
+    _hash = grid._hash_of_pts(points)
 
-    yu_slice, xu_slice = grid.get_efficient_slice(points, u_grid, ind, memo=True)
-    u_slice = [slice(t_index, t_index + 2), depth, yu_slice, xu_slice]
-    yv_slice, xv_slice = grid.get_efficient_slice(points, v_grid, ind, memo=True)
-    v_slice = [slice(t_index, t_index + 2), depth, yv_slice, xv_slice]
+    u0 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index, -1], memo=mem, _hash=_hash)
+    u1 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
 
-    u0, u1 = grid.u[u_slice]
-    v0, v1 = grid.v[v_slice]
+    v0 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index, -1], memo=mem, _hash=_hash)
+    v1 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
+
     u_vels = u0 + (u1 - u0) * t_alphas
     v_vels = v0 + (v1 - v0) * t_alphas
 
-    u_interp = grid.interpolate_var_to_points(points, u_vels, grid=u_grid, slices=None, memo=True)
-    v_interp = grid.interpolate_var_to_points(points, v_vels, grid=v_grid, slices=None, memo=True)
-
-    return u_interp, v_interp
+    return u_vels, v_vels
 
 
 class Time(object):

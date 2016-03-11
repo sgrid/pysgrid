@@ -415,6 +415,7 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self.tree = CellTree(self._lin_nodes, self._lin_faces)
 
+#     @profile
     def interpolate_var_to_points(self, points,
                                   variable,
                                   indices=None,
@@ -423,7 +424,7 @@ class SGrid(object):
                                   mask=None,
                                   slices=None,
                                   memo=False,
-                                  slice_grid=False,
+                                  slice_grid=True,
                                   _translated_indices=None,
                                   _hash=None
                                   ):
@@ -517,7 +518,7 @@ class SGrid(object):
         else:
             return None
 
-    @profile
+#     @profile
     def translate_index(self, points, ind, translation, slice_grid=True, memo=False, _hash=None):
         """
         :param points: Array of points on node grid.
@@ -869,15 +870,19 @@ class SGridAttributes(object):
         return node_lon, node_lat
 
     def get_cell_edge1_lat_lon(self):
-        edge1_lon_var, edge1_lat_var = self.get_attr_coordinates(
-            'edge1_coordinates')
+        try:
+            edge1_lon_var, edge1_lat_var = self.get_attr_coordinates('edge1_coordinates')
+        except TypeError:
+            edge1_lon, edge1_lat = None, None
         edge1_lon = self.nc[edge1_lon_var]
         edge1_lat = self.nc[edge1_lat_var]
         return edge1_lon, edge1_lat
 
     def get_cell_edge2_lat_lon(self):
-        edge2_lon_var, edge2_lat_var = self.get_attr_coordinates(
-            'edge2_coordinates')
+        try:
+            edge2_lon_var, edge2_lat_var = self.get_attr_coordinates('edge2_coordinates')
+        except TypeError:
+            edge2_lon, edge2_lat = None, None
         edge2_lon = self.nc[edge2_lon_var]
         edge2_lat = self.nc[edge2_lat_var]
         return edge2_lon, edge2_lat
