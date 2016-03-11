@@ -43,7 +43,6 @@ def test_locate_faces():
     res = (indices.data == ind_ans.data).all() and (
         indices.mask == ind_ans.mask).all()
     assert(res)
-    return res
 
 
 def test_points_in_polys():
@@ -64,7 +63,6 @@ def test_points_in_polys():
     answer = np.logical_and(answer[:, 0], answer[:, 1])
     res = (answer == pinp).all()
     assert(res)
-    return res
 
 
 def test_index_translation():
@@ -204,9 +202,3 @@ def test_interpolation_alphas():
     assert(np.all(alphas_n == answer_n))
     assert(np.all(alphas_e1 == answer_e1))
     assert(np.all(alphas_e2 == answer_e2))
-    pass
-
-test_locate_faces()
-test_points_in_polys()
-test_index_translation()
-test_interpolation_alphas()

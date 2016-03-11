@@ -216,71 +216,12 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     return angles
 
 
-def translate_index(points, ind, dest_grid, translation=None):
-    """
-    :param points: Array of points on grid 1
-    :param ind: Array of x,y indicices of the points on grid 1
-    :param grid1: SGrid representing the source grid
-    :param dest_grid: SGrid representing the destination grid
-    Takes two sgrid objects and a list of x,y indices on grid 1
-    Translates the indices to what they would be on the other grid
-    """
-
-    def s_poly(index, var):
-        x = index[:, 0]
-        y = index[:, 1]
-        return np.stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]), axis=1)
-
-    translations = {'psi2rho': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
-                    'u2v': np.array([[0, 0], [0, -1], [1, 0], [1, -1]]),
-                    'u2rho': np.array([[0, 0], [0, 1], [-1, 0], [-1, 1], [1, 0], [1, 1]]),
-                    'u2psi': np.array([[-1, 0], [0, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]]),
-                    'psi2u': np.array([[1, 0], [0, 0], [1, 1], [0, 1], [1, -1], [0, -1]]),
-                    'v2rho': np.array([[0, 0], [1, 0], [0, -1], [1, -1], [0, 1], [1, 1]]),
-                    'v2psi': np.array([[0, -1], [0, 0], [-1, -1], [-1, 0], [1, -1], [1, 0]]),
-                    }
-    translations.update({'rho2psi': -translations['psi2rho'],
-                         'v2u': -translations['u2v'],
-                         'rho2u': -translations['u2rho'],
-                         'psi2u': -translations['u2psi'],
-                         'rho2v': -translations['v2rho'],
-                         'psi2v': -translations['v2psi']
-                         })
-    if translation is None or translation not in translations.keys():
-        raise ValueError(
-            "Translation must be of: {0}".format(translations.keys()))
-
-    offsets = translations[translation]
-    new_ind = np.copy(ind)
-    test_poly = s_poly(new_ind, dest_grid.nodes)
-    not_found = np.where(~points_in_polys(points, test_polys))[0]
-    for offset in offsets:
-        # for every not found, update the cell to be checked
-        test_polys[not_found] = s_poly(
-            new_ind[not_found] + offset, dest_grid.nodes)
-        # retest the missing points. Some might be found, and will not appear
-        # in still_not_found
-        still_not_found = np.where(
-            ~points_in_polys(points[not_found], test_polys[not_found]))[0]
-        # therefore the points that were found is the intersection of the two
-        found = np.setdiff1d(not_found, still_not_found)
-        # update the indices of the ones that were found
-        not_found = still_not_found
-        new_ind[found] += offset
-        if len(not_found) == 0:
-            break
-
-    # There aren't any boundary issues thanks to numpy's indexing
-    return new_ind
-
-
-# @profile
 def points_in_polys(points, polys, polyy=None):
-    '''
+    """
     :param points: Numpy array of Nx2 points
     :param polys: Numpy array of N polygons of degree M represented by Mx2 points (NxMx2)
     for each point, see if respective poly contains it. Returns array of True/False
-    '''
+    """
 
     result = np.zeros((points.shape[0],), dtype=bool)
     pointsx = points[:, 0]
@@ -306,17 +247,3 @@ def points_in_polys(points, polys, polyy=None):
         np.logical_and(test1, test2, test1)
         np.logical_xor(result, test1, result)
     return result
-'''
-        bool CellTree2D::point_in_poly (int bb, double* test){
-    int* f = faces[bb];
-    int i, j = 0;
-    bool c = 0; /*really need a bool here...*/
-    for (i = 0, j = poly-1; i < poly; j = i++) {
-        double* v1 = vertices[f[i]];
-        double* v2 = vertices[f[j]];
-        if ( ((v1[1]>test[1]) != (v2[1]>test[1])) &&
-                (test[0] < (v2[0]-v1[0]) * (test[1]-v1[1]) / (v2[1]-v1[1]) + v1[0]) )
-            c = !c;
-    }
-    return c;
-}'''

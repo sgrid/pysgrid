@@ -17,7 +17,6 @@ from .variables import SGridVariable
 
 class SGrid(object):
 
-    grid_names = ['node', 'face', 'edge1', 'edge2']
     padding_slices = {'both': (1, -1),
                       'none': (None, None),
                       'low': (1, None),
@@ -521,12 +520,18 @@ class SGrid(object):
 #     @profile
     def translate_index(self, points, ind, translation, slice_grid=True, memo=False, _hash=None):
         """
+        A function to translate indices from one grid to another. For example:
+
+        Point p is located in cell (x, y) on the node grid.
+        On the centers grid, it could be in (x, y), (x+1, y), (x, y+1), or (x+1,y+1)
+
+        This is important when trying to find the correct four points to use for interpolation.
+
         :param points: Array of points on node grid.
         :param ind: Array of x,y indicices of the points on node grid.
         :param translation: string to describe destination grid
         :param slice_grid: Boolean to specify whether to slice the grid during translation
         in some instances this can be faster
-        translates indices from one grid to another.
         """
 
         def s_poly(var, index):
@@ -854,9 +859,13 @@ class SGridAttributes(object):
         return angles
 
     def get_cell_center_lat_lon(self):
-        grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')  # noqa
-        center_lat = self.nc[grid_cell_center_lat_var]
-        center_lon = self.nc[grid_cell_center_lon_var]
+        try:
+            grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')  # noqa
+        except TypeError:
+            center_lat, center_lon = None, None
+        else:
+            center_lat = self.nc[grid_cell_center_lat_var]
+            center_lon = self.nc[grid_cell_center_lon_var]
         return center_lon, center_lat
 
     def get_cell_node_lat_lon(self):
@@ -872,10 +881,11 @@ class SGridAttributes(object):
     def get_cell_edge1_lat_lon(self):
         try:
             edge1_lon_var, edge1_lat_var = self.get_attr_coordinates('edge1_coordinates')
-        except TypeError:
+        except:
             edge1_lon, edge1_lat = None, None
-        edge1_lon = self.nc[edge1_lon_var]
-        edge1_lat = self.nc[edge1_lat_var]
+        else:
+            edge1_lon = self.nc[edge1_lon_var]
+            edge1_lat = self.nc[edge1_lat_var]
         return edge1_lon, edge1_lat
 
     def get_cell_edge2_lat_lon(self):
@@ -883,8 +893,9 @@ class SGridAttributes(object):
             edge2_lon_var, edge2_lat_var = self.get_attr_coordinates('edge2_coordinates')
         except TypeError:
             edge2_lon, edge2_lat = None, None
-        edge2_lon = self.nc[edge2_lon_var]
-        edge2_lat = self.nc[edge2_lat_var]
+        else:
+            edge2_lon = self.nc[edge2_lon_var]
+            edge2_lat = self.nc[edge2_lat_var]
         return edge2_lon, edge2_lat
 
 
