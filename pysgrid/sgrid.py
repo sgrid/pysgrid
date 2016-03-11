@@ -806,9 +806,13 @@ class SGridAttributes(object):
         return angles
 
     def get_cell_center_lat_lon(self):
-        grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')  # noqa
-        center_lat = self.nc[grid_cell_center_lat_var]
-        center_lon = self.nc[grid_cell_center_lon_var]
+        try:
+            grid_cell_center_lon_var, grid_cell_center_lat_var = self.get_attr_coordinates('face_coordinates')  # noqa
+        except TypeError:
+            center_lat, center_lon = None, None
+        else:
+            center_lat = self.nc[grid_cell_center_lat_var]
+            center_lon = self.nc[grid_cell_center_lon_var]
         return center_lon, center_lat
 
     def get_cell_node_lat_lon(self):
@@ -822,17 +826,23 @@ class SGridAttributes(object):
         return node_lon, node_lat
 
     def get_cell_edge1_lat_lon(self):
-        edge1_lon_var, edge1_lat_var = self.get_attr_coordinates(
-            'edge1_coordinates')
-        edge1_lon = self.nc[edge1_lon_var]
-        edge1_lat = self.nc[edge1_lat_var]
+        try:
+            edge1_lon_var, edge1_lat_var = self.get_attr_coordinates('edge1_coordinates')
+        except:
+            edge1_lon, edge1_lat = None, None
+        else:
+            edge1_lon = self.nc[edge1_lon_var]
+            edge1_lat = self.nc[edge1_lat_var]
         return edge1_lon, edge1_lat
 
     def get_cell_edge2_lat_lon(self):
-        edge2_lon_var, edge2_lat_var = self.get_attr_coordinates(
-            'edge2_coordinates')
-        edge2_lon = self.nc[edge2_lon_var]
-        edge2_lat = self.nc[edge2_lat_var]
+        try:
+            edge2_lon_var, edge2_lat_var = self.get_attr_coordinates('edge2_coordinates')
+        except TypeError:
+            edge2_lon, edge2_lat = None, None
+        else:
+            edge2_lon = self.nc[edge2_lon_var]
+            edge2_lat = self.nc[edge2_lat_var]
         return edge2_lon, edge2_lat
 
 
