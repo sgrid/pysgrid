@@ -12,7 +12,7 @@ before_install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes --all
-    - conda config --add channels NOAA-ORR-ERD -f
+    - conda config --add channels ioos -f
     - travis_retry conda create --yes -n TEST python=$PYTHON nomkl --file requirements.txt
     - source activate TEST
     - travis_retry conda install --yes --file requirements-dev.txt
