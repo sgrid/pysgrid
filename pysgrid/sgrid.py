@@ -537,10 +537,7 @@ class SGrid(object):
             if yslice.stop < lons.shape[0] + 1:
                 yslice = slice(yslice.start, yslice.stop + 1)
             sl = [yslice, xslice]
-            try:
-                lons = lons[sl]
-            except IndexError(str(sl)):
-                pass
+            lons = lons[sl]
             lats = lats[sl]
 
         translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
