@@ -1,0 +1,30 @@
+# Pysgrid Conda recipe
+package:
+    name: pysgrid
+    version: "0.2"
+
+source:
+    git_url: https://github.com/jay-hennen/pysgrid.git
+    git_tag: v0.2
+
+build:
+    number: 0
+
+requirements:
+    build:
+        - python
+        - setuptools
+    run:
+        - python
+        - numpy
+        - netcdf4
+        - scipy
+
+test:
+    imports:
+        - pysgrid
+
+about:
+    home: https://github.com/pysgrid/pysgrid
+    license: BSD
+    summary: 'A Python API to utilize data managed under the structured grid SGRID conventions'

@@ -51,6 +51,25 @@ class SGridVariable(object):
         self._data = data
 
     @classmethod
+    def create_var(cls, nc_var_obj):
+        var = cls(data=nc_var_obj)
+        potential_attribs = ['coordinates',
+                             'dimensions',
+                             'dtype',
+                             'grid',
+                             'location',
+                             'long_name',
+                             'name',
+                             'standard_name',
+                             'time',
+                             'units']
+        for attrib in potential_attribs:
+            if hasattr(var.data, attrib):
+                setattr(var, attrib, getattr(var.data, attrib))
+
+        return var
+
+    @classmethod
     def create_variable(cls, nc_var_obj, sgrid_obj):
         variable = nc_var_obj.name
         try:
