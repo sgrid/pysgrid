@@ -545,6 +545,9 @@ class SGrid(object):
         else:
             return None
 
+    def fits_data(self, data):
+        return self.infer_grid(data) is not None
+
     def translate_index(self,
                         points,
                         ind,
