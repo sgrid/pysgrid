@@ -301,7 +301,7 @@ class SGrid(object):
         item.setflags(write=False)
         if _hash is None:
             _hash = self._hash_of_pts(points)
-        if D[location] is not None and len(D[location]) > 0:
+        if D[location] is not None and len(D[location]) > 4:
             D[location].pop(D[location].keys()[0])
         D[location] = {_hash: item}
 
@@ -428,7 +428,7 @@ class SGrid(object):
                 "node_lon and node_lat must be defined in order to create and use CellTree")
         if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
             self._lin_nodes = np.ascontiguousarray(
-                np.stack((self.node_lon[:], self.node_lat[:]), axis=-1).reshape(-1, 2)).astype(np.float64)
+                np.column_stack((self.node_lon[:].reshape(-1), self.node_lat[:].reshape(-1)))).astype(np.float64)
             y_size = self.node_lon.shape[0]
             x_size = self.node_lon.shape[1]
             self._lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
@@ -486,6 +486,8 @@ class SGrid(object):
         if ind is None and _translated_indices is None:
             # ind has to be writable
             ind = self.locate_faces(points, memo, copy, _hash)
+            if (ind.mask).all():
+                return np.full((points.shape[0], 1), np.nan)
         if grid is None:
             grid = self.infer_grid(variable)
         if _translated_indices is None:
