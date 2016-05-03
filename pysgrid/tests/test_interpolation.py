@@ -62,6 +62,10 @@ def test_points_in_polys():
     answer = sgrid.locate_faces(points + 1) == [0, 0]
     answer = np.logical_and(answer[:, 0], answer[:, 1])
     res = (answer == pinp).all()
+    print pinp
+    print answer
+    print res
+    assert 0
     assert(res)
 
 
