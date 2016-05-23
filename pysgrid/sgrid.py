@@ -182,6 +182,10 @@ class SGrid(object):
                               variable not in self.grid_variables]
         return non_grid_variables
 
+    @property
+    def nodes(self):
+        return np.stack((self.node_lon, self.node_lat), axis=-1)
+
     def _save_common_components(self, nc_file):
         grid_var = self.grid_topology_var
         # Create dimensions.
@@ -304,6 +308,7 @@ class SGrid(object):
         if D[location] is not None and len(D[location]) > 6:
             D[location].pop(D[location].keys()[0])
         D[location] = {_hash: item}
+        D[location][_hash].setflags(write=False)
 
     def _get_memoed(self, points, location, D, copy=False, _hash=None):
         if _hash is None:
@@ -400,6 +405,7 @@ class SGrid(object):
             if memo:
                 self._ind_memo_dict.pop(self._ind_memo_dict.keys()[0])
                 self._ind_memo_dict[_hash] = res.copy() if copy else res
+                self._ind_memo_dict[_hash].setflags(write=False)
             return res
 
     def get_variable_by_index(self, var, index):
@@ -510,7 +516,7 @@ class SGrid(object):
             raise ValueError("Variable has too many dimensions to \
             associate with grid. Please specify slices.")
 
-        ind = ind - [yslice.start, xslice.start]
+        ind = ind.copy() - [yslice.start, xslice.start]
         vals = self.get_variable_by_index(variable, ind)
 
         result = np.ma.sum(vals * alphas, axis=1)
@@ -798,7 +804,7 @@ class SGrid(object):
         lons = lons[sl]
         lats = lats[sl]
 
-        indices -= [sl[0].start, sl[1].start]
+        indices = indices - [sl[0].start, sl[1].start]
 
         polyx = self.get_variable_by_index(lons, indices)
         polyy = self.get_variable_by_index(lats, indices)
