@@ -301,7 +301,7 @@ class SGrid(object):
         item.setflags(write=False)
         if _hash is None:
             _hash = self._hash_of_pts(points)
-        if D[location] is not None and len(D[location]) > 4:
+        if D[location] is not None and len(D[location]) > 6:
             D[location].pop(D[location].keys()[0])
         D[location] = {_hash: item}
 
@@ -339,7 +339,7 @@ class SGrid(object):
         x_slice = slice(xmin, t_ind[:, 1].max() + 2)
         return (y_slice, x_slice)
 
-    def get_grid(self, grid='node'):
+    def get_lines(self, grid='node'):
         """
         TEMPORARY
         """
@@ -437,7 +437,8 @@ class SGrid(object):
                 self._lin_faces.reshape(-1, 4).astype(np.int32))
         self.tree = CellTree(self._lin_nodes, self._lin_faces)
 
-    def interpolate_var_to_points(self, points,
+    def interpolate_var_to_points(self,
+                                  points,
                                   variable,
                                   indices=None,
                                   grid=None,
@@ -447,8 +448,7 @@ class SGrid(object):
                                   memo=False,
                                   slice_grid=True,
                                   _translated_indices=None,
-                                  _hash=None
-                                  ):
+                                  _hash=None):
         """
         Interpolates a variable on one of the grids to an array of points.
         :param points: Nx2 Array of points to be interpolated to.
@@ -489,7 +489,7 @@ class SGrid(object):
             if (ind.mask).all():
                 return np.full((points.shape[0], 1), np.nan)
         if grid is None:
-            grid = self.infer_grid(variable)
+            grid = self.infer_location(variable)
         if _translated_indices is None:
             ind = self.translate_index(points, ind, grid, slice_grid, memo, copy, _hash)
         else:
@@ -504,7 +504,7 @@ class SGrid(object):
         else:
             slices = [yslice, xslice]
 
-        if self.infer_grid(variable) is not None:
+        if self.infer_location(variable) is not None:
             variable = variable[slices]
         if len(variable.shape) > 2:
             raise ValueError("Variable has too many dimensions to \
@@ -529,7 +529,7 @@ class SGrid(object):
         result.mask[off_grids] = True
         return result
 
-    def infer_grid(self, variable):
+    def infer_location(self, variable):
         """
         Assuming default is psi grid, check variable dimensions to determine which grid
         it is on.
@@ -548,7 +548,7 @@ class SGrid(object):
             return None
 
     def fits_data(self, data):
-        return self.infer_grid(data) is not None
+        return self.infer_location(data) is not None
 
     def translate_index(self,
                         points,
