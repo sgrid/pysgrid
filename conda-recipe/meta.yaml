@@ -1,7 +1,7 @@
 # Pysgrid Conda recipe
 package:
     name: pysgrid
-    version: "0.2"
+    version: "0.3"
 
 source:
     fn: alpha_memo.zip
@@ -25,6 +25,6 @@ test:
         - pysgrid
 
 about:
-    home: https://github.com/pysgrid/pysgrid
+    home: https://github.com/jay-hennen/pysgrid
     license: BSD
     summary: 'A Python API to utilize data managed under the structured grid SGRID conventions'
