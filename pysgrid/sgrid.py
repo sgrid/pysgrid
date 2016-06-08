@@ -456,8 +456,8 @@ class SGrid(object):
         if lon is None or lat is None:
             raise ValueError(
                 "{0}_lon and {0}_lat must be defined in order to create and use CellTree for this grid".format(grid))
-        lin_nodes = np.ascontiguousarray(np.column_stack((self.node_lon[:].reshape(-1),
-                                                           self.node_lat[:].reshape(-1)))).astype(np.float64)
+        lin_nodes = np.ascontiguousarray(np.column_stack((lon[:].reshape(-1),
+                                                          lat[:].reshape(-1)))).astype(np.float64)
         y_size = lon.shape[0]
         x_size = lon.shape[1]
         lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
