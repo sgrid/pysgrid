@@ -224,6 +224,12 @@ def points_in_polys(points, polys, polyy=None):
     """
 
     result = np.zeros((points.shape[0],), dtype=bool)
+    if isinstance(points, np.ma.masked_array):
+        points = points.data
+    if isinstance(polys, np.ma.masked_array):
+        polys = polys.data
+    if polyy is not None and isinstance(polyy, np.ma.masked_array):
+        polyy = polyy.data
     pointsx = points[:, 0]
     pointsy = points[:, 1]
     v1x = v1y = v2x = v2y = -1

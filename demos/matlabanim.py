@@ -33,39 +33,35 @@ This is a WIP. Reader beware.
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
 url = ('http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
 lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
-maxslice = 2
+# lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
+maxslice = 3
 fps = 10
 
 
-def interpolated_velocities(grid, points, timeobj, tindex, u, v, u_alphas, v_alphas, u_ind, v_ind, depth=-1.):
-    """
+def interpolated_velocities(grid, points, ind, timeobj, tindex, u, v, depth=-1.):
+    '''
     Finds velocities at the points at the time specified, interpolating in 2D
     over the u and v grids to do so.
     :param time: The time in the simulation
     :param points: a numpy array of points that you want to find interpolated velocities for
     :param indices: Numpy array of indices of the points, if already known.
     :return: interpolated velocities at the specified points
-    """
+    '''
     t_alphas = timeobj.ialphas(tindex)
     t_index = int(np.floor(tindex))
+    mem = True
+    _hash = grid._hash_of_pts(points)
 
-    yu_slice, xu_slice = grid._get_efficient_slice(u_grid, indices=u_ind)
-    u_slice = [slice(t_index, t_index + 2), depth, yu_slice, xu_slice]
-    yv_slice, xv_slice = grid._get_efficient_slice(
-        v_grid, indices=v_ind)
-    v_slice = [slice(t_index, t_index + 2), depth, yv_slice, xv_slice]
+    u0 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index, -1], memo=mem, _hash=_hash)
+    u1 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
 
-    u0, u1 = grid.u[u_slice]
-    v0, v1 = grid.v[v_slice]
+    v0 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index, -1], memo=mem, _hash=_hash)
+    v1 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
+
     u_vels = u0 + (u1 - u0) * t_alphas
     v_vels = v0 + (v1 - v0) * t_alphas
 
-    u_interp = grid.interpolate_var_to_points(
-        points, u_vels, ind, alphas=u_alphas, grid=u_grid, slices=None, _translated_indices=u_ind)
-    v_interp = grid.interpolate_var_to_points(
-        points, v_vels, ind, alphas=v_alphas, grid=v_grid, slices=None, _translated_indices=v_ind)
-
-    return u_interp, v_interp
+    return u_vels, v_vels
 
 
 class Time(object):
@@ -157,19 +153,6 @@ points = np.stack((lons, lats), axis=-1).reshape(-1, 2)
 
 ind = sgrid.locate_faces(points)
 
-u_grid = sgrid.infer_grid(sgrid.u)
-v_grid = sgrid.infer_grid(sgrid.v)
-
-u_ind = sgrid.translate_index(
-    points, ind, u_grid, slice_grid=False)
-v_ind = sgrid.translate_index(
-    points, ind, v_grid, slice_grid=False)
-
-u_alphas = sgrid.interpolation_alphas(
-    points, None, u_grid, _translated_indices=u_ind)
-v_alphas = sgrid.interpolation_alphas(
-    points, None, v_grid, _translated_indices=v_ind)
-
 ang_ind = ind + [1, 1]
 angles = sgrid.angles[:][ang_ind[:, 0], ang_ind[:, 1]]
 
@@ -205,8 +188,7 @@ def gen_map(k):
 
     print tindex
     print time_str
-    u_rot, v_rot = interpolated_velocities(
-        sgrid, points, timeobj, tindex, sgrid.u, sgrid.v, u_alphas, v_alphas, u_ind, v_ind)
+    u_rot, v_rot = interpolated_velocities(sgrid, points, ind, timeobj, tindex, sgrid.u, sgrid.v)
     u_rot, v_rot = rotate_vectors(u_rot, v_rot, angles)
     u_rot = u_rot.reshape(600, -1)
     v_rot = v_rot.reshape(600, -1)
