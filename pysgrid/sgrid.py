@@ -307,7 +307,10 @@ class SGrid(object):
             _hash = self._hash_of_pts(points)
         if D[location] is not None and len(D[location]) > 6:
             D[location].pop(D[location].keys()[0])
-        D[location] = {_hash: item}
+        if D[location] is None:
+            D[location] = {_hash: item}
+        else:
+            D[location][_hash] = item
         D[location][_hash].setflags(write=False)
 
     def _get_memoed(self, points, location, D, copy=False, _hash=None):
@@ -331,17 +334,12 @@ class SGrid(object):
         entire specified area. 
         IN DEVELOPMENT
         """
-        t_ind = None
         if indices is None:
-            indices = self.locate_faces(points, memo, copy, _hash)
-        if grid != 'node':
-            t_ind = self.translate_index(points, indices, grid, memo=memo, copy=copy, _hash=_hash)
-        else:
-            t_ind = indices
-        ymin = t_ind[:, 0][t_ind[:, 0] != -1].min()
-        xmin = t_ind[:, 1][t_ind[:, 1] != -1].min()
-        y_slice = slice(ymin, t_ind[:, 0].max() + 2)
-        x_slice = slice(xmin, t_ind[:, 1].max() + 2)
+            indices = self.locate_faces(points, grid, memo, copy, _hash)
+        ymin = indices[:, 0][indices[:, 0] != -1].min()
+        xmin = indices[:, 1][indices[:, 1] != -1].min()
+        y_slice = slice(ymin, indices[:, 0].max() + 2)
+        x_slice = slice(xmin, indices[:, 1].max() + 2)
         return (y_slice, x_slice)
 
     def get_lines(self, grid='node'):
@@ -357,6 +355,7 @@ class SGrid(object):
 
     def locate_faces(self,
                      points,
+                     grid,
                      memo=False,
                      copy=False,
                      _hash=None):
@@ -374,38 +373,50 @@ class SGrid(object):
         :type points: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
                      for more than one point.
 
+        :param grid: The grid on which you want to locate the points
+        :type grid: Name of the grid ('node', 'center', 'edge1', 'edge2)
+
         This version utilizes the CellTree data structure.
 
         """
 
         if not hasattr(self, '_ind_memo_dict'):
-            self._ind_memo_dict = {0: 0}
+            self._ind_memo_dict = {'node': None,
+                                 'edge1': None,
+                                 'edge2': None,
+                                 'center': None}
+        if not hasattr(self, '_trees'):
+            self._trees = {'node': None,
+                           'edge1': None,
+                           'edge2': None,
+                           'center': None}
         if memo:
             if _hash is None:
                 _hash = self._hash_of_pts(points)
-            if _hash in self._ind_memo_dict:
-                return self._ind_memo_dict[_hash].copy() if copy else self._ind_memo_dict[_hash]
+            result = self._get_memoed(points, grid, self._ind_memo_dict, copy, _hash)
+            if result is not None:
+                return result
 
         points = np.asarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
         points = points.reshape(-1, 2)
 
-        if self.tree is None:
-            self.build_celltree()
-        indices = self.tree.multi_locate(points)
-        node_x = indices % (self.node_lat.shape[1] - 1)
-        node_y = indices // (self.node_lat.shape[1] - 1)
-        node_ind = np.column_stack((node_y, node_x))
-        node_ind[node_ind[:, 0] == -1] = [-1, -1]
+        if self._trees[grid] is None:
+            self.build_celltree(grid)
+        tree = self._trees[grid][0]
+        indices = tree.multi_locate(points)
+        lon, lat = self._get_grid_vars(grid)
+        x = indices % (lat.shape[1] - 1)
+        y = indices // (lat.shape[1] - 1)
+        ind = np.column_stack((y, x))
+        ind[ind[:, 0] == -1] = [-1, -1]
         if just_one:
-            res = node_ind[0]
+            res = ind[0]
             return res
         else:
-            res = np.ma.masked_less(node_ind, 0)
+            res = np.ma.masked_less(ind, 0)
             if memo:
-                self._ind_memo_dict.pop(self._ind_memo_dict.keys()[0])
-                self._ind_memo_dict[_hash] = res.copy() if copy else res
-                self._ind_memo_dict[_hash].setflags(write=False)
+                self._add_memo(points, res, grid, self._ind_memo_dict, copy, _hash)
             return res
 
     def get_variable_by_index(self, var, index):
@@ -419,29 +430,40 @@ class SGrid(object):
         y = index[:, 1]
         return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
 
-    def build_celltree(self):
+    def build_celltree(self, grid='node'):
         """
         Tries to build the celltree for grid defined by the node coordinates.
 
         """
+
+        if not hasattr(self, '_ind_memo_dict'):
+            self._ind_memo_dict = {'node': None,
+                                 'edge1': None,
+                                 'edge2': None,
+                                 'center': None}
+        if not hasattr(self, '_trees'):
+            self._trees = {'node': None,
+                           'edge1': None,
+                           'edge2': None,
+                           'center': None}
         try:
             from cell_tree2d import CellTree
         except ImportError:
             raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
                               "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
-        if self.node_lon is None or self.node_lat is None:
+
+        lon, lat = self._get_grid_vars(grid)
+        if lon is None or lat is None:
             raise ValueError(
-                "node_lon and node_lat must be defined in order to create and use CellTree")
-        if not hasattr(self, '_lin_faces') or not hasattr(self, '_lin_nodes') or self._lin_nodes is None or self._lin_faces is None:
-            self._lin_nodes = np.ascontiguousarray(
-                np.column_stack((self.node_lon[:].reshape(-1), self.node_lat[:].reshape(-1)))).astype(np.float64)
-            y_size = self.node_lon.shape[0]
-            x_size = self.node_lon.shape[1]
-            self._lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
-                                                  for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
-            self._lin_faces = np.ascontiguousarray(
-                self._lin_faces.reshape(-1, 4).astype(np.int32))
-        self.tree = CellTree(self._lin_nodes, self._lin_faces)
+                "{0}_lon and {0}_lat must be defined in order to create and use CellTree for this grid".format(grid))
+        lin_nodes = np.ascontiguousarray(np.column_stack((self.node_lon[:].reshape(-1),
+                                                           self.node_lat[:].reshape(-1)))).astype(np.float64)
+        y_size = lon.shape[0]
+        x_size = lon.shape[1]
+        lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
+                                        for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
+        lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4).astype(np.int32))
+        self._trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)
 
     def interpolate_var_to_points(self,
                                   points,
@@ -453,7 +475,6 @@ class SGrid(object):
                                   slices=None,
                                   memo=False,
                                   slice_grid=True,
-                                  _translated_indices=None,
                                   _hash=None):
         """
         Interpolates a variable on one of the grids to an array of points.
@@ -462,7 +483,6 @@ class SGrid(object):
         :param indices: If computed already, array of Nx2 indices can be passed in to increase speed.
         :param alphas: If computed already, array of Nx4 alphas can be passed in to increase speed.
         :param mask: under development.
-        :param _translated_indices: For advanced users to minimize recomputation of information
 
 
         - With a numpy array:  
@@ -474,7 +494,6 @@ class SGrid(object):
         computation and increase performance.  
         - ind = # precomputed indices of points  
         - alphas = # precomputed alphas (useful if interpolating to the same points frequently)  
-        - _translated_indices = # precomputed translated indices (advanced)
 
         sgrid.interpolate_var_to_points(points, sgrid.u, indices=ind, alphas=alphas, 
         slices=[time_idx, depth_idx])
@@ -489,17 +508,13 @@ class SGrid(object):
 
         copy = False
 
-        if ind is None and _translated_indices is None:
-            # ind has to be writable
-            ind = self.locate_faces(points, memo, copy, _hash)
-            if (ind.mask).all():
-                return np.full((points.shape[0], 1), np.nan)
         if grid is None:
             grid = self.infer_location(variable)
-        if _translated_indices is None:
-            ind = self.translate_index(points, ind, grid, slice_grid, memo, copy, _hash)
-        else:
-            ind = np.ma.copy(_translated_indices)
+        if ind is None:
+            # ind has to be writable
+            ind = self.locate_faces(points, grid, memo, copy, _hash)
+            if (ind.mask).all():
+                return np.full((points.shape[0], 1), np.nan)
         if alphas is None:
             alphas = self.interpolation_alphas(points, ind, grid, memo, copy, _hash)
 
@@ -556,130 +571,13 @@ class SGrid(object):
     def fits_data(self, data):
         return self.infer_location(data) is not None
 
-    def translate_index(self,
-                        points,
-                        ind,
-                        translation,
-                        slice_grid=True,
-                        memo=False,
-                        copy=False,
-                        _hash=None):
-        """
-        A function to translate indices from one grid to another. For example:
-
-        Point p is located in cell (x, y) on the node grid.
-        On the centers grid, it could be in (x, y), (x+1, y), (x, y+1), or (x+1,y+1)
-
-        This is important when trying to find the correct four points to use for interpolation.
-
-        :param points: Array of points on node grid.
-        :param ind: Array of x,y indicices of the points on node grid.
-        :param translation: string to describe destination grid
-        :param slice_grid: Boolean to specify whether to slice the grid during translation
-        in some instances this can be faster
-        """
-
-        def s_poly(var, index):
-            arr = var[:]
-            x = index[:, 0]
-            y = index[:, 1]
-            return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
-
-        if not hasattr(self, '_t_ind_memo_dict'):
-            self._t_ind_memo_dict = {'node': None,
-                                     'edge1': None,
-                                     'edge2': None,
-                                     'center': None}
-
-        if memo:
-            if _hash is None:
-                _hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, translation, self._t_ind_memo_dict, copy, _hash)
-            if result is not None:
-                return result
-
-        ind = np.ma.array(ind, mask=ind == -1)
-        if translation is 'node':
-            return ind
-        lons, lats = self._get_grid_vars(translation)
-        xslice = yslice = sl = None
-        if slice_grid is False:
-            lons = lons[:]
-            lats = lats[:]
-            yslice = slice(0, lons.shape[0])
-            xslice = slice(0, lons.shape[1])
-        else:
-            yslice, xslice = self.get_efficient_slice(points, ind, 'node', memo, copy, _hash)
-            if xslice.start != 0:
-                xslice = slice(xslice.start - 1, xslice.stop)
-            if xslice.stop < lons.shape[1] + 1:
-                xslice = slice(xslice.start, xslice.stop + 1)
-            if yslice.start != 0:
-                yslice = slice(yslice.start - 1, yslice.stop)
-            if yslice.stop < lons.shape[0] + 1:
-                yslice = slice(yslice.start, yslice.stop + 1)
-            sl = [yslice, xslice]
-            lons = lons[sl]
-            lats = lats[sl]
-
-        translations = {'center': np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
-                        'edge1': np.array([[0, 0], [1, 0], [0, -1], [1, -1], [0, 1], [1, 1]]),
-                        'edge2': np.array([[0, 0], [0, 1], [-1, 0], [1, 0], [1, 1], [-1, 1]]),
-                        }
-        if translation not in translations.keys():
-            raise ValueError(
-                "Translation must be of: {0}".format(translations.keys()))
-        points = np.ma.array(points, mask=ind.mask)
-        offsets = translations[translation]
-        new_ind = np.ma.copy(ind)
-        new_ind[:, 0] -= yslice.start
-        new_ind[:, 1] -= xslice.start
-        test_polyx = s_poly(lons, new_ind)
-        test_polyy = s_poly(lats, new_ind)
-        not_found = np.where(~ind.mask[:, 0])[0]
-        for offset in offsets:
-            # for every not found, update the index to be checked
-            new_ind[not_found] += offset
-            # locate situations where the indices are now out of bounds
-            oob = np.where(np.logical_or(
-                new_ind[not_found] + [1, 1] >= lons.shape, new_ind[not_found] < 0))[0]
-            if oob.size > 0:
-                # reset problem indices
-                new_ind[not_found[oob]] -= offset
-
-            # Generate candidate polygons that could contain the points
-            test_polyx[not_found] = s_poly(lons, new_ind[not_found])
-            test_polyy[not_found] = s_poly(lats, new_ind[not_found])
-
-            found = points_in_polys(
-                points[not_found], test_polyx[not_found], test_polyy[not_found])
-            found = not_found[found]
-
-            oob = not_found[oob]
-            # remove the found items from the not found list
-            not_found = np.setdiff1d(not_found, found)
-            # update the indices of the ones that were not found
-            new_ind[not_found] -= offset
-            new_ind[oob] += offset
-            if len(not_found) == 0:
-                break
-
-        # There aren't any boundary issues thanks to numpy's indexing
-        new_ind[not_found] = [-1, -1]
-        new_ind.mask[not_found] = True
-        new_ind += [yslice.start, xslice.start]
-        if memo:
-            self._add_memo(points, new_ind, translation, self._t_ind_memo_dict, copy, _hash)
-        return new_ind
-
     def interpolation_alphas(self,
                              points,
                              indices=None,
-                             location='center',
+                             grid='center',
                              memo=False,
                              copy=False,
-                             _hash=None,
-                             _translated_indices=None):
+                             _hash=None,):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the four nodes of the face that the point is located in. If the point is
@@ -699,8 +597,9 @@ class SGrid(object):
                                      'edge2': None,
                                      'center': None}
         if memo:
-            _hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, location, self._alpha_memo_dict, copy, _hash)
+            if _hash is None:
+                _hash = self._hash_of_pts(points)
+            result = self._get_memoed(points, grid, self._alpha_memo_dict, copy, _hash)
             if result is not None:
                 return result
 
@@ -788,18 +687,11 @@ class SGrid(object):
 
             return (l, m)
 
-        lons, lats = self._get_grid_vars(location)
-        if indices is None and _translated_indices is None:
-            indices = self.locate_faces(points, memo, copy, _hash)
-            indices = self.translate_index(points, indices, location, memo, copy, _hash)
-        elif indices is not None:
-            indices = self.translate_index(points, indices, location, memo, copy, _hash)
-        elif _translated_indices is not None:
-            indices = np.ma.copy(_translated_indices)
-#         if isinstance(indices, np.ma.MaskedArray):
-#             indices = indices.data
+        lons, lats = self._get_grid_vars(grid)
+        if indices is None:
+            indices = self.locate_faces(points, grid, memo, copy, _hash)
 
-        sl = [yslice, xslice] = self.get_efficient_slice(points, indices, location, memo, copy, _hash)
+        sl = [yslice, xslice] = self.get_efficient_slice(points, indices, grid, memo, copy, _hash)
 
         lons = lons[sl]
         lats = lats[sl]
@@ -823,7 +715,7 @@ class SGrid(object):
         alphas = np.array((aa, ab, ac, ad)).T
 
         if memo:
-            self._add_memo(points, alphas, location, self._alpha_memo_dict, copy, _hash)
+            self._add_memo(points, alphas, grid, self._alpha_memo_dict, copy, _hash)
         return alphas
 
 
