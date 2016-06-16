@@ -9,6 +9,7 @@ from __future__ import (absolute_import, division, print_function)
 from netCDF4 import Dataset
 import numpy as np
 import hashlib
+from collections import OrderedDict
 
 from .read_netcdf import NetCDFDataset, parse_padding, find_grid_topology_var
 from .utils import calculate_angle_from_true_east, pair_arrays, points_in_polys
@@ -292,7 +293,7 @@ class SGrid(object):
         """
         return hashlib.sha1(points.tobytes()).hexdigest()
 
-    def _add_memo(self, points, item, location, D, copy=False, _hash=None):
+    def _add_memo(self, points, item, location, D, _copy=False, _hash=None):
         """
         :param points: List of points to be hashed.
         :param item: Result of computation to be stored.
@@ -300,24 +301,24 @@ class SGrid(object):
         :param D: Dict that will store hash -> item mapping.
         :param _hash: If hash is already computed it may be passed in here.
         """
-        if copy:
+        if _copy:
             item = item.copy()
         item.setflags(write=False)
         if _hash is None:
             _hash = self._hash_of_pts(points)
         if D[location] is not None and len(D[location]) > 6:
-            D[location].pop(D[location].keys()[0])
+            D[location].popitem(last=False)
         if D[location] is None:
-            D[location] = {_hash: item}
+            D[location] = OrderedDict({_hash: item})
         else:
             D[location][_hash] = item
         D[location][_hash].setflags(write=False)
 
-    def _get_memoed(self, points, location, D, copy=False, _hash=None):
+    def _get_memoed(self, points, location, D, _copy=False, _hash=None):
         if _hash is None:
             _hash = self._hash_of_pts(points)
         if (D[location] is not None and _hash in D[location]):
-            return D[location][_hash].copy() if copy else D[location][_hash]
+            return D[location][_hash].copy() if _copy else D[location][_hash]
         else:
             return None
 
@@ -325,8 +326,8 @@ class SGrid(object):
                             points,
                             indices=None,
                             grid='node',
-                            memo=False,
-                            copy=False,
+                            _memo=False,
+                            _copy=False,
                             _hash=None):
         """
         given minimum and maximum longitudes and latitudes, find
@@ -335,7 +336,7 @@ class SGrid(object):
         IN DEVELOPMENT
         """
         if indices is None:
-            indices = self.locate_faces(points, grid, memo, copy, _hash)
+            indices = self.locate_faces(points, grid, _memo, _copy, _hash)
         ymin = indices[:, 0][indices[:, 0] != -1].min()
         xmin = indices[:, 1][indices[:, 1] != -1].min()
         y_slice = slice(ymin, indices[:, 0].max() + 2)
@@ -356,8 +357,8 @@ class SGrid(object):
     def locate_faces(self,
                      points,
                      grid,
-                     memo=False,
-                     copy=False,
+                     _memo=False,
+                     _copy=False,
                      _hash=None):
         """
         Returns the node grid indices, one per point.
@@ -390,10 +391,10 @@ class SGrid(object):
                            'edge1': None,
                            'edge2': None,
                            'center': None}
-        if memo:
+        if _memo:
             if _hash is None:
                 _hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, grid, self._ind_memo_dict, copy, _hash)
+            result = self._get_memoed(points, grid, self._ind_memo_dict, _copy, _hash)
             if result is not None:
                 return result
 
@@ -415,8 +416,8 @@ class SGrid(object):
             return res
         else:
             res = np.ma.masked_less(ind, 0)
-            if memo:
-                self._add_memo(points, res, grid, self._ind_memo_dict, copy, _hash)
+            if _memo:
+                self._add_memo(points, res, grid, self._ind_memo_dict, _copy, _hash)
             return res
 
     def get_variable_by_index(self, var, index):
@@ -473,7 +474,7 @@ class SGrid(object):
                                   alphas=None,
                                   mask=None,
                                   slices=None,
-                                  memo=False,
+                                  _memo=False,
                                   slice_grid=True,
                                   _hash=None):
         """
@@ -506,19 +507,19 @@ class SGrid(object):
         if hash is None:
             _hash = self._hash_of_pts(points)
 
-        copy = False
+        _copy = False
 
         if grid is None:
             grid = self.infer_location(variable)
         if ind is None:
             # ind has to be writable
-            ind = self.locate_faces(points, grid, memo, copy, _hash)
+            ind = self.locate_faces(points, grid, _memo, _copy, _hash)
             if (ind.mask).all():
-                return np.full((points.shape[0], 1), np.nan)
+                return np.ma.masked_all((points.shape[0]))
         if alphas is None:
-            alphas = self.interpolation_alphas(points, ind, grid, memo, copy, _hash)
+            alphas = self.interpolation_alphas(points, ind, grid, _memo, _copy, _hash)
 
-        yxslice = [yslice, xslice] = self.get_efficient_slice(points, ind, grid, memo, copy, _hash)
+        yxslice = [yslice, xslice] = self.get_efficient_slice(points, ind, grid, _memo, _copy, _hash)
         if slices is not None:
             slices.append(yslice)
             slices.append(xslice)
@@ -575,8 +576,8 @@ class SGrid(object):
                              points,
                              indices=None,
                              grid='center',
-                             memo=False,
-                             copy=False,
+                             _memo=False,
+                             _copy=False,
                              _hash=None,):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
@@ -596,10 +597,10 @@ class SGrid(object):
                                      'edge1': None,
                                      'edge2': None,
                                      'center': None}
-        if memo:
+        if _memo:
             if _hash is None:
                 _hash = self._hash_of_pts(points)
-            result = self._get_memoed(points, grid, self._alpha_memo_dict, copy, _hash)
+            result = self._get_memoed(points, grid, self._alpha_memo_dict, _copy, _hash)
             if result is not None:
                 return result
 
@@ -610,8 +611,7 @@ class SGrid(object):
             """
             px = np.matrix(px)
             py = np.matrix(py)
-            A = np.array(
-                ([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
+            A = np.array(([1, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 1, 0, 0]))
             AI = np.linalg.inv(A)
             a = np.dot(AI, px.getH())
             b = np.dot(AI, py.getH())
@@ -689,9 +689,9 @@ class SGrid(object):
 
         lons, lats = self._get_grid_vars(grid)
         if indices is None:
-            indices = self.locate_faces(points, grid, memo, copy, _hash)
+            indices = self.locate_faces(points, grid, _memo, _copy, _hash)
 
-        sl = [yslice, xslice] = self.get_efficient_slice(points, indices, grid, memo, copy, _hash)
+        sl = [yslice, xslice] = self.get_efficient_slice(points, indices, grid, _memo, _copy, _hash)
 
         lons = lons[sl]
         lats = lats[sl]
@@ -714,8 +714,8 @@ class SGrid(object):
         ad = l - l * m
         alphas = np.array((aa, ab, ac, ad)).T
 
-        if memo:
-            self._add_memo(points, alphas, grid, self._alpha_memo_dict, copy, _hash)
+        if _memo:
+            self._add_memo(points, alphas, grid, self._alpha_memo_dict, _copy, _hash)
         return alphas
 
 
