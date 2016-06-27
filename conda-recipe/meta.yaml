@@ -1,10 +1,10 @@
 # Conda recipe example.
 package:
-    name: pyugrid
+    name: pysgrid
     version: "0.3.1"
 
 source:
-    git_url: https://github.com/pysgrid/pysgrid.git
+    git_url: https://github.com/jay-hennen/pysgrid.git
     git_tag: v0.3.1
 
 build:
@@ -22,9 +22,9 @@ requirements:
 
 test:
     imports:
-        - pyugrid
+        - pysgrid
 
 about:
-    home: https://github.com/pyugrid/pyugrid
+    home: https://github.com/pysgrid/pysgrid
     license: BSD
-    summary: 'A Python API to utilize data written using the unstructured grid UGRID conventions'
+    summary: 'A Python API to utilize data written using the unstructured grid SGRID conventions'
