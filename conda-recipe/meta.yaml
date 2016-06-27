@@ -4,8 +4,8 @@ package:
     version: "0.3.1"
 
 source:
-    fn: alpha_memo.zip
-    url: https://github.com/jay-hennen/pysgrid/archive/alpha_memo.zip
+    fn: pyugrid-0.2.0.zip
+    url:  https://github.com/pyugrid/pyugrid/archive/develop.zip
 
 build:
     number: 0
