@@ -423,7 +423,8 @@ class SGrid(object):
     def get_variable_by_index(self, var, index):
         """
         Function to get the node values of a given face index.
-        Emulates the 'self.grid.nodes[self.grid.nodes.faces[index]]' paradigm of unstructured grids.
+        Emulates the 'self.grid.nodes[self.grid.nodes.faces[index]]'
+        paradigm of unstructured grids.
         """
 
         arr = var[:]
@@ -433,15 +434,17 @@ class SGrid(object):
 
     def build_celltree(self, grid='node'):
         """
-        Tries to build the celltree for grid defined by the node coordinates.
+        Tries to build the celltree for grid defined by the node coordinates of the specified grid.
 
+        :param grid: which grid to biuld the celltree for. options are:
+                     'node', 'edge1', 'edge2', 'center'
         """
 
         if not hasattr(self, '_ind_memo_dict'):
             self._ind_memo_dict = {'node': None,
-                                 'edge1': None,
-                                 'edge2': None,
-                                 'center': None}
+                                   'edge1': None,
+                                   'edge2': None,
+                                   'center': None}
         if not hasattr(self, '_trees'):
             self._trees = {'node': None,
                            'edge1': None,

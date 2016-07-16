@@ -11,8 +11,12 @@ import unittest
 
 from netCDF4 import Dataset
 
-from ..read_netcdf import (NetCDFDataset, parse_axes, parse_padding,
-                           parse_vector_axis, find_grid_topology_var)
+from pysgrid.read_netcdf import (NetCDFDataset,
+                                 parse_axes,
+                                 parse_padding,
+                                 parse_vector_axis,
+                                 find_grid_topology_var)
+
 from .write_nc_test_files import roms_sgrid, wrf_sgrid_2d
 
 
