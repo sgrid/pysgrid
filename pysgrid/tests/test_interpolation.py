@@ -49,6 +49,7 @@ def test_locate_faces():
             (indices.mask == ind_ans.mask).all())
 
 
+
 # fixme: delete entirely? index translation no longer needed
 # def test_index_translation():
 #     ptsx, ptsy = np.mgrid[0:6:7j, 0:6:7j]
@@ -213,5 +214,3 @@ def test_points_in_polys():
     # print answer
     # print res
     assert (answer == pinp).all()
-
-
