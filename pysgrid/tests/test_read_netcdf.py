@@ -182,7 +182,7 @@ class TestNetCDFDatasetWithoutNodes(unittest.TestCase):
     def test_find_variable_by_attr(self):
         result = self.nc_ds.find_variables_by_attr(cf_role='grid_topology', topology_dimension=2)
         expected = ['grid']
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_find_variable_by_nonexistant_attr(self):
         result = self.nc_ds.find_variables_by_attr(bird='tufted titmouse')
