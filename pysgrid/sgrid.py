@@ -405,7 +405,7 @@ class SGrid(object):
         if self._trees[grid] is None:
             self.build_celltree(grid)
         tree = self._trees[grid][0]
-        indices = tree.multi_locate(points)
+        indices = tree.locate(points)
         lon, lat = self._get_grid_vars(grid)
         x = indices % (lat.shape[1] - 1)
         y = indices // (lat.shape[1] - 1)
