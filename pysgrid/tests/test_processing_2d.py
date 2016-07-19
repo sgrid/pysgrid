@@ -9,7 +9,7 @@ from __future__ import (absolute_import, division, print_function)
 import unittest
 import numpy as np
 
-from ..processing_2d import avg_to_cell_center, rotate_vectors, vector_sum
+from pysgrid.processing_2d import avg_to_cell_center, rotate_vectors, vector_sum
 
 
 class TestVectorSum(unittest.TestCase):

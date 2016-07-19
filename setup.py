@@ -35,7 +35,7 @@ def extract_version(module='pysgrid'):
     return version
 
 
-reqs = [line.strip() for line in open('requirements.txt')]
+reqs = [line.strip().split('#')[0] for line in open('requirements.txt')]
 
 
 def readme():
