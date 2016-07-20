@@ -6,10 +6,7 @@ Created on Apr 7, 2015
 
 from __future__ import (absolute_import, division, print_function)
 
-import os
 import unittest
-
-from netCDF4 import Dataset
 
 from ..read_netcdf import (NetCDFDataset, parse_axes, parse_padding,
                            parse_vector_axis, find_grid_topology_var)
@@ -17,7 +14,6 @@ from .write_nc_test_files import roms_sgrid, wrf_sgrid_2d
 
 
 class TestParseAxes(unittest.TestCase):
-
     def setUp(self):
         self.xy = 'X: xi_psi Y: eta_psi'
         self.xyz = 'X: NMAX Y: MMAXZ Z: KMAX'
@@ -34,7 +30,6 @@ class TestParseAxes(unittest.TestCase):
 
 
 class TestParsePadding(unittest.TestCase):
-
     def setUp(self):
         self.grid_topology = 'some_grid'
         self.with_two_padding = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: low)'  # noqa
@@ -86,7 +81,6 @@ class TestParsePadding(unittest.TestCase):
 
 
 class TestParseVectorAxis(unittest.TestCase):
-
     def setUp(self):
         self.standard_name_1 = 'sea_water_y_velocity'
         self.standard_name_2 = 'atmosphere_optical_thickness_due_to_cloud'
@@ -107,6 +101,7 @@ class TestParseVectorAxis(unittest.TestCase):
         self.assertEqual(direction, expected_direction)
 
 
+# TestNetCDFDatasetWithNodes.
 def test_finding_node_variables(roms_sgrid):
     nc_ds = NetCDFDataset(roms_sgrid)
     result = nc_ds.find_node_coordinates('xi_psi eta_psi')
@@ -153,33 +148,22 @@ def test_sgrid_compliant_check(roms_sgrid):
     assert result
 
 
-class TestNetCDFDatasetWithoutNodes(unittest.TestCase):
+# TestNetCDFDatasetWithoutNodes
+def test_node_coordinates(wrf_sgrid_2d):
+    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+    node_coordinates = nc_ds.find_node_coordinates('west_east_stag south_north_stag')  # noqa
+    assert node_coordinates is None
 
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = wrf_sgrid_2d()
 
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
+def test_find_variable_by_attr(wrf_sgrid_2d):
+    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+    result = nc_ds.find_variables_by_attr(cf_role='grid_topology',
+                                          topology_dimension=2)
+    expected = ['grid']
+    assert result == expected
 
-    def setUp(self):
-        self.ds = Dataset(self.sgrid_test_file)
-        self.nc_ds = NetCDFDataset(self.ds)
 
-    def tearDown(self):
-        self.ds.close()
-
-    def test_node_coordinates(self):
-        node_coordinates = self.nc_ds.find_node_coordinates('west_east_stag south_north_stag')  # noqa
-        self.assertIsNone(node_coordinates)
-
-    def test_find_variable_by_attr(self):
-        result = self.nc_ds.find_variables_by_attr(cf_role='grid_topology',
-                                                   topology_dimension=2)
-        expected = ['grid']
-        assert result == expected
-
-    def test_find_variable_by_nonexistant_attr(self):
-        result = self.nc_ds.find_variables_by_attr(bird='tufted titmouse')
-        self.assertEqual(result, [])
+def test_find_variable_by_nonexistant_attr(wrf_sgrid_2d):
+    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+    result = nc_ds.find_variables_by_attr(bird='tufted titmouse')
+    assert result == []

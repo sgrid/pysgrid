@@ -7,7 +7,6 @@ Created on Apr 7, 2015
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import unittest
 
 import pytest
 import numpy as np
@@ -25,23 +24,12 @@ TEST_FILES = os.path.join(CURRENT_DIR, 'files')
 write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
 
 
-class TestSGridCompliant(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = non_compliant_sgrid()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def test_exception_raised(self):
-        self.assertRaises(ValueError,
-                          load_grid,
-                          self.sgrid_test_file
-                          )
+def test_exception_raised(non_compliant_sgrid):
+    with pytest.raises(ValueError):
+        load_grid(non_compliant_sgrid)
 
 
+# TestSGridCreate.
 def test_load_from_file(roms_sgrid):
     fname = 'tmp_sgrid_roms.nc'  # FIXME: name handling in the fixture.
     sg_obj = load_grid(fname)
@@ -54,22 +42,22 @@ def test_load_from_dataset(roms_sgrid):
 
 
 @pytest.fixture
-def sg_obj(roms_sgrid):
+def sgrid_roms_sgrid(roms_sgrid):
     return load_grid(roms_sgrid)
 
 
-def test_center_lon(sg_obj):
-    center_lon = sg_obj.center_lon
+def test_center_lon(sgrid_roms_sgrid):
+    center_lon = sgrid_roms_sgrid.center_lon
     assert center_lon.shape == (4, 4)
 
 
-def test_center_lat(sg_obj):
-    center_lat = sg_obj.center_lat
+def test_center_lat(sgrid_roms_sgrid):
+    center_lat = sgrid_roms_sgrid.center_lat
     assert center_lat.shape == (4, 4)
 
 
-def test_variables(sg_obj):
-    dataset_vars = sg_obj.variables
+def test_variables(sgrid_roms_sgrid):
+    dataset_vars = sgrid_roms_sgrid.variables
     expected_vars = [u's_rho',
                      u's_w',
                      u'time',
@@ -99,15 +87,15 @@ def test_variables(sg_obj):
     assert dataset_vars == expected_vars
 
 
-def test_grid_variables(sg_obj):
-    dataset_grid_variables = sg_obj.grid_variables
+def test_grid_variables(sgrid_roms_sgrid):
+    dataset_grid_variables = sgrid_roms_sgrid.grid_variables
     expected_grid_variables = [u'u', u'v', u'fake_u', u'salt']
     assert len(dataset_grid_variables) == len(expected_grid_variables)
     assert set(dataset_grid_variables) == set(expected_grid_variables)
 
 
-def test_non_grid_variables(sg_obj):
-    dataset_non_grid_variables = sg_obj.non_grid_variables
+def test_non_grid_variables(sgrid_roms_sgrid):
+    dataset_non_grid_variables = sgrid_roms_sgrid.non_grid_variables
     expected_non_grid_variables = [u's_rho',
                                    u's_w',
                                    u'time',
@@ -133,33 +121,33 @@ def test_non_grid_variables(sg_obj):
     assert set(dataset_non_grid_variables) == set(expected_non_grid_variables)
 
 
-def test_variable_slicing(sg_obj):
-    u_center_slices = sg_obj.u.center_slicing
-    v_center_slices = sg_obj.v.center_slicing
+def test_variable_slicing(sgrid_roms_sgrid):
+    u_center_slices = sgrid_roms_sgrid.u.center_slicing
+    v_center_slices = sgrid_roms_sgrid.v.center_slicing
     u_center_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
     v_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
     assert u_center_slices == u_center_expected
     assert v_center_slices == v_center_expected
 
 
-def test_grid_variable_average_axes(sg_obj):
-    uc_axis = sg_obj.u.center_axis
+def test_grid_variable_average_axes(sgrid_roms_sgrid):
+    uc_axis = sgrid_roms_sgrid.u.center_axis
     uc_axis_expected = 1
-    un_axis = sg_obj.u.node_axis
+    un_axis = sgrid_roms_sgrid.u.node_axis
     un_axis_expected = 0
-    lon_rho_c_axis = sg_obj.lon_rho.center_axis
-    lon_rho_n_axis = sg_obj.lon_rho.node_axis
+    lon_rho_c_axis = sgrid_roms_sgrid.lon_rho.center_axis
+    lon_rho_n_axis = sgrid_roms_sgrid.lon_rho.node_axis
     assert uc_axis == uc_axis_expected
     assert un_axis == un_axis_expected
     assert lon_rho_c_axis is None
     assert lon_rho_n_axis is None
 
 
-def test_optional_grid_attrs(sg_obj):
-    face_coordinates = sg_obj.face_coordinates
-    node_coordinates = sg_obj.node_coordinates
-    edge1_coordinates = sg_obj.edge1_coordinates
-    edge2_coordinates = sg_obj.edge2_coordinates
+def test_optional_grid_attrs(sgrid_roms_sgrid):
+    face_coordinates = sgrid_roms_sgrid.face_coordinates
+    node_coordinates = sgrid_roms_sgrid.node_coordinates
+    edge1_coordinates = sgrid_roms_sgrid.edge1_coordinates
+    edge2_coordinates = sgrid_roms_sgrid.edge2_coordinates
     fc_expected = ('lon_rho', 'lat_rho')
     nc_expected = ('lon_psi', 'lat_psi')
     e1c_expected = ('lon_u', 'lat_u')
@@ -170,331 +158,332 @@ def test_optional_grid_attrs(sg_obj):
     assert edge2_coordinates == e2c_expected
 
 
-def test_write_sgrid_to_netcdf(sg_obj):
-    sg_obj.save_as_netcdf(write_path)
+def test_write_sgrid_to_netcdf(sgrid_roms_sgrid):
+    sgrid_roms_sgrid.save_as_netcdf(write_path)
     result = load_grid(write_path)
     os.remove(write_path)
     assert isinstance(result, SGrid)  # TODO: Add more "round-trip" tests.
 
 
-class TestSGridNoCoordinates(unittest.TestCase):
+# TestSGridNoCoordinates
+"""
+Test to make sure that if no coordinates (e.g. face, edge1, etc)
+are specified, those coordinates can be inferred from the dataset.
+
+A file is representing a delft3d dataset is used for this test.
+
+"""
+
+
+@pytest.fixture
+def sgrid_deltares(deltares_sgrid_no_optional_attr):
+    return load_grid(deltares_sgrid_no_optional_attr)
+
+
+def test_face_coordinate_inference(sgrid_deltares):
+    face_coordinates = sgrid_deltares.face_coordinates
+    expected_face_coordinates = (u'XZ', u'YZ')
+    assert face_coordinates == expected_face_coordinates
+
+
+def test_center_lon_deltares_no_coord(sgrid_deltares):
+    center_lon = sgrid_deltares.center_lon
+    assert center_lon.shape == (4, 4)
+
+
+def test_center_lat_deltares_no_coord(sgrid_deltares):
+    center_lat = sgrid_deltares.center_lat
+    assert center_lat.shape == (4, 4)
+
+
+def test_node_lon(sgrid_deltares):
+    node_lon = sgrid_deltares.node_lon
+    assert node_lon.shape == (4, 4)
+
+
+def test_node_lat(sgrid_deltares):
+    node_lat = sgrid_deltares.node_lat
+    assert node_lat.shape == (4, 4)
+
+
+def test_grid_angles(sgrid_deltares):
+    angles = sgrid_deltares.angles
+    angles_shape = (4, 4)
+    assert angles.shape == angles_shape
+
+
+# TestSGridWRFDataset
+"""
+Test a representative WRF file.
+
+"""
+
+
+@pytest.fixture
+def sgrid_wrf(wrf_sgrid_2d):
+    return load_grid(wrf_sgrid_2d)
+
+
+def test_topology_dimension(sgrid_wrf):
+    topology_dim = sgrid_wrf.topology_dimension
+    expected_dim = 2
+    assert topology_dim == expected_dim
+
+
+def test_variable_slicing_wrf(sgrid_wrf):
+    u_slice = sgrid_wrf.U.center_slicing
+    u_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
+    v_slice = sgrid_wrf.V.center_slicing
+    v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
+    assert u_slice == u_expected
+    assert v_slice == v_expected
+
+
+def test_variable_average_axes(sgrid_wrf):
+    u_avg_axis = sgrid_wrf.U.center_axis
+    u_axis_expected = 1
+    v_avg_axis = sgrid_wrf.V.center_axis
+    v_axis_expected = 0
+    assert u_avg_axis == u_axis_expected
+    assert v_avg_axis == v_axis_expected
+
+
+# TestSGridDelft3dDataset
+"""
+Test using a representative delft3d file.
+
+"""
+
+
+@pytest.fixture
+def sgrid_obj_deltares(deltares_sgrid):
+    return load_grid(deltares_sgrid)
+
+
+def test_center_lon_deltares(sgrid_obj_deltares):
+    center_lon = sgrid_obj_deltares.center_lon
+    assert center_lon.shape == (4, 4)
+
+
+def test_center_lat_deltares(sgrid_obj_deltares):
+    center_lat = sgrid_obj_deltares.center_lat
+    assert center_lat.shape == (4, 4)
+
+
+def test_topology_dimension_deltares(sgrid_obj_deltares):
+    topology_dim = sgrid_obj_deltares.topology_dimension
+    expected_dim = 2
+    assert topology_dim == expected_dim
+
+
+def test_variable_slice(sgrid_obj_deltares):
+    u_center_slices = sgrid_obj_deltares.U1.center_slicing
+    v_center_slices = sgrid_obj_deltares.V1.center_slicing
+    u_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
+    v_center_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
+    xz_center_slices = sgrid_obj_deltares.XZ.center_slicing
+    xcor_center_slices = sgrid_obj_deltares.XCOR.center_slicing
+    xz_center_expected = (np.s_[1:], np.s_[1:])
+    xcor_center_expected = (np.s_[:], np.s_[:])
+    assert u_center_slices == u_center_expected
+    assert v_center_slices == v_center_expected
+    assert xz_center_slices == xz_center_expected
+    assert xcor_center_slices == xcor_center_expected
+
+
+def test_averaging_axes(sgrid_obj_deltares):
+    u1c_axis = sgrid_obj_deltares.U1.center_axis
+    u1c_expected = 0
+    v1n_axis = sgrid_obj_deltares.V1.node_axis
+    v1n_expected = 0
+    latitude_c_axis = sgrid_obj_deltares.latitude.center_axis
+    latitude_n_axis = sgrid_obj_deltares.latitude.node_axis
+    assert u1c_axis == u1c_expected
+    assert v1n_axis == v1n_expected
+    assert latitude_c_axis is None
+    assert latitude_n_axis is None
+
+
+def test_grid_optional_attrs(sgrid_obj_deltares):
+    face_coordinates = sgrid_obj_deltares.face_coordinates
+    node_coordinates = sgrid_obj_deltares.node_coordinates
+    edge1_coordinates = sgrid_obj_deltares.edge1_coordinates
+    edge2_coordinates = sgrid_obj_deltares.edge2_coordinates
+    fc_expected = ('XZ', 'YZ')
+    nc_expected = ('XCOR', 'YCOR')
+    assert face_coordinates == fc_expected
+    assert node_coordinates == nc_expected
+    assert edge1_coordinates is None
+    assert edge2_coordinates is None
+
+
+def test_grid_variables_deltares(sgrid_obj_deltares):
+    grid_variables = sgrid_obj_deltares.grid_variables
+    expected_grid_variables = [u'U1', u'V1', u'FAKE_U1', u'W', u'FAKE_W']
+    assert set(grid_variables) == set(expected_grid_variables)
+
+
+def test_angles(sgrid_obj_deltares):
+    angles = sgrid_obj_deltares.angles
+    expected_shape = (4, 4)
+    assert angles.shape == expected_shape
+
+
+def test_no_3d_attributes(sgrid_obj_deltares):
+    assert not hasattr(sgrid_obj_deltares, 'volume_padding')
+    assert not hasattr(sgrid_obj_deltares, 'volume_dimensions')
+    assert not hasattr(sgrid_obj_deltares, 'volume_coordinates')
+    assert not hasattr(sgrid_obj_deltares, 'face1_padding')
+    assert not hasattr(sgrid_obj_deltares, 'face1_coordinates')
+    assert not hasattr(sgrid_obj_deltares, 'face1_dimensions')
+    assert not hasattr(sgrid_obj_deltares, 'face2_padding')
+    assert not hasattr(sgrid_obj_deltares, 'face2_coordinates')
+    assert not hasattr(sgrid_obj_deltares, 'face2_dimensions')
+    assert not hasattr(sgrid_obj_deltares, 'face3_padding')
+    assert not hasattr(sgrid_obj_deltares, 'face3_coordinates')
+    assert not hasattr(sgrid_obj_deltares, 'edge3_padding')
+    assert not hasattr(sgrid_obj_deltares, 'edge3_coordinates')
+    assert not hasattr(sgrid_obj_deltares, 'edge3_dimensions')
+
+
+def test_2d_attributes(sgrid_obj_deltares):
+    assert hasattr(sgrid_obj_deltares, 'face_padding')
+    assert hasattr(sgrid_obj_deltares, 'face_coordinates')
+    assert hasattr(sgrid_obj_deltares, 'face_dimensions')
+    assert hasattr(sgrid_obj_deltares, 'vertical_padding')
+    assert hasattr(sgrid_obj_deltares, 'vertical_dimensions')
+
+
+# TestSGridSaveNoNodeCoordinates
+"""
+Test that SGrid.save_as_netcdf is saving content
+when there are no nodes or node coordinates specified.
+
+This scenario will typically occur with WRF datasets.
+
+"""
+
+
+def round_trip_wrf(wrf_sgrid_2d):
+    sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
+    sg_obj = load_grid(wrf_sgrid_2d)
+    sg_obj.save_as_netcdf(sgrid_target)
+    os.remove(sgrid_target)
+
+
+@pytest.fixture
+def sgrid_wrf_sgrid_2d(wrf_sgrid_2d):
+    return load_grid(wrf_sgrid_2d)
+
+
+def test_sgrid(sgrid_wrf_sgrid_2d):
+    assert isinstance(sgrid_wrf_sgrid_2d, SGrid)
+
+
+def test_nodes(sgrid_wrf_sgrid_2d):
+    node_lon = sgrid_wrf_sgrid_2d.node_lon
+    node_lat = sgrid_wrf_sgrid_2d.node_lat
+    assert node_lon is None
+    assert node_lat is None
+
+
+def test_node_coordinates(sgrid_wrf_sgrid_2d):
+    node_coordinates = sgrid_wrf_sgrid_2d.node_coordinates
+    assert node_coordinates is None
+
+
+def test_node_dimesnions(sgrid_wrf_sgrid_2d):
+    node_dims = sgrid_wrf_sgrid_2d.node_dimensions
+    expected = 'west_east_stag south_north_stag'
+    assert node_dims == expected
+
+
+# TestSGridSaveNodeCoordinates
+"""
+Test that SGrid.save_as_netcdf is saving
+content correctly.
+
+There maybe a better way to do this using
+mocks, but this will do for now.
+
+"""
+
+
+def round_trip_deltares(deltares_sgrid):
+    sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
+    sg_obj = load_grid(deltares_sgrid)
+    sg_obj.save_as_netcdf(sgrid_target)
+    os.remoce(sgrid_target)
+
+
+@pytest.fixture
+def sgrid_deltares_sgrid(deltares_sgrid):
+    return load_grid(deltares_sgrid)
+
+
+def test_save_as_netcdf(sgrid_deltares_sgrid):
     """
-    Test to make sure that if no coordinates (e.g. face, edge1, etc)
-    are specified, those coordinates can be inferred from the dataset.
-
-    A file is representing a delft3d dataset is used for this test.
+    Test that the attributes in the
+    saved netCDF file are as expected.
 
     """
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = deltares_sgrid_no_optional_attr()
+    target_dims = sgrid_deltares_sgrid.dimensions
+    expected_target_dims = [(u'MMAXZ', 4),
+                            (u'NMAXZ', 4),
+                            (u'MMAX', 4),
+                            (u'NMAX', 4),
+                            (u'KMAX', 2),
+                            (u'KMAX1', 3),
+                            (u'time', 2)
+                            ]
+    target_vars = sgrid_deltares_sgrid.variables
+    expected_target_vars = [u'XZ',
+                            u'YZ',
+                            u'XCOR',
+                            u'YCOR',
+                            u'grid',
+                            u'U1',
+                            u'FAKE_U1',
+                            u'V1',
+                            u'W',
+                            u'FAKE_W',
+                            u'time',
+                            u'latitude',
+                            u'longitude',
+                            u'grid_latitude',
+                            u'grid_longitude'
+                            ]
+    target_grid_vars = sgrid_deltares_sgrid.grid_variables
+    expected_target_grid_vars = [u'U1',
+                                 u'FAKE_U1',
+                                 u'V1',
+                                 u'W',
+                                 u'FAKE_W']
+    target_face_coordinates = sgrid_deltares_sgrid.face_coordinates
+    expected_target_face_coordinates = (u'XZ', u'YZ')
+    assert isinstance(sgrid_deltares_sgrid, SGrid)
+    assert len(target_dims) == len(expected_target_dims)
+    assert set(target_dims) == set(expected_target_dims)
+    assert len(target_vars) == len(expected_target_vars)
+    assert set(target_vars) == set(expected_target_vars)
+    assert len(target_grid_vars) == len(expected_target_grid_vars)
+    assert set(target_grid_vars) == set(expected_target_grid_vars)
+    assert target_face_coordinates == expected_target_face_coordinates
 
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
 
-    def setUp(self):
-        self.sgrid_obj = load_grid(self.sgrid_test_file)
-
-    def test_face_coordinate_inference(self):
-        face_coordinates = self.sgrid_obj.face_coordinates
-        expected_face_coordinates = (u'XZ', u'YZ')
-        self.assertEqual(face_coordinates, expected_face_coordinates)
-
-    def test_center_lon(self):
-        center_lon = self.sgrid_obj.center_lon
-        self.assertEqual(center_lon.shape, (4, 4))
-
-    def test_center_lat(self):
-        center_lat = self.sgrid_obj.center_lat
-        self.assertEqual(center_lat.shape, (4, 4))
-
-    def test_node_lon(self):
-        node_lon = self.sgrid_obj.node_lon
-        self.assertEqual(node_lon.shape, (4, 4))
-
-    def test_node_lat(self):
-        node_lat = self.sgrid_obj.node_lat
-        self.assertEqual(node_lat.shape, (4, 4))
-
-    def test_grid_angles(self):
-        angles = self.sgrid_obj.angles
-        angles_shape = (4, 4)
-        self.assertEqual(angles.shape, angles_shape)
-
-
-class TestSGridWRFDataset(unittest.TestCase):
+def test_saved_sgrid_attributes(sgrid_deltares_sgrid):
     """
-    Test a representative WRF file.
-
-    """
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = wrf_sgrid_2d()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def setUp(self):
-        self.sg_obj = load_grid(self.sgrid_test_file)
-
-    def test_topology_dimension(self):
-        topology_dim = self.sg_obj.topology_dimension
-        expected_dim = 2
-        self.assertEqual(topology_dim, expected_dim)
-
-    def test_variable_slicing(self):
-        u_slice = self.sg_obj.U.center_slicing
-        u_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
-        v_slice = self.sg_obj.V.center_slicing
-        v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
-        self.assertEqual(u_slice, u_expected)
-        self.assertEqual(v_slice, v_expected)
-
-    def test_variable_average_axes(self):
-        u_avg_axis = self.sg_obj.U.center_axis
-        u_axis_expected = 1
-        v_avg_axis = self.sg_obj.V.center_axis
-        v_axis_expected = 0
-        self.assertEqual(u_avg_axis, u_axis_expected)
-        self.assertEqual(v_avg_axis, v_axis_expected)
-
-
-class TestSGridDelft3dDataset(unittest.TestCase):
-    """
-    Test using a representative delft3d file.
+    Test that calculated/inferred attributes
+    are as expected from the saved filed.
 
     """
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = deltares_sgrid()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def setUp(self):
-        self.sg_obj = load_grid(self.sgrid_test_file)
-
-    def test_center_lon(self):
-        center_lon = self.sg_obj.center_lon
-        self.assertEqual(center_lon.shape, (4, 4))
-
-    def test_center_lat(self):
-        center_lat = self.sg_obj.center_lat
-        self.assertEqual(center_lat.shape, (4, 4))
-
-    def test_topology_dimension(self):
-        topology_dim = self.sg_obj.topology_dimension
-        expected_dim = 2
-        self.assertEqual(topology_dim, expected_dim)
-
-    def test_variable_slice(self):
-        u_center_slices = self.sg_obj.U1.center_slicing
-        v_center_slices = self.sg_obj.V1.center_slicing
-        u_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:])
-        v_center_expected = (np.s_[:], np.s_[:], np.s_[1:], np.s_[:])
-        xz_center_slices = self.sg_obj.XZ.center_slicing
-        xcor_center_slices = self.sg_obj.XCOR.center_slicing
-        xz_center_expected = (np.s_[1:], np.s_[1:])
-        xcor_center_expected = (np.s_[:], np.s_[:])
-        self.assertEqual(u_center_slices, u_center_expected)
-        self.assertEqual(v_center_slices, v_center_expected)
-        self.assertEqual(xz_center_slices, xz_center_expected)
-        self.assertEqual(xcor_center_slices, xcor_center_expected)
-
-    def test_averaging_axes(self):
-        u1c_axis = self.sg_obj.U1.center_axis
-        u1c_expected = 0
-        v1n_axis = self.sg_obj.V1.node_axis
-        v1n_expected = 0
-        latitude_c_axis = self.sg_obj.latitude.center_axis
-        latitude_n_axis = self.sg_obj.latitude.node_axis
-        self.assertEqual(u1c_axis, u1c_expected)
-        self.assertEqual(v1n_axis, v1n_expected)
-        self.assertIsNone(latitude_c_axis)
-        self.assertIsNone(latitude_n_axis)
-
-    def test_grid_optional_attrs(self):
-        face_coordinates = self.sg_obj.face_coordinates
-        node_coordinates = self.sg_obj.node_coordinates
-        edge1_coordinates = self.sg_obj.edge1_coordinates
-        edge2_coordinates = self.sg_obj.edge2_coordinates
-        fc_expected = ('XZ', 'YZ')
-        nc_expected = ('XCOR', 'YCOR')
-        self.assertEqual(face_coordinates, fc_expected)
-        self.assertEqual(node_coordinates, nc_expected)
-        self.assertIsNone(edge1_coordinates)
-        self.assertIsNone(edge2_coordinates)
-
-    def test_grid_variables(self):
-        grid_variables = self.sg_obj.grid_variables
-        expected_grid_variables = [u'U1', u'V1', u'FAKE_U1', u'W', u'FAKE_W']
-        self.assertEqual(set(grid_variables), set(expected_grid_variables))
-
-    def test_angles(self):
-        angles = self.sg_obj.angles
-        expected_shape = (4, 4)
-        self.assertEqual(angles.shape, expected_shape)
-
-    def test_no_3d_attributes(self):
-        self.assertFalse(hasattr(self.sg_obj, 'volume_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'volume_dimensions'))
-        self.assertFalse(hasattr(self.sg_obj, 'volume_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'face1_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'face1_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'face1_dimensions'))
-        self.assertFalse(hasattr(self.sg_obj, 'face2_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'face2_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'face2_dimensions'))
-        self.assertFalse(hasattr(self.sg_obj, 'face3_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'face3_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'edge3_padding'))
-        self.assertFalse(hasattr(self.sg_obj, 'edge3_coordinates'))
-        self.assertFalse(hasattr(self.sg_obj, 'edge3_dimensions'))
-
-    def test_2d_attributes(self):
-        self.assertTrue(hasattr(self.sg_obj, 'face_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'face_coordinates'))
-        self.assertTrue(hasattr(self.sg_obj, 'face_dimensions'))
-        self.assertTrue(hasattr(self.sg_obj, 'vertical_padding'))
-        self.assertTrue(hasattr(self.sg_obj, 'vertical_dimensions'))
-
-
-class TestSGridSaveNoNodeCoordinates(unittest.TestCase):
-    """
-    Test that SGrid.save_as_netcdf is saving content
-    when there are no nodes or node coordinates specified.
-
-    This scenario will typically occur with WRF datasets.
-
-    """
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = wrf_sgrid_2d()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def setUp(self):
-        self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = load_grid(self.sgrid_test_file)
-        self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = load_grid(self.sgrid_target)
-
-    def tearDown(self):
-        os.remove(self.sgrid_target)
-
-    def test_sgrid(self):
-        self.assertIsInstance(self.target, SGrid)
-
-    def test_nodes(self):
-        node_lon = self.target.node_lon
-        node_lat = self.target.node_lat
-        self.assertIsNone(node_lon) and self.assertIsNone(node_lat)
-
-    def test_node_coordinates(self):
-        node_coordinates = self.target.node_coordinates
-        self.assertIsNone(node_coordinates)
-
-    def test_node_dimesnions(self):
-        node_dims = self.target.node_dimensions
-        expected = 'west_east_stag south_north_stag'
-        self.assertEqual(node_dims, expected)
-
-
-class TestSGridSaveNodeCoordinates(unittest.TestCase):
-    """
-    Test that SGrid.save_as_netcdf is saving
-    content correctly.
-
-    There maybe a better way to do this using
-    mocks, but this will do for now.
-
-    """
-    @classmethod
-    def setUpClass(cls):
-        cls.sgrid_test_file = deltares_sgrid()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.sgrid_test_file)
-
-    def setUp(self):
-        self.sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-        self.sg_obj = load_grid(self.sgrid_test_file)
-        self.sg_obj.save_as_netcdf(self.sgrid_target)
-        self.target = load_grid(self.sgrid_target)
-
-    def tearDown(self):
-        os.remove(self.sgrid_target)
-
-    def test_save_as_netcdf(self):
-        """
-        Test that the attributes in the
-        saved netCDF file are as expected.
-
-        """
-        target_dims = self.target.dimensions
-        expected_target_dims = [(u'MMAXZ', 4),
-                                (u'NMAXZ', 4),
-                                (u'MMAX', 4),
-                                (u'NMAX', 4),
-                                (u'KMAX', 2),
-                                (u'KMAX1', 3),
-                                (u'time', 2)
-                                ]
-        target_vars = self.target.variables
-        expected_target_vars = [u'XZ',
-                                u'YZ',
-                                u'XCOR',
-                                u'YCOR',
-                                u'grid',
-                                u'U1',
-                                u'FAKE_U1',
-                                u'V1',
-                                u'W',
-                                u'FAKE_W',
-                                u'time',
-                                u'latitude',
-                                u'longitude',
-                                u'grid_latitude',
-                                u'grid_longitude'
-                                ]
-        target_grid_vars = self.target.grid_variables
-        expected_target_grid_vars = [u'U1',
-                                     u'FAKE_U1',
-                                     u'V1',
-                                     u'W',
-                                     u'FAKE_W'
-                                     ]
-        target_face_coordinates = self.target.face_coordinates
-        expected_target_face_coordinates = (u'XZ', u'YZ')
-        self.assertIsInstance(self.target, SGrid)
-        self.assertEqual(len(target_dims), len(expected_target_dims))
-        self.assertEqual(set(target_dims), set(expected_target_dims))
-        self.assertEqual(len(target_vars), len(expected_target_vars))
-        self.assertEqual(set(target_vars), set(expected_target_vars))
-        self.assertEqual(len(target_grid_vars), len(expected_target_grid_vars))
-        self.assertEqual(set(target_grid_vars), set(expected_target_grid_vars))
-        self.assertEqual(target_face_coordinates,
-                         expected_target_face_coordinates)
-
-    def test_saved_sgrid_attributes(self):
-        """
-        Test that calculated/inferred attributes
-        are as expected from the saved filed.
-
-        """
-        u1_var = self.target.U1
-        u1_var_center_avg_axis = u1_var.center_axis
-        expected_u1_center_axis = 0
-        u1_vector_axis = u1_var.vector_axis
-        expected_u1_vector_axis = 'X'
-        original_angles = self.sg_obj.angles
-        saved_angles = self.target.angles
-        self.assertEqual(u1_var_center_avg_axis, expected_u1_center_axis)
-        self.assertEqual(u1_vector_axis, expected_u1_vector_axis)
-        np.testing.assert_almost_equal(original_angles, saved_angles, decimal=3)  # noqa
+    u1_var = sgrid_deltares_sgrid.U1
+    u1_var_center_avg_axis = u1_var.center_axis
+    expected_u1_center_axis = 0
+    u1_vector_axis = u1_var.vector_axis
+    expected_u1_vector_axis = 'X'
+    original_angles = sgrid_deltares_sgrid.angles
+    saved_angles = sgrid_deltares_sgrid.angles
+    assert u1_var_center_avg_axis == expected_u1_center_axis
+    assert u1_vector_axis == expected_u1_vector_axis
+    np.testing.assert_almost_equal(original_angles, saved_angles, decimal=3)  # noqa
