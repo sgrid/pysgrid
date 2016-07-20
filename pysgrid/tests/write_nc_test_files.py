@@ -7,8 +7,11 @@ Created on Apr 7, 2015
 from __future__ import (absolute_import, division, print_function)
 
 import os
-from netCDF4 import Dataset
+
+import pytest
 import numpy as np
+from netCDF4 import Dataset
+
 from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME,
                             LAT_GRID_CELL_CENTER_LONG_NAME,
                             LON_GRID_CELL_NODE_LONG_NAME,
@@ -197,110 +200,113 @@ def deltares_sgrid(target_dir=TEST_FILES,
     return file_name
 
 
-def roms_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_roms.nc'):
+@pytest.yield_fixture
+def roms_sgrid(fname='tmp_sgrid_roms.nc'):
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
 
     """
-    file_name = os.path.join(target_dir, nc_filename)
-    with Dataset(file_name, 'w') as rg:
-        # set dimensions
-        rg.createDimension('s_rho', 2)
-        rg.createDimension('s_w', 3)
-        rg.createDimension('time', 2)
-        rg.createDimension('xi_rho', 4)
-        rg.createDimension('eta_rho', 4)
-        rg.createDimension('xi_psi', 3)
-        rg.createDimension('eta_psi', 3)
-        rg.createDimension('xi_u', 3)
-        rg.createDimension('eta_u', 4)
-        rg.createDimension('xi_v', 4)
-        rg.createDimension('eta_v', 3)
-        # create coordinate variables
-        z_centers = rg.createVariable('s_rho', 'i4', ('s_rho',))
-        rg.createVariable('s_w', 'i4', ('s_w',))
-        times = rg.createVariable('time', 'f8', ('time',))
-        rg.createVariable('xi_rho', 'f4', ('xi_rho',))
-        rg.createVariable('eta_rho', 'f4', ('eta_rho',))
-        rg.createVariable('xi_psi', 'f4', ('xi_psi',))
-        rg.createVariable('eta_psi', 'f4', ('eta_psi',))
-        x_us = rg.createVariable('xi_u', 'f4', ('xi_u',))
-        y_us = rg.createVariable('eta_u', 'f4', ('eta_u',))
-        x_vs = rg.createVariable('xi_v', 'f4', ('xi_v',))
-        y_vs = rg.createVariable('eta_v', 'f4', ('eta_v',))
-        # create other variables
-        grid = rg.createVariable('grid', 'i2')
-        u = rg.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
-        v = rg.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
-        fake_u = rg.createVariable('fake_u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))  # noqa
-        lon_centers = rg.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
-        lat_centers = rg.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
-        lon_nodes = rg.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
-        lat_nodes = rg.createVariable('lat_psi', 'f4', ('eta_psi', 'xi_psi'))
-        lat_u = rg.createVariable('lat_u', 'f4', ('eta_u', 'xi_u'))
-        lon_u = rg.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
-        lat_v = rg.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
-        lon_v = rg.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
-        salt = rg.createVariable('salt', 'f4', ('time', 's_rho', 'eta_rho', 'xi_rho'))  # noqa
-        zeta = rg.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
-        # create variable attributes
-        lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
-        lon_centers.standard_name = 'longitude'
-        lon_centers.axes = 'X: xi_rho Y: eta_rho'
-        lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
-        lat_centers.standard_name = 'latitude'
-        lat_centers.axes = 'X: xi_rho Y: eta_rho'
-        lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
-        lon_nodes.axes = 'X: xi_psi Y: eta_psi'
-        lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
-        lat_nodes.axes = 'X: xi_psi Y: eta_psi'
-        times.standard_name = 'time'
-        grid.cf_role = 'grid_topology'
-        grid.topology_dimension = 2
-        grid.node_dimensions = 'xi_psi eta_psi'
-        grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'  # noqa
-        grid.edge1_dimensions = 'xi_u: xi_psi eta_u: eta_psi (padding: both)'
-        grid.edge2_dimensions = 'xi_v: xi_psi (padding: both) eta_v: eta_psi'
-        grid.node_coordinates = 'lon_psi lat_psi'
-        grid.face_coordinates = 'lon_rho lat_rho'
-        grid.edge1_coordinates = 'lon_u lat_u'
-        grid.edge2_coordinates = 'lon_v lat_v'
-        grid.vertical_dimensions = 's_rho: s_w (padding: none)'
-        salt.grid = 'grid'
-        zeta.location = 'face'
-        zeta.coordinates = 'time lat_rho lon_rho'
-        u.grid = 'some grid'
-        u.axes = 'X: xi_u Y: eta_u'
-        u.coordinates = 'time s_rho lat_u lon_u '
-        u.location = 'edge1'
-        u.standard_name = 'sea_water_x_velocity'
-        v.grid = 'some grid'
-        v.axes = 'X: xi_v Y: eta_v'
-        v.location = 'edge2'
-        v.standard_name = 'sea_water_y_velocity'
-        fake_u.grid = 'some grid'
-        # create coordinate data
-        z_centers[:] = np.random.random(size=(2,))
-        times[:] = np.random.random(size=(2,))
-        lon_centers[:, :] = np.random.random(size=(4, 4))
-        lat_centers[:, :] = np.random.random(size=(4, 4))
-        lon_nodes[:] = np.random.random(size=(3, 3))
-        lat_nodes[:] = np.random.random(size=(3, 3))
-        x_us[:] = np.random.random(size=(3,))
-        y_us[:] = np.random.random(size=(4,))
-        x_vs[:] = np.random.random(size=(4,))
-        y_vs[:] = np.random.random(size=(3,))
-        u[:] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
-        v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities
-        fake_u[:] = np.random.random(size=(2, 2, 4, 3))
-        lat_u[:] = np.random.random(size=(4, 3))
-        lon_u[:] = np.random.random(size=(4, 3))
-        lat_v[:] = np.random.random(size=(3, 4))
-        lon_v[:] = np.random.random(size=(3, 4))
-        salt[:] = np.random.random(size=(2, 2, 4, 4))
-    return file_name
+    nc = Dataset(fname, 'w')
+    # Set dimensions.
+    nc.createDimension('s_rho', 2)
+    nc.createDimension('s_w', 3)
+    nc.createDimension('time', 2)
+    nc.createDimension('xi_rho', 4)
+    nc.createDimension('eta_rho', 4)
+    nc.createDimension('xi_psi', 3)
+    nc.createDimension('eta_psi', 3)
+    nc.createDimension('xi_u', 3)
+    nc.createDimension('eta_u', 4)
+    nc.createDimension('xi_v', 4)
+    nc.createDimension('eta_v', 3)
+    # Create coordinate variables.
+    z_centers = nc.createVariable('s_rho', 'i4', ('s_rho',))
+    nc.createVariable('s_w', 'i4', ('s_w',))
+    times = nc.createVariable('time', 'f8', ('time',))
+    nc.createVariable('xi_rho', 'f4', ('xi_rho',))
+    nc.createVariable('eta_rho', 'f4', ('eta_rho',))
+    nc.createVariable('xi_psi', 'f4', ('xi_psi',))
+    nc.createVariable('eta_psi', 'f4', ('eta_psi',))
+    x_us = nc.createVariable('xi_u', 'f4', ('xi_u',))
+    y_us = nc.createVariable('eta_u', 'f4', ('eta_u',))
+    x_vs = nc.createVariable('xi_v', 'f4', ('xi_v',))
+    y_vs = nc.createVariable('eta_v', 'f4', ('eta_v',))
+    # Create other variables.
+    grid = nc.createVariable('grid', 'i2')
+    u = nc.createVariable('u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))
+    v = nc.createVariable('v', 'f4', ('time', 's_rho', 'eta_v', 'xi_v'))
+    fake_u = nc.createVariable('fake_u', 'f4', ('time', 's_rho', 'eta_u', 'xi_u'))  # noqa
+    lon_centers = nc.createVariable('lon_rho', 'f4', ('eta_rho', 'xi_rho'))
+    lat_centers = nc.createVariable('lat_rho', 'f4', ('eta_rho', 'xi_rho'))
+    lon_nodes = nc.createVariable('lon_psi', 'f4', ('eta_psi', 'xi_psi'))
+    lat_nodes = nc.createVariable('lat_psi', 'f4', ('eta_psi', 'xi_psi'))
+    lat_u = nc.createVariable('lat_u', 'f4', ('eta_u', 'xi_u'))
+    lon_u = nc.createVariable('lon_u', 'f4', ('eta_u', 'xi_u'))
+    lat_v = nc.createVariable('lat_v', 'f4', ('eta_v', 'xi_v'))
+    lon_v = nc.createVariable('lon_v', 'f4', ('eta_v', 'xi_v'))
+    salt = nc.createVariable('salt', 'f4', ('time', 's_rho', 'eta_rho', 'xi_rho'))  # noqa
+    zeta = nc.createVariable('zeta', 'f4', ('time', 'eta_rho', 'xi_rho'))
+    # Create variable attributes.
+    lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
+    lon_centers.standard_name = 'longitude'
+    lon_centers.axes = 'X: xi_rho Y: eta_rho'
+    lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
+    lat_centers.standard_name = 'latitude'
+    lat_centers.axes = 'X: xi_rho Y: eta_rho'
+    lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
+    lon_nodes.axes = 'X: xi_psi Y: eta_psi'
+    lat_nodes.long_name = LAT_GRID_CELL_NODE_LONG_NAME[0]
+    lat_nodes.axes = 'X: xi_psi Y: eta_psi'
+    times.standard_name = 'time'
+    grid.cf_role = 'grid_topology'
+    grid.topology_dimension = 2
+    grid.node_dimensions = 'xi_psi eta_psi'
+    grid.face_dimensions = 'xi_rho: xi_psi (padding: both) eta_rho: eta_psi (padding: both)'  # noqa
+    grid.edge1_dimensions = 'xi_u: xi_psi eta_u: eta_psi (padding: both)'
+    grid.edge2_dimensions = 'xi_v: xi_psi (padding: both) eta_v: eta_psi'
+    grid.node_coordinates = 'lon_psi lat_psi'
+    grid.face_coordinates = 'lon_rho lat_rho'
+    grid.edge1_coordinates = 'lon_u lat_u'
+    grid.edge2_coordinates = 'lon_v lat_v'
+    grid.vertical_dimensions = 's_rho: s_w (padding: none)'
+    salt.grid = 'grid'
+    zeta.location = 'face'
+    zeta.coordinates = 'time lat_rho lon_rho'
+    u.grid = 'some grid'
+    u.axes = 'X: xi_u Y: eta_u'
+    u.coordinates = 'time s_rho lat_u lon_u '
+    u.location = 'edge1'
+    u.standard_name = 'sea_water_x_velocity'
+    v.grid = 'some grid'
+    v.axes = 'X: xi_v Y: eta_v'
+    v.location = 'edge2'
+    v.standard_name = 'sea_water_y_velocity'
+    fake_u.grid = 'some grid'
+    # Create coordinate data.
+    z_centers[:] = np.random.random(size=(2,))
+    times[:] = np.random.random(size=(2,))
+    lon_centers[:, :] = np.random.random(size=(4, 4))
+    lat_centers[:, :] = np.random.random(size=(4, 4))
+    lon_nodes[:] = np.random.random(size=(3, 3))
+    lat_nodes[:] = np.random.random(size=(3, 3))
+    x_us[:] = np.random.random(size=(3,))
+    y_us[:] = np.random.random(size=(4,))
+    x_vs[:] = np.random.random(size=(4,))
+    y_vs[:] = np.random.random(size=(3,))
+    u[:] = np.random.random(size=(2, 2, 4, 3))  # x-directed velocities
+    v[:] = np.random.random(size=(2, 2, 3, 4))  # y-directed velocities
+    fake_u[:] = np.random.random(size=(2, 2, 4, 3))
+    lat_u[:] = np.random.random(size=(4, 3))
+    lon_u[:] = np.random.random(size=(4, 3))
+    lat_v[:] = np.random.random(size=(3, 4))
+    lon_v[:] = np.random.random(size=(3, 4))
+    salt[:] = np.random.random(size=(2, 2, 4, 4))
+    nc.sync()
+    yield nc
+    nc.close()
+    os.remove(fname)
 
 
 def wrf_sgrid_2d(target_dir=TEST_FILES, nc_filename='test_sgrid_wrf_2.nc'):
