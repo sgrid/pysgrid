@@ -21,51 +21,6 @@ from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME,
 TEST_FILES = os.path.join(os.path.split(__file__)[0], 'files')
 
 
-def simulated_dgrid(target_dir=TEST_FILES, nc_filename='fake_dgrid.nc'):
-    file_name = os.path.join(target_dir, nc_filename)
-    with Dataset(file_name, 'w') as rg:
-        # define dims
-        rg.createDimension('MMAXZ', 4)
-        rg.createDimension('NMAXZ', 4)
-        rg.createDimension('MMAX', 4)
-        rg.createDimension('NMAX', 4)
-        rg.createDimension('KMAX', 2)
-        rg.createDimension('KMAX1', 3)
-        rg.createDimension('time', 2)
-        # define vars
-        xcor = rg.createVariable('XCOR', 'f4', ('MMAX', 'NMAX'))
-        ycor = rg.createVariable('YCOR', 'f4', ('MMAX', 'NMAX'))
-        xz = rg.createVariable('XZ', 'f4', ('MMAXZ', 'NMAXZ'))
-        yz = rg.createVariable('YZ', 'f4', ('MMAXZ', 'NMAXZ'))
-        # Dimensions T, Z, X, Y.
-        u1 = rg.createVariable('U1', 'f4', ('time', 'KMAX', 'MMAXZ', 'NMAX'))
-        v1 = rg.createVariable('V1', 'f4', ('time', 'KMAX', 'MMAX', 'NMAXZ'))
-        times = rg.createVariable('time', 'f8', ('time',))
-        grid = rg.createVariable('grid', 'i4')
-        # define attributes
-        grid.cf_role = 'grid_topology'
-        grid.topology_dimension = 2
-        grid.node_dimensions = 'MMAX NMAX'
-        grid.face_dimensions = 'MMAXZ: MMAX (padding: low) NMAXZ: NMAX (padding: low)'  # noqa
-        grid.node_coordinates = 'XCOR YCOR'
-        # grid.face_coordinates = 'XZ YZ'
-        grid.vertical_dimensions = 'KMAX: KMAX1 (padding: none)'
-        u1.grid = 'some grid'
-        u1.standard_name = 'sea_water_x_velocity'
-        u1.location = 'edge2'
-        v1.grid = 'some grid'
-        v1.standard_name = 'sea_water_y_velocity'
-        v1.location = 'edge1'
-        # create variable data
-        xcor[:] = np.random.random((4, 4))
-        ycor[:] = np.random.random((4, 4))
-        xz[:] = np.random.random((4, 4))
-        yz[:] = np.random.random((4, 4))
-        u1[:] = np.random.random((2, 2, 4, 4))
-        v1[:] = np.random.random((2, 2, 4, 4))
-        times[:] = np.random.random((2,))
-
-
 def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares_no_optional_attr.nc'):  # noqa
     file_name = os.path.join(target_dir, nc_filename)
     with Dataset(file_name, 'w') as rg:
@@ -121,8 +76,7 @@ def deltares_sgrid_no_optional_attr(target_dir=TEST_FILES, nc_filename='test_sgr
     return file_name
 
 
-def deltares_sgrid(target_dir=TEST_FILES,
-                   nc_filename='test_sgrid_deltares.nc'):
+def deltares_sgrid(target_dir=TEST_FILES, nc_filename='test_sgrid_deltares.nc'):
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
