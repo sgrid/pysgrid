@@ -249,10 +249,7 @@ def test_variable_average_axes(sgrid_wrf):
 
 
 # TestSGridDelft3dDataset
-"""
-Test using a representative delft3d file.
-
-"""
+# Test using a representative delft3d file.
 
 
 @pytest.fixture
@@ -360,11 +357,9 @@ Test that SGrid.save_as_netcdf is saving content
 when there are no nodes or node coordinates specified.
 
 This scenario will typically occur with WRF datasets.
-
 """
 
-
-def round_trip_wrf(wrf_sgrid_2d):
+def test_round_trip_wrf(wrf_sgrid_2d):
     sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
     sg_obj = load_grid(wrf_sgrid_2d)
     sg_obj.save_as_netcdf(sgrid_target)
@@ -398,22 +393,14 @@ def test_node_dimesnions(sgrid_wrf_sgrid_2d):
     assert node_dims == expected
 
 
-# TestSGridSaveNodeCoordinates
-"""
-Test that SGrid.save_as_netcdf is saving
-content correctly.
+# Test that SGrid.save_as_netcdf is saving
+# content correctly.
 
-There maybe a better way to do this using
-mocks, but this will do for now.
-
-"""
-
-
-def round_trip_deltares(deltares_sgrid):
+def test_round_trip_deltares(deltares_sgrid):
     sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
     sg_obj = load_grid(deltares_sgrid)
     sg_obj.save_as_netcdf(sgrid_target)
-    os.remoce(sgrid_target)
+    os.remove(sgrid_target)
 
 
 @pytest.fixture
@@ -486,4 +473,6 @@ def test_saved_sgrid_attributes(sgrid_deltares_sgrid):
     saved_angles = sgrid_deltares_sgrid.angles
     assert u1_var_center_avg_axis == expected_u1_center_axis
     assert u1_vector_axis == expected_u1_vector_axis
-    np.testing.assert_almost_equal(original_angles, saved_angles, decimal=3)  # noqa
+    assert np.array_equal(original_angles, saved_angles)
+    # if it turns out they aren't exactly equal:
+    # assert np.allclose( original_angles, saved_angles, rtol=1e-12, atol=0)
