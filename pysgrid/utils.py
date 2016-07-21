@@ -171,7 +171,7 @@ def infer_variable_location(sgrid, variable):
         edge_dims = []
     var_dims = variable.dimensions
     if (does_intersection_exist(var_dims, face_dims) and not
-       does_intersection_exist(var_dims, node_dims)):
+            does_intersection_exist(var_dims, node_dims)):
         inferred_location = 'face'
     elif ((does_intersection_exist(var_dims, face_dims) and
            does_intersection_exist(var_dims, node_dims)) or
@@ -187,16 +187,16 @@ def calculate_bearing(lon_lat_1, lon_lat_2):
     return bearing from true north in degrees
 
     """
-    lon_lat_1_radians = lon_lat_1 * np.pi/180
-    lon_lat_2_radians = lon_lat_2 * np.pi/180
+    lon_lat_1_radians = lon_lat_1 * np.pi / 180
+    lon_lat_2_radians = lon_lat_2 * np.pi / 180
     lon_1 = lon_lat_1_radians[..., 0]
     lat_1 = lon_lat_1_radians[..., 1]
     lon_2 = lon_lat_2_radians[..., 0]
     lat_2 = lon_lat_2_radians[..., 1]
-    x1 = np.sin(lon_2-lon_1) * np.cos(lat_2)
-    x2 = np.cos(lat_1)*np.sin(lat_2) - np.sin(lat_1)*np.cos(lat_2)*np.cos(lon_2-lon_1)  # noqa
+    x1 = np.sin(lon_2 - lon_1) * np.cos(lat_2)
+    x2 = np.cos(lat_1) * np.sin(lat_2) - np.sin(lat_1) * np.cos(lat_2) * np.cos(lon_2 - lon_1)  # noqa
     bearing_radians = np.arctan2(x1, x2)
-    bearing_degrees = bearing_radians * 180/np.pi
+    bearing_degrees = bearing_radians * 180 / np.pi
     return (bearing_degrees + 360) % 360
 
 
@@ -207,9 +207,50 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
     """
     bearing = calculate_bearing(lon_lat_1, lon_lat_2)
     bearing_from_true_east = 90 - bearing
-    bearing_from_true_east_radians = bearing_from_true_east * np.pi/180
-    # Unsure if this is the appropriate thing to do for the last grid cell.
+    bearing_from_true_east_radians = bearing_from_true_east * np.pi / 180
+    # not sure if this is the most appropriate thing to do for the last grid
+    # cell
     angles = np.append(bearing_from_true_east_radians,
                        bearing_from_true_east_radians[..., -1:],
                        axis=-1)
     return angles
+
+
+def points_in_polys(points, polys, polyy=None):
+    """
+    :param points: Numpy array of Nx2 points
+    :param polys: Numpy array of N polygons of degree M represented
+    by Mx2 points (NxMx2) for each point, see if respective poly
+    contains it. Returns array of True/False
+    """
+
+    result = np.zeros((points.shape[0],), dtype=bool)
+    if isinstance(points, np.ma.masked_array):
+        points = points.data
+    if isinstance(polys, np.ma.masked_array):
+        polys = polys.data
+    if polyy is not None and isinstance(polyy, np.ma.masked_array):
+        polyy = polyy.data
+    pointsx = points[:, 0]
+    pointsy = points[:, 1]
+    v1x = v1y = v2x = v2y = -1
+    for i in range(0, polys.shape[1]):
+        if polyy is not None:
+            v1x = polys[:, i - 1]
+            v1y = polyy[:, i - 1]
+            v2x = polys[:, i]
+            v2y = polyy[:, i]
+        else:
+            v1x = polys[:, i - 1, 0]
+            v1y = polys[:, i - 1, 1]
+            v2x = polys[:, i, 0]
+            v2y = polys[:, i, 1]
+        test1 = (v2y > pointsy) != (v1y > pointsy)
+        test2 = np.zeros(points.shape[0], dtype=bool)
+        m = np.where(test1 == 1)[0]
+        test2[m] = pointsx[m] < \
+            (v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / \
+            (v1y[m] - v2y[m]) + v2x[m]
+        np.logical_and(test1, test2, test1)
+        np.logical_xor(result, test1, result)
+    return result
