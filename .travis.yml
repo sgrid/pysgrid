@@ -20,4 +20,5 @@ before_install:
 
 script:
     - python setup.py test -a "--verbose"
-    - find . -type f -name "*.py" | xargs flake8 --max-line-length=100
+    - find . -type f -name "*.py" ! -name 'test_*.py' | xargs flake8 --max-line-length=100
+    - find . -type f -name 'test_*.py' | xargs flake8 --max-line-length=100 --ignore=F811,F401
