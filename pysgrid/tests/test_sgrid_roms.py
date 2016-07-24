@@ -20,12 +20,6 @@ Test SGrid ROMS.
 """
 
 
-def test_load_from_file(roms_sgrid):
-    fname = 'tmp_sgrid_roms.nc'  # FIXME: name handling in the fixture.
-    sg_obj = load_grid(fname)
-    assert isinstance(sg_obj, SGrid)
-
-
 def test_load_from_dataset(roms_sgrid):
     sg_obj = load_grid(roms_sgrid)
     assert isinstance(sg_obj, SGrid)
