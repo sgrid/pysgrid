@@ -100,9 +100,9 @@ def test_interpolation_alphas():
 
 
 def test_points_in_polys2():
-    # simple 2x2 rect
+    # Simple 2x2 rectangle.
     polygon = np.array(([0, 0], [2, 0], [2, 2], [0, 2])).reshape(1, 4, 2)
-    # points along teh boundaries
+    # Points along the boundaries.
     points = np.array([[0, 0],
                        [1, 0],
                        [2, 0],
