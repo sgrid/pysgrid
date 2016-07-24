@@ -1,172 +1,24 @@
-'''
+"""
 Created on Apr 7, 2015
 
 @author: ayan
-'''
+
+"""
 
 from __future__ import (absolute_import, division, print_function)
-
-import os
 
 import pytest
 import numpy as np
 
 from ..sgrid import SGrid, load_grid
+
 from .write_nc_test_files import (deltares_sgrid,
-                                  deltares_sgrid_no_optional_attr,
-                                  non_compliant_sgrid,
-                                  roms_sgrid,
-                                  wrf_sgrid_2d)
+                                  deltares_sgrid_no_optional_attr)
 
 
-CURRENT_DIR = os.path.dirname(__file__)
-TEST_FILES = os.path.join(CURRENT_DIR, 'files')
-write_path = os.path.join(CURRENT_DIR, 'test_sgrid_write.nc')
-
-
-def test_exception_raised(non_compliant_sgrid):
-    with pytest.raises(ValueError):
-        load_grid(non_compliant_sgrid)
-
-
-# TestSGridCreate.
-def test_load_from_file(roms_sgrid):
-    fname = 'tmp_sgrid_roms.nc'  # FIXME: name handling in the fixture.
-    sg_obj = load_grid(fname)
-    assert isinstance(sg_obj, SGrid)
-
-
-def test_load_from_dataset(roms_sgrid):
-    sg_obj = load_grid(roms_sgrid)
-    assert isinstance(sg_obj, SGrid)
-
-
-@pytest.fixture
-def sgrid_roms_sgrid(roms_sgrid):
-    return load_grid(roms_sgrid)
-
-
-def test_center_lon(sgrid_roms_sgrid):
-    center_lon = sgrid_roms_sgrid.center_lon
-    assert center_lon.shape == (4, 4)
-
-
-def test_center_lat(sgrid_roms_sgrid):
-    center_lat = sgrid_roms_sgrid.center_lat
-    assert center_lat.shape == (4, 4)
-
-
-def test_variables(sgrid_roms_sgrid):
-    dataset_vars = sgrid_roms_sgrid.variables
-    expected_vars = [u's_rho',
-                     u's_w',
-                     u'time',
-                     u'xi_rho',
-                     u'eta_rho',
-                     u'xi_psi',
-                     u'eta_psi',
-                     u'xi_u',
-                     u'eta_u',
-                     u'xi_v',
-                     u'eta_v',
-                     u'grid',
-                     u'u',
-                     u'v',
-                     u'fake_u',
-                     u'lon_rho',
-                     u'lat_rho',
-                     u'lon_psi',
-                     u'lat_psi',
-                     u'lat_u',
-                     u'lon_u',
-                     u'lat_v',
-                     u'lon_v',
-                     u'salt',
-                     u'zeta']
-    assert len(dataset_vars) == len(expected_vars)
-    assert dataset_vars == expected_vars
-
-
-def test_grid_variables(sgrid_roms_sgrid):
-    dataset_grid_variables = sgrid_roms_sgrid.grid_variables
-    expected_grid_variables = [u'u', u'v', u'fake_u', u'salt']
-    assert len(dataset_grid_variables) == len(expected_grid_variables)
-    assert set(dataset_grid_variables) == set(expected_grid_variables)
-
-
-def test_non_grid_variables(sgrid_roms_sgrid):
-    dataset_non_grid_variables = sgrid_roms_sgrid.non_grid_variables
-    expected_non_grid_variables = [u's_rho',
-                                   u's_w',
-                                   u'time',
-                                   u'xi_rho',
-                                   u'eta_rho',
-                                   u'xi_psi',
-                                   u'eta_psi',
-                                   u'xi_u',
-                                   u'eta_u',
-                                   u'xi_v',
-                                   u'eta_v',
-                                   u'grid',
-                                   u'lon_rho',
-                                   u'lat_rho',
-                                   u'lon_psi',
-                                   u'lat_psi',
-                                   u'lat_u',
-                                   u'lon_u',
-                                   u'lat_v',
-                                   u'lon_v',
-                                   u'zeta']
-    assert len(dataset_non_grid_variables) == len(expected_non_grid_variables)
-    assert set(dataset_non_grid_variables) == set(expected_non_grid_variables)
-
-
-def test_variable_slicing(sgrid_roms_sgrid):
-    u_center_slices = sgrid_roms_sgrid.u.center_slicing
-    v_center_slices = sgrid_roms_sgrid.v.center_slicing
-    u_center_expected = (np.s_[:], np.s_[:], np.s_[1:-1], np.s_[:])
-    v_center_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[1:-1])
-    assert u_center_slices == u_center_expected
-    assert v_center_slices == v_center_expected
-
-
-def test_grid_variable_average_axes(sgrid_roms_sgrid):
-    uc_axis = sgrid_roms_sgrid.u.center_axis
-    uc_axis_expected = 1
-    un_axis = sgrid_roms_sgrid.u.node_axis
-    un_axis_expected = 0
-    lon_rho_c_axis = sgrid_roms_sgrid.lon_rho.center_axis
-    lon_rho_n_axis = sgrid_roms_sgrid.lon_rho.node_axis
-    assert uc_axis == uc_axis_expected
-    assert un_axis == un_axis_expected
-    assert lon_rho_c_axis is None
-    assert lon_rho_n_axis is None
-
-
-def test_optional_grid_attrs(sgrid_roms_sgrid):
-    face_coordinates = sgrid_roms_sgrid.face_coordinates
-    node_coordinates = sgrid_roms_sgrid.node_coordinates
-    edge1_coordinates = sgrid_roms_sgrid.edge1_coordinates
-    edge2_coordinates = sgrid_roms_sgrid.edge2_coordinates
-    fc_expected = ('lon_rho', 'lat_rho')
-    nc_expected = ('lon_psi', 'lat_psi')
-    e1c_expected = ('lon_u', 'lat_u')
-    e2c_expected = ('lon_v', 'lat_v')
-    assert face_coordinates == fc_expected
-    assert node_coordinates == nc_expected
-    assert edge1_coordinates == e1c_expected
-    assert edge2_coordinates == e2c_expected
-
-
-def test_write_sgrid_to_netcdf(sgrid_roms_sgrid):
-    sgrid_roms_sgrid.save_as_netcdf(write_path)
-    result = load_grid(write_path)
-    os.remove(write_path)
-    assert isinstance(result, SGrid)  # TODO: Add more "round-trip" tests.
-
-
-# TestSGridNoCoordinates
 """
+Test SGrid No Coordinates.
+
 Test to make sure that if no coordinates (e.g. face, edge1, etc)
 are specified, those coordinates can be inferred from the dataset.
 
@@ -212,45 +64,8 @@ def test_grid_angles(sgrid_deltares):
     assert angles.shape == angles_shape
 
 
-# TestSGridWRFDataset
 """
-Test a representative WRF file.
-
-"""
-
-
-@pytest.fixture
-def sgrid_wrf(wrf_sgrid_2d):
-    return load_grid(wrf_sgrid_2d)
-
-
-def test_topology_dimension(sgrid_wrf):
-    topology_dim = sgrid_wrf.topology_dimension
-    expected_dim = 2
-    assert topology_dim == expected_dim
-
-
-def test_variable_slicing_wrf(sgrid_wrf):
-    u_slice = sgrid_wrf.U.center_slicing
-    u_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
-    v_slice = sgrid_wrf.V.center_slicing
-    v_expected = (np.s_[:], np.s_[:], np.s_[:], np.s_[:])
-    assert u_slice == u_expected
-    assert v_slice == v_expected
-
-
-def test_variable_average_axes(sgrid_wrf):
-    u_avg_axis = sgrid_wrf.U.center_axis
-    u_axis_expected = 1
-    v_avg_axis = sgrid_wrf.V.center_axis
-    v_axis_expected = 0
-    assert u_avg_axis == u_axis_expected
-    assert v_avg_axis == v_axis_expected
-
-
-# TestSGridDelft3dDataset
-"""
-Test using a representative delft3d file.
+Test SGrid Delft3d Dataset.
 
 """
 
@@ -354,66 +169,22 @@ def test_2d_attributes(sgrid_obj_deltares):
     assert hasattr(sgrid_obj_deltares, 'vertical_dimensions')
 
 
-# TestSGridSaveNoNodeCoordinates
 """
-Test that SGrid.save_as_netcdf is saving content
-when there are no nodes or node coordinates specified.
+Test SGrid Save Node Coordinates.
 
-This scenario will typically occur with WRF datasets.
+Test that `SGrid.save_as_netcdf `is saving the content correctly.
 
 """
 
 
-def round_trip_wrf(wrf_sgrid_2d):
-    sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
-    sg_obj = load_grid(wrf_sgrid_2d)
-    sg_obj.save_as_netcdf(sgrid_target)
-    os.remove(sgrid_target)
+def test_round_trip(deltares_sgrid, tmpdir):
+    """
+    TODO: add more "round-trip" tests.
 
-
-@pytest.fixture
-def sgrid_wrf_sgrid_2d(wrf_sgrid_2d):
-    return load_grid(wrf_sgrid_2d)
-
-
-def test_sgrid(sgrid_wrf_sgrid_2d):
-    assert isinstance(sgrid_wrf_sgrid_2d, SGrid)
-
-
-def test_nodes(sgrid_wrf_sgrid_2d):
-    node_lon = sgrid_wrf_sgrid_2d.node_lon
-    node_lat = sgrid_wrf_sgrid_2d.node_lat
-    assert node_lon is None
-    assert node_lat is None
-
-
-def test_node_coordinates(sgrid_wrf_sgrid_2d):
-    node_coordinates = sgrid_wrf_sgrid_2d.node_coordinates
-    assert node_coordinates is None
-
-
-def test_node_dimesnions(sgrid_wrf_sgrid_2d):
-    node_dims = sgrid_wrf_sgrid_2d.node_dimensions
-    expected = 'west_east_stag south_north_stag'
-    assert node_dims == expected
-
-
-# TestSGridSaveNodeCoordinates
-"""
-Test that SGrid.save_as_netcdf is saving
-content correctly.
-
-There maybe a better way to do this using
-mocks, but this will do for now.
-
-"""
-
-
-def round_trip_deltares(deltares_sgrid):
-    sgrid_target = os.path.join(TEST_FILES, 'tmp_sgrid.nc')
+    """
+    fname = tmpdir.mkdir('files').join('deltares_roundtrip.nc')
     sg_obj = load_grid(deltares_sgrid)
-    sg_obj.save_as_netcdf(sgrid_target)
-    os.remoce(sgrid_target)
+    sg_obj.save_as_netcdf(fname)
 
 
 @pytest.fixture
