@@ -15,11 +15,11 @@ import pytest
 from ..sgrid import SGrid
 from ..utils import GridPadding
 from ..variables import SGridVariable
-from .write_nc_test_files import wrf_sgrid_2d
+from .write_nc_test_files import wrf_sgrid
 
 
 @pytest.fixture
-def sgrid_var_wrf(wrf_sgrid_2d):
+def sgrid_var_wrf(wrf_sgrid):
     face_padding = [GridPadding(mesh_topology_var=u'grid',
                                 face_dim=u'west_east',
                                 node_dim=u'west_east_stag',
@@ -31,8 +31,8 @@ def sgrid_var_wrf(wrf_sgrid_2d):
     node_dimensions = 'west_east_stag south_north_stag'
     return dict(sgrid=SGrid(face_padding=face_padding,
                             node_dimensions=node_dimensions),
-                test_var_1=wrf_sgrid_2d.variables['SNOW'],
-                test_var_2=wrf_sgrid_2d.variables['FAKE_U'])
+                test_var_1=wrf_sgrid.variables['SNOW'],
+                test_var_2=wrf_sgrid.variables['FAKE_U'])
 
 
 def test_face_location_inference1(sgrid_var_wrf):

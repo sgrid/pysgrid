@@ -12,7 +12,7 @@ import numpy as np
 
 from ..sgrid import SGrid, load_grid
 
-from .write_nc_test_files import wrf_sgrid_2d
+from .write_nc_test_files import wrf_sgrid
 
 
 """
@@ -22,8 +22,8 @@ Test SGrid WRF Dataset.
 
 
 @pytest.fixture
-def sgrid(wrf_sgrid_2d):
-    return load_grid(wrf_sgrid_2d)
+def sgrid(wrf_sgrid):
+    return load_grid(wrf_sgrid)
 
 
 def test_topology_dimension(sgrid):
@@ -50,14 +50,14 @@ def test_variable_average_axes(sgrid):
     assert v_avg_axis == v_axis_expected
 
 
-def test_roundtrip(wrf_sgrid_2d, tmpdir):
+def test_roundtrip(wrf_sgrid, tmpdir):
     """
     TODO: add more "round-trip" tests.
 
     Test SGrid Save No-Node Coordinates.
     """
     fname = tmpdir.mkdir('files').join('wrf_roundtrip.nc')
-    sg_obj = load_grid(wrf_sgrid_2d)
+    sg_obj = load_grid(wrf_sgrid)
     sg_obj.save_as_netcdf(fname)
 
 

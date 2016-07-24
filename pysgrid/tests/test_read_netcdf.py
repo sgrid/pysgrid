@@ -8,7 +8,7 @@ Created on Apr 7, 2015
 from __future__ import absolute_import, division, print_function
 
 from ..read_netcdf import NetCDFDataset, find_grid_topology_var
-from .write_nc_test_files import roms_sgrid, wrf_sgrid_2d
+from .write_nc_test_files import roms_sgrid, wrf_sgrid
 
 
 """
@@ -69,21 +69,21 @@ Test NetCDF Dataset Without Nodes.
 """
 
 
-def test_node_coordinates(wrf_sgrid_2d):
-    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+def test_node_coordinates(wrf_sgrid):
+    nc_ds = NetCDFDataset(wrf_sgrid)
     node_coordinates = nc_ds.find_node_coordinates('west_east_stag south_north_stag')  # noqa
     assert node_coordinates is None
 
 
-def test_find_variable_by_attr(wrf_sgrid_2d):
-    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+def test_find_variable_by_attr(wrf_sgrid):
+    nc_ds = NetCDFDataset(wrf_sgrid)
     result = nc_ds.find_variables_by_attr(cf_role='grid_topology',
                                           topology_dimension=2)
     expected = ['grid']
     assert result == expected
 
 
-def test_find_variable_by_nonexistant_attr(wrf_sgrid_2d):
-    nc_ds = NetCDFDataset(wrf_sgrid_2d)
+def test_find_variable_by_nonexistant_attr(wrf_sgrid):
+    nc_ds = NetCDFDataset(wrf_sgrid)
     result = nc_ds.find_variables_by_attr(bird='tufted titmouse')
     assert result == []

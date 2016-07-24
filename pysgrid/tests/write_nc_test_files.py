@@ -1,25 +1,28 @@
-'''
+"""
 Created on Apr 7, 2015
 
 @author: ayan
-'''
+
+"""
 
 from __future__ import (absolute_import, division, print_function)
 
 import os
+import tempfile
 
 import pytest
 import numpy as np
 from netCDF4 import Dataset
 
-from pysgrid.lookup import (LON_GRID_CELL_CENTER_LONG_NAME,
-                            LAT_GRID_CELL_CENTER_LONG_NAME,
-                            LON_GRID_CELL_NODE_LONG_NAME,
-                            LAT_GRID_CELL_NODE_LONG_NAME)
+from ..lookup import (LON_GRID_CELL_CENTER_LONG_NAME,
+                      LAT_GRID_CELL_CENTER_LONG_NAME,
+                      LON_GRID_CELL_NODE_LONG_NAME,
+                      LAT_GRID_CELL_NODE_LONG_NAME)
 
 
 @pytest.yield_fixture
-def deltares_sgrid_no_optional_attr(fname='tmp_sgrid_deltares_no_opt_attr.nc'):
+def deltares_sgrid_no_optional_attr():
+    fname = tempfile.mktemp(suffix='.nc')
     nc = Dataset(fname, 'w')
     # Define dimensions.
     nc.createDimension('MMAXZ', 4)
@@ -77,13 +80,14 @@ def deltares_sgrid_no_optional_attr(fname='tmp_sgrid_deltares_no_opt_attr.nc'):
 
 
 @pytest.yield_fixture
-def deltares_sgrid(fname='tmp_sgrid_deltares.nc'):
+def deltares_sgrid():
     """
     Create a netCDF file that is structurally similar to
     deltares output. Dimension and variable names may differ
     from an actual file.
 
     """
+    fname = tempfile.mktemp(suffix='.nc')
     nc = Dataset(fname, 'w')
     # Define dimensions.
     nc.createDimension('MMAXZ', 4)
@@ -136,7 +140,7 @@ def deltares_sgrid(fname='tmp_sgrid_deltares.nc'):
     w.grid = 'grid'
     w.location = 'face'
     fake_w.grid = 'grid'
-    # create variable data
+    # Create variable data.
     xcor[:] = np.random.random((4, 4))
     ycor[:] = np.random.random((4, 4))
     xz[:] = np.random.random((4, 4))
@@ -158,13 +162,14 @@ def deltares_sgrid(fname='tmp_sgrid_deltares.nc'):
 
 
 @pytest.yield_fixture
-def roms_sgrid(fname='tmp_sgrid_roms.nc'):
+def roms_sgrid():
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
 
     """
+    fname = tempfile.mktemp(suffix='.nc')
     nc = Dataset(fname, 'w')
     # Set dimensions.
     nc.createDimension('s_rho', 2)
@@ -267,7 +272,8 @@ def roms_sgrid(fname='tmp_sgrid_roms.nc'):
 
 
 @pytest.yield_fixture
-def wrf_sgrid_2d(fname='tmp_sgrid_wrf_2.nc'):
+def wrf_sgrid():
+    fname = tempfile.mktemp(suffix='.nc')
     nc = Dataset(fname, 'w')
     nc.createDimension('Time', 2)
     nc.createDimension('DateStrLen', 3)
@@ -330,74 +336,14 @@ def wrf_sgrid_2d(fname='tmp_sgrid_wrf_2.nc'):
 
 
 @pytest.yield_fixture
-def wrf_sgrid(fname='tmp_sgrid_wrf.nc'):
-    """
-    Write an SGrid file using 3D conventions.
-
-    """
-    nc = Dataset(fname, 'w')
-    # Create dimensions.
-    nc.createDimension('Time', 2)
-    nc.createDimension('DateStrLen', 3)
-    nc.createDimension('west_east', 4)
-    nc.createDimension('south_north', 5)
-    nc.createDimension('west_east_stag', 5)
-    nc.createDimension('bottom_top', 3)
-    nc.createDimension('south_north_stag', 6)
-    nc.createDimension('bottom_top_stag', 4)
-    # Create variables.
-    times = nc.createVariable('Times', np.dtype(str), ('Time', 'DateStrLen'))  # noqa
-    xtimes = nc.createVariable('XTIME', 'f8', ('Time',))
-    xtimes.standard_name = 'time'
-    us = nc.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))  # noqa
-    us.grid = 'grid'
-    us.location = 'face1'
-    vs = nc.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))  # noqa
-    vs.grid = 'grid'
-    vs.location = 'face2'
-    ws = nc.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))  # noqa
-    ws.grid = 'grid'
-    ws.location = 'face3'
-    temps = nc.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))  # noqa
-    temps.grid = 'grid'
-    temps.location = 'volume'
-    xlats = nc.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))  # noqa
-    xlongs = nc.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))  # noqa
-    znus = nc.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
-    znws = nc.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
-    grid = nc.createVariable('grid', 'i2')
-    grid.cf_role = 'grid_topology'
-    grid.topology_dimension = 3
-    grid.node_dimensions = 'west_east_stag south_north_stag bottom_top_stag'  # noqa
-    grid.volume_dimensions = ('west_east: west_east_stag (padding: none) '
-                                'south_north: south_north_stag (padding: none) '  # noqa
-                                'bottom_top: bottom_top_stag (padding: none)')  # noqa
-    grid.volume_coordinates = 'XLONG XLAT ZNU'
-    # create fake data
-    times[:] = np.random.random(size=(2, 3)).astype(str)
-    xtimes[:] = np.random.random(size=(2,))
-    us[:, :, :, :] = np.random.random(size=(2, 3, 5, 5))
-    vs[:, :, :, :] = np.random.random(size=(2, 3, 6, 4))
-    ws[:, :, :, :] = np.random.random(size=(2, 4, 5, 4))
-    temps[:, :, :, :] = np.random.random(size=(2, 3, 5, 4))
-    xlats[:, :, :] = np.random.random(size=(2, 5, 4))
-    xlongs[:, :, :] = np.random.random(size=(2, 5, 4))
-    znus[:, :] = np.random.random(size=(2, 3))
-    znws[:, :] = np.random.random(size=(2, 4))
-    nc.sync()
-    yield nc
-    nc.close()
-    os.remove(fname)
-
-
-@pytest.yield_fixture
-def non_compliant_sgrid(fname='tmp_noncompliant_sgrid.nc'):
+def non_compliant_sgrid():
     """
     Create a netCDF file that is structurally similar to
     ROMS output. Dimension and variable names may differ
     from an actual file.
 
     """
+    fname = tempfile.mktemp(suffix='.nc')
     nc = Dataset(fname, 'w')
     nc.createDimension('z_center', 2)
     nc.createDimension('z_node', 3)
@@ -410,7 +356,7 @@ def non_compliant_sgrid(fname='tmp_noncompliant_sgrid.nc'):
     nc.createDimension('y_u', 4)
     nc.createDimension('x_v', 4)
     nc.createDimension('y_v', 3)
-    # create coordinate variables
+    # Create coordinate variables.
     z_centers = nc.createVariable('z_center', 'i4', ('z_center',))
     nc.createVariable('z_node', 'i4', ('z_node',))
     times = nc.createVariable('time', 'f8', ('time',))
@@ -422,7 +368,7 @@ def non_compliant_sgrid(fname='tmp_noncompliant_sgrid.nc'):
     y_us = nc.createVariable('y_u', 'f4', ('y_u',))
     x_vs = nc.createVariable('x_v', 'f4', ('x_v',))
     y_vs = nc.createVariable('y_v', 'f4', ('y_v',))
-    # create other variables
+    # Create other variables.
     grid = nc.createVariable('grid', 'i2')
     u = nc.createVariable('u', 'f4', ('time', 'z_center', 'y_u', 'x_u'))
     v = nc.createVariable('v', 'f4', ('time', 'z_center', 'y_v', 'x_v'))
@@ -434,7 +380,7 @@ def non_compliant_sgrid(fname='tmp_noncompliant_sgrid.nc'):
     lon_u = nc.createVariable('lon_u', 'f4', ('y_u', 'x_u'))
     lat_v = nc.createVariable('lat_v', 'f4', ('y_v', 'x_v'))
     lon_v = nc.createVariable('lon_v', 'f4', ('y_v', 'x_v'))
-    # create variable attributes
+    # Create variable attributes.
     lon_centers.long_name = LON_GRID_CELL_CENTER_LONG_NAME[0]
     lat_centers.long_name = LAT_GRID_CELL_CENTER_LONG_NAME[0]
     lon_nodes.long_name = LON_GRID_CELL_NODE_LONG_NAME[0]
@@ -449,7 +395,7 @@ def non_compliant_sgrid(fname='tmp_noncompliant_sgrid.nc'):
     grid.edge1_coordinates = 'lon_u lat_u'
     grid.edge2_coordinates = 'lon_v lat_v'
     grid.vertical_dimensions = 'z_center: z_node (padding: none)'
-    # create coordinate data
+    # Create coordinate data.
     z_centers[:] = np.random.random(size=(2,))
     times[:] = np.random.random(size=(2,))
     lon_centers[:, :] = np.random.random(size=(4, 4))
