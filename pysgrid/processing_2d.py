@@ -7,6 +7,7 @@ Created on Apr 2, 2015
 from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
+import numpy.ma as ma
 
 
 def vector_sum(x_arr, y_arr):
@@ -22,8 +23,7 @@ def vector_sum(x_arr, y_arr):
     :rtype: numpy.array
 
     """
-    vector_sum = np.sqrt(x_arr**2 + y_arr**2)
-    return vector_sum
+    return ma.sqrt(x_arr**2 + y_arr**2)
 
 
 def rotate_vectors(x_arr, y_arr, angle_arr):
