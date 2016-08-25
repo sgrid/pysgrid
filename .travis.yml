@@ -12,12 +12,8 @@ before_install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --add channels conda-forge -f
-    - travis_retry conda create --yes -n TEST python=$PYTHON nomkl --file requirements.txt
+    - travis_retry conda create --yes -n TEST python=$PYTHON nomkl --file requirements.txt --file requirements-dev.txt
     - source activate TEST
-    - travis_retry conda install --yes --file requirements-dev.txt
-    - if [[ "$PYTHON" != "3.5" ]]; then
-        travis_retry conda install --yes mock ;
-      fi
 
 script:
     - python setup.py test -a "--verbose"
