@@ -23,8 +23,7 @@ def vector_sum(x_arr, y_arr):
     :rtype: numpy.array
 
     """
-    vector_sum = ma.sqrt(x_arr**2 + y_arr**2)
-    return vector_sum
+    return ma.sqrt(x_arr**2 + y_arr**2)
 
 
 def rotate_vectors(x_arr, y_arr, angle_arr):
