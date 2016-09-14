@@ -337,8 +337,8 @@ class SGrid(object):
         """
         if indices is None:
             indices = self.locate_faces(points, grid, _memo, _copy, _hash)
-        ymin = indices[:, 0][indices[:, 0] != -1].min()
-        xmin = indices[:, 1][indices[:, 1] != -1].min()
+        ymin = indices[:, 0].astype('uint32').min()
+        xmin = indices[:, 1].astype('uint32').min()
         y_slice = slice(ymin, indices[:, 0].max() + 2)
         x_slice = slice(xmin, indices[:, 1].max() + 2)
         return (y_slice, x_slice)
@@ -427,10 +427,20 @@ class SGrid(object):
         paradigm of unstructured grids.
         """
 
-        arr = var[:]
-        x = index[:, 0]
-        y = index[:, 1]
-        return np.ma.column_stack((arr[x, y], arr[x + 1, y], arr[x + 1, y + 1], arr[x, y + 1]))
+        var = var[:]
+        
+        rv = np.zeros((index.shape[0], 4), dtype=np.float64)
+        raw = np.ravel_multi_index(index.T, var.shape)
+        rv[:, 0] = np.take(var, raw)
+        raw += np.array(var.shape[1], dtype=np.int32)
+        rv[:, 1] = np.take(var, raw)
+        raw += 1
+        rv[:, 2] = np.take(var, raw)
+        raw -= np.array(var.shape[1], dtype=np.int32)
+        rv[:, 3] = np.take(var, raw)
+        return rv
+#         return np.ma.column_stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]))
+        
 
     def build_celltree(self, grid='node'):
         """
@@ -537,8 +547,9 @@ class SGrid(object):
 
         ind = ind.copy() - [yslice.start, xslice.start]
         vals = self.get_variable_by_index(variable, ind)
-
-        result = np.ma.sum(vals * alphas, axis=1)
+        vals *= alphas
+        result = np.sum(vals, axis=1)
+        result = np.ma.masked_array(data=result, mask=np.zeros(result.shape, dtype=bool))
         if mask is not None:
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
@@ -646,7 +657,7 @@ class SGrid(object):
                 l[ind_arr] = (x[ind_arr] - a[0][ind_arr] - a[2][ind_arr]
                               * m[ind_arr]) / (a[1][ind_arr] + a[3][ind_arr] * m[ind_arr])
 
-            def quad_eqn(l, m, ind_arr, aa, bb, cc):
+            def quad_eqn(l, m, t, aa, bb, cc):
                 """
 
                 """
@@ -657,25 +668,22 @@ class SGrid(object):
 
                 det = np.ma.sqrt(k)
                 m1 = (-bb - det) / (2 * aa)
-                l1 = (x[ind_arr] - a[0][ind_arr] - a[2][ind_arr] *
-                      m1) / (a[1][ind_arr] + a[3][ind_arr] * m1)
+                l1 = (x[t] - a[0][t] - a[2][t] * 
+                      m1) / (a[1][t] + a[3][t] * m1)
 
                 m2 = (-bb + det) / (2 * aa)
-                l2 = (x[ind_arr] - a[0][ind_arr] - a[2][ind_arr] *
-                      m2) / (a[1][ind_arr] + a[3][ind_arr] * m2)
+                l2 = (x[t] - a[0][t] - a[2][t] * 
+                      m2) / (a[1][t] + a[3][t] * m2)
 
-                m[ind_arr] = m1
-                l[ind_arr] = l1
+                m[t] = m1
+                l[t] = l1
 
                 t1 = np.logical_or(l1 < 0, l1 > 1)
                 t2 = np.logical_or(m1 < 0, m1 > 1)
                 t3 = np.logical_or(t1, t2)
 
-                l[ind_arr[t3]] = l2[t3]
-                m[ind_arr[t3]] = m2[t3]
-
-#                 m[ind_arr[~t3]] = m2
-#                 l[ind_arr[~t3]] = l2
+                l[t[t3]] = l2[t3]
+                m[t[t3]] = m2[t3]
 
             aa = a[3] * b[2] - a[2] * b[3]
             bb = a[3] * b[0] - a[0] * b[3] + a[1] * \
@@ -685,8 +693,14 @@ class SGrid(object):
             m = np.zeros(bb.shape)
             l = np.zeros(bb.shape)
             t = aa[:] == 0
-            lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
-            quad_eqn(l, m, np.where(~t)[0], aa[~t], bb[~t], cc[~t])
+            # lin_eqn
+            with np.errstate(invalid='ignore'):
+                m[t] = -cc[t] / bb[t]
+                l[t] = (x[t] - a[0][t] - a[2][t] * m[t]) / (a[1][t] + a[3][t] * m[t])
+
+#             lin_eqn(l, m, np.where(t)[0], aa[t], bb[t], cc[t])
+            # quad
+            quad_eqn(l, m, ~t, aa[~t], bb[~t], cc[~t])
 
             return (l, m)
 
