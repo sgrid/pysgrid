@@ -332,9 +332,7 @@ class SGrid(object):
         """
         given minimum and maximum longitudes and latitudes, find
         the most efficient slice for the specified grid that covers the
-<<<<<<< HEAD
         entire specified area. 
-        IN DEVELOPMENT
         """
         if indices is None:
             indices = self.locate_faces(points, grid, _memo, _copy, _hash)
