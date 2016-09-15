@@ -1,4 +1,2 @@
-mock
-nose
 pytest
 flake8

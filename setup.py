@@ -35,7 +35,8 @@ def extract_version(module='pysgrid'):
     return version
 
 
-reqs = [line.strip().split('#')[0] for line in open('requirements.txt')]
+install_requires = [line.strip() for line in open('requirements.txt')]
+tests_require = [line.strip() for line in open('requirements-dev.txt')]
 
 
 def readme():
@@ -51,8 +52,8 @@ setup(name='pysgrid',
       packages=find_packages(),
       license='BSD',
       long_description=readme(),
-      install_requires=reqs,
-      tests_require=['mock', 'nose', 'pytest'],
+      install_requires=install_requires,
+      tests_require=tests_require,
       cmdclass=dict(test=PyTest),
       classifiers=[
           'Development Status :: 3 - Alpha',

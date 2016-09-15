@@ -1,11 +1,13 @@
-'''
+"""
 Created on Feb 17, 2016
 
 @author: jay.hennen
-'''
+"""
 
 import numpy as np
-from pysgrid import SGrid
+
+from ..sgrid import SGrid
+from ..utils import points_in_polys
 
 node_lon = np.array(([1, 3, 5], [1, 3, 5], [1, 3, 5]))
 node_lat = np.array(([1, 1, 1], [3, 3, 3], [5, 5, 5]))
@@ -48,8 +50,8 @@ def test_locate_faces():
     assert ((indices.data == ind_ans.data).all() and
             (indices.mask == ind_ans.mask).all())
 
+
 def test_points_in_polys():
-    from pysgrid.utils import points_in_polys
     points = np.array(
         [[0, 0],
          [1, 0],
@@ -66,6 +68,7 @@ def test_points_in_polys():
     answer = np.logical_and(answer[:, 0], answer[:, 1])
     res = (answer == pinp).all()
     assert(res)
+
 
 def test_interpolation_alphas():
     points = np.array(([2, 2], [2, 4], [4, 2], [4, 4]))
@@ -97,27 +100,21 @@ def test_interpolation_alphas():
     assert(np.all(alphas_e2 == answer_e2))
 
 
-def test_points_in_polys():
-    from pysgrid.utils import points_in_polys
-    # simple 2x2 rect
-    polygon = np.array(([0, 0], [2, 0], [2, 2], [0, 2])).reshape(1, 4, 2)
-    # points along teh boundaries
-    points = np.array([[0, 0],
-                       [1, 0],
-                       [2, 0],
-                       [0, 1],
-                       [0, 2],
-                       [1, 2],
-                       [2, 2],
-                       [2, 1]])
-    pinp = np.array([points_in_polys(point.reshape(1, 2), polygon)
-                     for point in points]).reshape(-1)
-    answer = sgrid.locate_faces(points + 1, 'node') == [0, 0]
+def test_points_in_polys2():
+    rectangle = np.array(([0, 0],
+                          [2, 0],
+                          [2, 2],
+                          [0, 2])).reshape(1, 4, 2)
+    boundaries = np.array([[0, 0],
+                           [1, 0],
+                           [2, 0],
+                           [0, 1],
+                           [0, 2],
+                           [1, 2],
+                           [2, 2],
+                           [2, 1]])
+    pinp = np.array([points_in_polys(point.reshape(1, 2), rectangle)
+                     for point in boundaries]).reshape(-1)
+    answer = sgrid.locate_faces(boundaries + 1, 'node') == [0, 0]
     answer = np.logical_and(answer[:, 0], answer[:, 1])
-
-    # print pinp
-    # print sgrid.locate_faces(points + 1, 'center').data
-    # print sgrid.locate_faces(points + 1, 'center').mask
-    # print answer
-    # print res
     assert (answer == pinp).all()

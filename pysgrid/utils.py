@@ -114,7 +114,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
     else:
         pass
     return slice_indices
@@ -219,8 +219,9 @@ def calculate_angle_from_true_east(lon_lat_1, lon_lat_2):
 def points_in_polys(points, polys, polyy=None):
     """
     :param points: Numpy array of Nx2 points
-    :param polys: Numpy array of N polygons of degree M represented by Mx2 points (NxMx2)
-    for each point, see if respective poly contains it. Returns array of True/False
+    :param polys: Numpy array of N polygons of degree M represented
+    by Mx2 points (NxMx2) for each point, see if respective poly
+    contains it. Returns array of True/False
     """
 
     result = np.zeros((points.shape[0],), dtype=bool)
@@ -246,7 +247,7 @@ def points_in_polys(points, polys, polyy=None):
             v2y = polys[:, i, 1]
         test1 = (v2y > pointsy) != (v1y > pointsy)
         test2 = np.zeros(points.shape[0], dtype=bool)
-        m = np.where(test1 == True)[0]
+        m = np.where(test1 == 1)[0]
         test2[m] = pointsx[m] < \
             (v1x[m] - v2x[m]) * (pointsy[m] - v2y[m]) / \
             (v1y[m] - v2y[m]) + v2x[m]

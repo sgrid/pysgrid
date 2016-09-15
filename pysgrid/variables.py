@@ -4,9 +4,12 @@ Created on Apr 15, 2015
 @author: ayan
 '''
 from __future__ import (absolute_import, division, print_function)
+
+import numpy as np
 from collections import OrderedDict
 from .read_netcdf import parse_axes, parse_vector_axis
-from .utils import determine_variable_slicing, infer_avg_axes, infer_variable_location
+from .utils import (determine_variable_slicing, infer_avg_axes,
+                    infer_variable_location)
 
 
 class SGridVariable(object):
