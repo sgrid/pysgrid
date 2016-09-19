@@ -488,7 +488,8 @@ class SGrid(object):
                                   slices=None,
                                   _memo=False,
                                   slice_grid=True,
-                                  _hash=None):
+                                  _hash=None,
+                                  _copy=False):
         """
         Interpolates a variable on one of the grids to an array of points.
         :param points: Nx2 Array of points to be interpolated to.
@@ -518,8 +519,6 @@ class SGrid(object):
         ind = indices
         if hash is None:
             _hash = self._hash_of_pts(points)
-
-        _copy = False
 
         if grid is None:
             grid = self.infer_location(variable)
