@@ -419,6 +419,7 @@ class SGrid(object):
                 self._add_memo(points, res, grid, self._ind_memo_dict, _copy, _hash)
             return res
 
+#     @profile
     def get_variable_by_index(self, var, index):
         """
         Function to get the node values of a given face index.
@@ -429,7 +430,7 @@ class SGrid(object):
         var = var[:]
         
         rv = np.zeros((index.shape[0], 4), dtype=np.float64)
-        raw = np.ravel_multi_index(index.T, var.shape)
+        raw = np.ravel_multi_index(index.T, var.shape, mode='clip')
         rv[:, 0] = np.take(var, raw)
         raw += np.array(var.shape[1], dtype=np.int32)
         rv[:, 1] = np.take(var, raw)
@@ -478,6 +479,7 @@ class SGrid(object):
         lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4).astype(np.int32))
         self._trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)
 
+#     @profile
     def interpolate_var_to_points(self,
                                   points,
                                   variable,
@@ -532,10 +534,10 @@ class SGrid(object):
 
         yxslice = [yslice, xslice] = self.get_efficient_slice(points, ind, grid, _memo, _copy, _hash)
         if slices is not None:
-            slices.append(yslice)
-            slices.append(xslice)
+            slices = slices + (yslice,)
+            slices = slices + (xslice,)
         else:
-            slices = [yslice, xslice]
+            slices = (yslice, xslice)
 
         if self.infer_location(variable) is not None:
             variable = variable[slices]
@@ -552,7 +554,7 @@ class SGrid(object):
             # REVISIT LATER
             result.mask = mask[ind[:, 0], ind[:, 1]]
 
-        off_grids = []
+        off_grids = [],
         if isinstance(ind.mask, np.bool_):
             return result
         if isinstance(ind, np.ma.MaskedArray):

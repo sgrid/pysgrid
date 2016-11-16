@@ -1,11 +1,11 @@
 # Conda recipe example.
 package:
     name: pysgrid
-    version: "0.3.1"
+    version: "0.3.3"
 
 source:
-    git_url: https://github.com/jay-hennen/pysgrid.git
-    git_tag: v0.3.1
+    git_url: https://github.com/NOAA-ORR-ERD/pysgrid.git
+    git_tag: v0.3.3
 
 build:
     number: 0
