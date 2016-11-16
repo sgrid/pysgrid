@@ -114,7 +114,7 @@ def determine_variable_slicing(sgrid_obj, nc_variable, method='center'):
                 slice_datum = sgrid_obj.padding_slices[padding_val]
                 lower_slice, upper_slice = slice_datum
                 slice_index = np.s_[lower_slice:upper_slice]
-                slice_indices += (slice_index, )
+                slice_indices += (slice_index,)
     else:
         pass
     return slice_indices

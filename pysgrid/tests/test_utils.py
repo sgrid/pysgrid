@@ -11,8 +11,12 @@ import pytest
 
 import numpy as np
 
-from ..utils import (calculate_bearing, calculate_angle_from_true_east,
-                     check_element_equal, does_intersection_exist, pair_arrays)
+from pysgrid.utils import (calculate_bearing,
+                           calculate_angle_from_true_east,
+                           check_element_equal,
+                           does_intersection_exist,
+                           pair_arrays,
+                           )
 
 
 @pytest.fixture
