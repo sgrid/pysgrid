@@ -10,6 +10,7 @@ from netCDF4 import Dataset
 import numpy as np
 import hashlib
 from collections import OrderedDict
+from scipy.spatial import KDTree
 
 from .read_netcdf import NetCDFDataset, parse_padding, find_grid_topology_var
 from .utils import calculate_angle_from_true_east, pair_arrays, points_in_polys
@@ -346,7 +347,8 @@ class SGrid(object):
         """
         TEMPORARY
         """
-        if grid not in ['node', 'center', 'edge1', 'edge2']:
+        grid_names = ['node', 'center', 'edge1', 'edge2']
+        if grid not in grid_names:
             raise ValueError(
                 'Name not recognized. Grid must be in {0}'.format(grid_names))
         lons = getattr(self, grid + '_lon')
@@ -385,11 +387,11 @@ class SGrid(object):
                                  'edge1': None,
                                  'edge2': None,
                                  'center': None}
-        if not hasattr(self, '_trees'):
-            self._trees = {'node': None,
-                           'edge1': None,
-                           'edge2': None,
-                           'center': None}
+        if not hasattr(self, ')_cell_trees'):
+            self._cell_trees = {'node': None,
+                                'edge1': None,
+                                'edge2': None,
+                                'center': None}
         if _memo:
             if _hash is None:
                 _hash = self._hash_of_pts(points)
@@ -401,9 +403,9 @@ class SGrid(object):
         just_one = (points.ndim == 1)
         points = points.reshape(-1, 2)
 
-        if self._trees[grid] is None:
+        if self._cell_trees[grid] is None:
             self.build_celltree(grid)
-        tree = self._trees[grid][0]
+        tree = self._cell_trees[grid][0]
         indices = tree.locate(points)
         lon, lat = self._get_grid_vars(grid)
         x = indices % (lat.shape[1] - 1)
@@ -419,6 +421,30 @@ class SGrid(object):
                 self._add_memo(points, res, grid, self._ind_memo_dict, _copy, _hash)
             return res
 
+    def locate_nearest(self,
+                       points,
+                       grid,
+                       _memo=False,
+                       _copy=False,
+                       _hash=None):
+        if not hasattr(self, '_kd_trees'):
+            self._kd_trees = {'node': None,
+                              'edge1': None,
+                              'edge2': None,
+                              'center': None}
+        points = np.asarray(points, dtype=np.float64)
+        just_one = (points.ndim == 1)
+        points = points.reshape(-1, 2)
+
+        if self._kd_trees[grid] is None:
+            self.build_kdtree(grid)
+        tree = self._kd_trees[grid]
+        lin_indices = np.array(tree.query(points))[1].astype(np.int32)
+        lon, lat = self._get_grid_vars(grid)
+        ind = np.unravel_index(lin_indices, dims=lon.shape)
+        ind = np.array(ind).T
+        return ind
+
 #     @profile
     def get_variable_by_index(self, var, index):
         """
@@ -428,8 +454,10 @@ class SGrid(object):
         """
 
         var = var[:]
-        
+
+        #return values, rows of tl, bl, br, tr
         rv = np.zeros((index.shape[0], 4), dtype=np.float64)
+        #raw = linearized index of the tl corner of the cell
         raw = np.ravel_multi_index(index.T, var.shape, mode='clip')
         rv[:, 0] = np.take(var, raw)
         raw += np.array(var.shape[1], dtype=np.int32)
@@ -440,7 +468,33 @@ class SGrid(object):
         rv[:, 3] = np.take(var, raw)
         return rv
 #         return np.ma.column_stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]))
-        
+
+    def get_variable_at_index(self, var, index):
+        var = var[:]
+
+        rv = np.zeros((index.shape[0],1), dtype=np.float64)
+        mask = np.zeros((index.shape[0],1), dtype=bool)
+        raw = np.ravel_multi_index(index.T, var.shape, mode='clip')
+        rv[:, 0] = np.take(var, raw)
+        mask[:,0] = np.take(var.mask, raw)
+        return np.ma.array(rv, mask=mask)
+
+    def build_kdtree(self, grid='node'):
+        """Builds the kdtree for the specified grid"""
+
+        if not hasattr(self, '_kd_trees'):
+            self._kd_trees = {'node': None,
+                              'edge1': None,
+                              'edge2': None,
+                              'center': None}
+        lon, lat = self._get_grid_vars(grid)
+        if lon is None or lat is None:
+            raise ValueError(
+                "{0}_lon and {0}_lat must be defined in order to create and use KDTree for this grid".format(grid))
+        lin_points = np.column_stack((lon.ravel(), lat.ravel()))
+        print(lin_points.shape)
+        self._kd_trees[grid] = KDTree(lin_points, leafsize=4)
+
 
     def build_celltree(self, grid='node'):
         """
@@ -456,10 +510,10 @@ class SGrid(object):
                                    'edge2': None,
                                    'center': None}
         if not hasattr(self, '_trees'):
-            self._trees = {'node': None,
-                           'edge1': None,
-                           'edge2': None,
-                           'center': None}
+            self._cell_trees = {'node': None,
+                                'edge1': None,
+                                'edge2': None,
+                                'center': None}
         try:
             from cell_tree2d import CellTree
         except ImportError:
@@ -477,7 +531,41 @@ class SGrid(object):
         lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
                                         for x in range(0, x_size - 1, 1)]) + y * x_size for y in range(0, y_size - 1)])
         lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4).astype(np.int32))
-        self._trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)
+        self._cell_trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)
+
+    def nearest_var_to_points(self,
+                              points,
+                              variable,
+                              indices=None,
+                              grid=None,
+                              alphas=None,
+                              mask=None,
+                              slices=None,
+                              _memo=False,
+                              slice_grid=True,
+                              _hash=None,
+                              _copy=False):
+        if grid is None:
+            grid = self.infer_location(variable)
+        if indices is None:
+            # ind has to be writable
+            indices = self.locate_nearest(points, grid, _memo, _copy, _hash)
+        yxslice = [yslice, xslice] = self.get_efficient_slice(points, indices, grid, _memo, _copy, _hash)
+        if slices is not None:
+            slices = slices + (yslice,)
+            slices = slices + (xslice,)
+        else:
+            slices = (yslice, xslice)
+
+        if self.infer_location(variable) is not None:
+            variable = variable[slices]
+        if len(variable.shape) > 2:
+            raise ValueError("Variable has too many dimensions to \
+            associate with grid. Please specify slices.")
+
+        ind = indices.copy() - [yslice.start, xslice.start]
+        result = self.get_variable_at_index(variable, ind)
+        return result
 
 #     @profile
     def interpolate_var_to_points(self,
