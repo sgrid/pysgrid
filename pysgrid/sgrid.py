@@ -449,7 +449,7 @@ class SGrid(object):
                 self._add_memo(points, res, grid, self._ind_memo_dict, _copy, _hash)
             return res
 
-    @profile
+#     @profile
     def get_variable_by_index(self, var, index):
         """
         index = index arr of quads (maskedarray only)
@@ -538,7 +538,29 @@ class SGrid(object):
                                   slice_grid=True,
                                   _hash=None,
                                   _copy=False):
-#         return SGrid.interpolate_var_to_points(self, points, variable, indices=indices, grid=grid, alphas=alphas, mask=mask, slices=slices, _memo=_memo, slice_grid=slice_grid, _hash=_hash, _copy=_copy)
+        """
+        Interpolates a variable on one of the grids to an array of points.
+        :param points: Nx2 Array of points to be interpolated to.
+        :param variable: Variable data array with the same shape as one of the grids.
+        :param indices: If computed already, array of Nx2 indices can be passed in to increase speed.
+        :param alphas: If computed already, array of Nx4 alphas can be passed in to increase speed.
+        :param mask: under development.
+
+
+        - With a numpy array:  
+        sgrid.interpolate_var_to_points(points, sgrid.u[time_idx, depth_idx])  
+        - With a raw netCDF Variable:  
+        sgrid.interpolate_var_to_points(points, nc.variables['u'], slices=[time_idx, depth_idx])  
+
+        If you have pre-computed information, you can pass it in to avoid unnecessary
+        computation and increase performance.  
+        - ind = # precomputed indices of points  
+        - alphas = # precomputed alphas (useful if interpolating to the same points frequently)  
+
+        sgrid.interpolate_var_to_points(points, sgrid.u, indices=ind, alphas=alphas, 
+        slices=[time_idx, depth_idx])
+
+        """
     
         points = points.reshape(-1, 2)
 
