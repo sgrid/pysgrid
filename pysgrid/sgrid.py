@@ -449,7 +449,7 @@ class SGrid(object):
                 self._add_memo(points, res, grid, self._ind_memo_dict, _copy, _hash)
             return res
 
-#     @profile
+    @profile
     def get_variable_by_index(self, var, index):
         """
         index = index arr of quads (maskedarray only)
@@ -468,8 +468,9 @@ class SGrid(object):
         
         if isinstance(var, np.ma.MaskedArray) or isinstance(index, np.ma.MaskedArray):
             rv = np.ma.empty((index.shape[0], 4), dtype=np.float64)
-            rv.mask = np.ma.getmaskarray(rv)
-            rv.mask[:] = np.ma.getmaskarray(index)[:, 0][:, np.newaxis]
+            if index.mask is not np.bool_():  # because False is not False. Thanks numpy
+                rv.mask = np.zeros_like(rv, dtype=bool)
+                rv.mask[:] = index.mask[:, 0][:, np.newaxis]
             rv.harden_mask()
         else:
             rv = np.zeros((index.shape[0], 4), dtype=np.float64)
@@ -524,7 +525,7 @@ class SGrid(object):
         lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4).astype(np.int32))
         self._trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)
 
-    @profile
+#     @profile
     def interpolate_var_to_points(self,
                                   points,
                                   variable,
