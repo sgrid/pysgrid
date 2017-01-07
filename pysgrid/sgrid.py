@@ -651,7 +651,7 @@ class SGrid(object):
                 if len(aa) is 0:
                     return
                 k = bb * bb - 4 * aa * cc
-                k = np.ma.array(k, mask=(k < 0))
+                k = np.ma.masked_less(k, 0)
 
                 det = np.ma.sqrt(k)
                 m1 = (-bb - det) / (2 * aa)
@@ -662,15 +662,16 @@ class SGrid(object):
                 l2 = (x[t] - a[0][t] - a[2][t] * 
                       m2) / (a[1][t] + a[3][t] * m2)
 
-                m[t] = m1
-                l[t] = l1
+#                 m[t] = m1
+#                 l[t] = l1
 
                 t1 = np.logical_or(l1 < 0, l1 > 1)
                 t2 = np.logical_or(m1 < 0, m1 > 1)
                 t3 = np.logical_or(t1, t2)
+                
+                m[t] = np.choose(t3, (m1, m2))
+                l[t] = np.choose(t3, (l1, l2))
 
-                l[t[t3]] = l2[t3]
-                m[t[t3]] = m2[t3]
             a = a.T
             b = b.T
             aa = a[3] * b[2] - a[2] * b[3]
