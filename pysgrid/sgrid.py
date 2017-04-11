@@ -788,6 +788,9 @@ class SGrid(object):
             if result is not None:
                 return result
 
+        if self._l_coeffs.get(grid, None) is None:
+            self._compute_transform_coeffs(grid)
+
         lons, lats = self._get_grid_vars(grid)
         if indices is None:
             indices = self.locate_faces(points, grid, _memo, _copy, _hash)
