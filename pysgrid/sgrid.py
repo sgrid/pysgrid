@@ -10,7 +10,6 @@ from netCDF4 import Dataset
 import numpy as np
 import hashlib
 from collections import OrderedDict
-from scipy.spatial import KDTree
 
 from .read_netcdf import NetCDFDataset, parse_padding, find_grid_topology_var
 from .utils import calculate_angle_from_true_east, pair_arrays, points_in_polys
@@ -457,6 +456,7 @@ class SGrid(object):
                        _memo=False,
                        _copy=False,
                        _hash=None):
+        from scipy.spatial import KDTree
         if not hasattr(self, '_kd_trees'):
             self._kd_trees = {'node': None,
                               'edge1': None,
