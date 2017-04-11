@@ -1,11 +1,11 @@
 # Conda recipe example.
 package:
     name: pysgrid
-    version: "0.3.3"
+    version: "0.3.4"
 
 source:
     git_url: https://github.com/NOAA-ORR-ERD/pysgrid.git
-    git_tag: v0.3.3
+    git_tag: v0.3.4
 
 build:
     number: 0
@@ -14,6 +14,7 @@ requirements:
     build:
         - python
         - setuptools
+        - scipy
     run:
         - python
         - numpy
