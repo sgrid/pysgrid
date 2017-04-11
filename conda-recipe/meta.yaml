@@ -8,13 +8,12 @@ source:
     git_tag: v0.3.4
 
 build:
-    number: 0
+    number: 1
 
 requirements:
     build:
         - python
         - setuptools
-        - scipy
     run:
         - python
         - numpy
