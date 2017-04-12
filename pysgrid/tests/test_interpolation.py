@@ -126,7 +126,7 @@ def test_nearest_neighbor():
 
     diagonal = [[0, 0], [1, 1], [1, 2], [1, 2.1], [2.1,2.1], [5, 5], [6, 6]]
     inds = sgrid.locate_nearest(diagonal, 'node')
-    print inds
+    print(inds)
     ind_ans = np.array([[0, 0],
                         [0, 0],
                         [0, 0],

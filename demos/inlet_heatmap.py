@@ -1,10 +1,22 @@
+
+from __future__ import (absolute_import, division, print_function)
+
+
 from netCDF4 import Dataset
 import numpy as np
 import pysgrid
 
-#url = ('http://geoport.whoi.edu/thredds/dodsC/clay/usgs/users/jcwarner/Projects/Sandy/triple_nest/00_dir_NYB05.ncml')
-url2 = (
-    'http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
+import matplotlib.pyplot as plt
+
+import cartopy.crs as ccrs
+# from cartopy.io import shapereader
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
+# rotation is still ugly...
+from pysgrid.processing_2d import rotate_vectors, vector_sum
+
+# url = ('http://geoport.whoi.edu/thredds/dodsC/clay/usgs/users/jcwarner/Projects/Sandy/triple_nest/00_dir_NYB05.ncml') # noqa
+url2 = ('http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml') # noqa
 
 nc = Dataset(url2)
 sgrid = pysgrid.load_grid(nc)
@@ -13,7 +25,7 @@ lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
 
 points = np.stack((lons, lats), axis=-1)
 
-print points.shape
+print(points.shape)
 time_idx = 0
 v_idx = 0
 
@@ -30,11 +42,6 @@ interp_u = sgrid.interpolate_var_to_points(
 interp_v = sgrid.interpolate_var_to_points(
     points, sgrid.v, slices=[time_idx, v_idx])
 
-
-# rotation is still ugly...
-from pysgrid.processing_2d import rotate_vectors, vector_sum
-from pysgrid.processing_2d import vector_sum
-
 ind = sgrid.locate_faces(points)
 ang_ind = ind + [1, 1]
 angles = sgrid.angles[:][ang_ind[:, 0], ang_ind[:, 1]]
@@ -45,14 +52,6 @@ v_rot = v_rot.reshape(600, -1)
 uv_vector_sum = vector_sum(u_rot, v_rot)
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import cartopy.crs as ccrs
-from cartopy.io import shapereader
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-
 def make_map(projection=ccrs.PlateCarree(), figsize=(20, 20)):
     fig, ax = plt.subplots(figsize=figsize,
                            subplot_kw=dict(projection=projection))
@@ -61,6 +60,7 @@ def make_map(projection=ccrs.PlateCarree(), figsize=(20, 20)):
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     return fig, ax
+
 
 mscale = 1
 vscale = 10
