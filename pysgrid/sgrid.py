@@ -524,7 +524,7 @@ class SGrid(object):
 
     def build_kdtree(self, grid='node'):
         """Builds the kdtree for the specified grid"""
-
+        from scipy.spatial import KDTree
         if not hasattr(self, '_kd_trees'):
             self._kd_trees = {'node': None,
                               'edge1': None,
