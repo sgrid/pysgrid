@@ -1,8 +1,11 @@
-'''
+"""
+Test SGrid Variable ROMS.
+
 Created on Apr 15, 2015
 
 @author: ayan
-'''
+
+"""
 
 from __future__ import (absolute_import, division, print_function)
 
@@ -13,10 +16,9 @@ import numpy as np
 from ..sgrid import SGrid
 from ..utils import GridPadding
 from ..variables import SGridVariable
-from .write_nc_test_files import deltares_sgrid, roms_sgrid, wrf_sgrid_2d
+from .write_nc_test_files import roms_sgrid
 
 
-# TestSGridVariableROMS.
 @pytest.fixture
 def sgrid_variable_roms(roms_sgrid):
     face_padding = [GridPadding(mesh_topology_var=u'grid',
@@ -155,73 +157,3 @@ def test_vector_directions(sgrid_variable_roms):
     zeta_axis = zeta_var.vector_axis
     assert u_vector_axis == expected_u_axis
     assert zeta_axis is None
-
-
-# TestSGridVariablesWRF.
-@pytest.fixture
-def sgrid_var_wrf(wrf_sgrid_2d):
-    face_padding = [GridPadding(mesh_topology_var=u'grid',
-                                face_dim=u'west_east',
-                                node_dim=u'west_east_stag',
-                                padding=u'none'),
-                    GridPadding(mesh_topology_var=u'grid',
-                                face_dim=u'south_north',
-                                node_dim=u'south_north_stag',
-                                padding=u'none')]
-    node_dimensions = 'west_east_stag south_north_stag'
-    return dict(sgrid=SGrid(face_padding=face_padding,
-                            node_dimensions=node_dimensions),
-                test_var_1=wrf_sgrid_2d.variables['SNOW'],
-                test_var_2=wrf_sgrid_2d.variables['FAKE_U'])
-
-
-def test_face_location_inference1(sgrid_var_wrf):
-    sg_var = SGridVariable.create_variable(sgrid_var_wrf['test_var_1'],
-                                           sgrid_var_wrf['sgrid'])
-    sg_var_location = sg_var.location
-    expected_location = 'face'
-    assert sg_var_location == expected_location
-
-
-def test_edge_location_inference2(sgrid_var_wrf):
-    sg_var = SGridVariable.create_variable(sgrid_var_wrf['test_var_2'],
-                                           sgrid_var_wrf['sgrid'])
-    sg_var_location = sg_var.location
-    expected_location = 'edge1'
-    assert sg_var_location == expected_location
-
-
-# TestSGridVariablesDeltares
-
-
-@pytest.fixture
-def sgrid_vars_deltares(deltares_sgrid):
-    face_padding = [GridPadding(mesh_topology_var=u'grid',
-                                face_dim=u'MMAXZ',
-                                node_dim=u'MMAX',
-                                padding=u'low'),
-                    GridPadding(mesh_topology_var=u'grid',
-                                face_dim=u'NMAXZ',
-                                node_dim=u'NMAX',
-                                padding=u'low')]
-    node_dimensions = 'MMAX NMAX'
-    return dict(sgrid=SGrid(face_padding=face_padding,
-                            node_dimensions=node_dimensions),
-                test_var_1=deltares_sgrid.variables['FAKE_W'],
-                test_var_2=deltares_sgrid.variables['FAKE_U1'])
-
-
-def test_face_location_inference_deltares(sgrid_vars_deltares):
-    sg_var = SGridVariable.create_variable(sgrid_vars_deltares['test_var_1'],
-                                           sgrid_vars_deltares['sgrid'])
-    sg_var_location = sg_var.location
-    expected_location = 'face'
-    assert sg_var_location == expected_location
-
-
-def test_edge_location_inference_deltares(sgrid_vars_deltares):
-    sg_var = SGridVariable.create_variable(sgrid_vars_deltares['test_var_2'],
-                                           sgrid_vars_deltares['sgrid'])
-    sg_var_location = sg_var.location
-    expected_location = 'edge2'
-    assert sg_var_location == expected_location

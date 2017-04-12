@@ -1,2 +1,0 @@
-Test netCDF files go here. These can be generated dynamically for a test or they may be placed here by a developer.
-Please do not commit binary files to git as it dramatically increases the size of the repo.
