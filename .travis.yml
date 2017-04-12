@@ -6,6 +6,7 @@ env:
     - PYTHON="2.7"
     - PYTHON="3.4"
     - PYTHON="3.5"
+    - PYTHON="3.6"
 
 before_install:
     - wget http://bit.ly/miniconda -O miniconda.sh

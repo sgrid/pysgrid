@@ -56,9 +56,7 @@ class SGrid(object):
                  face_dimensions=None,
                  vertical_padding=None,
                  vertical_dimensions=None,
-                 tree=None,
-                 *args,
-                 **kwargs):
+                 ):
 
         self.node_lon = node_lon
         self.node_lat = node_lat
@@ -89,7 +87,6 @@ class SGrid(object):
         self.face_dimensions = face_dimensions
         self.vertical_padding = vertical_padding
         self.vertical_dimensions = vertical_dimensions
-        self.tree = tree
 
     @classmethod
     def load_grid(cls, nc):
@@ -400,7 +397,7 @@ class SGrid(object):
             if result is not None:
                 return result
 
-        points = np.asarray(points, dtype=np.float64)
+        points = np.ascontiguousarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
         points = points.reshape(-1, 2)
 
@@ -467,13 +464,15 @@ class SGrid(object):
             raise ValueError(
                 "{0}_lon and {0}_lat must be defined in order to create and "
                 "use CellTree for this grid".format(grid))
-        lin_nodes = np.ascontiguousarray(np.column_stack((lon[:].reshape(-1), lat[:].reshape(-1)))).astype(np.float64)  # noqa
+        lin_nodes = np.ascontiguousarray(np.column_stack((lon[:].reshape(-1),
+                                                          lat[:].reshape(-1))),
+                                         dtype=np.float64)
         y_size = lon.shape[0]
         x_size = lon.shape[1]
         lin_faces = np.array([np.array([[x, x + 1, x + x_size + 1, x + x_size]
                                         for x in range(0, x_size - 1, 1)]) +
                               y * x_size for y in range(0, y_size - 1)])
-        lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4).astype(np.int32))  # noqa
+        lin_faces = np.ascontiguousarray(lin_faces.reshape(-1, 4), dtype=np.int32)  # noqa
         self._trees[grid] = (CellTree(lin_nodes, lin_faces), lin_nodes, lin_faces)  # noqa
 
     def interpolate_var_to_points(self,
