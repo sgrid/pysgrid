@@ -1,5 +1,6 @@
 import pysgrid
 import numpy as np
+import matplotlib.pyplot as plt
 
 node_lon = np.array(([1, 3, 5], [1, 3, 5], [1, 3, 5]))
 node_lat = np.array(([1, 1, 1], [3, 3, 3], [5, 5, 5]))
@@ -32,8 +33,6 @@ interp_c = sgrid.interpolate_var_to_points(pts, c_var).reshape(600, 600)
 interp_e1 = sgrid.interpolate_var_to_points(pts, e1_var).reshape(600, 600).T
 interp_e2 = sgrid.interpolate_var_to_points(pts, e2_var).reshape(600, 600).T
 interp_n = sgrid.interpolate_var_to_points(pts, n_var).reshape(600, 600)
-
-import matplotlib.pyplot as plt
 
 plt.subplot(221)
 plt.imshow(interp_c, extent=(0, 6, 0, 6), origin='lower')

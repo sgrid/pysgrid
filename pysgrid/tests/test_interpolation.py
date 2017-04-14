@@ -6,8 +6,6 @@ Created on Feb 17, 2016
 
 import numpy as np
 
-# from ..sgrid import SGrid
-# from ..utils import points_in_polys
 from pysgrid import SGrid
 from pysgrid.utils import points_in_polys
 
@@ -124,9 +122,8 @@ def test_points_in_polys2():
 def test_nearest_neighbor():
     sgrid.build_kdtree()
 
-    diagonal = [[0, 0], [1, 1], [1, 2], [1, 2.1], [2.1,2.1], [5, 5], [6, 6]]
+    diagonal = [[0, 0], [1, 1], [1, 2], [1, 2.1], [2.1, 2.1], [5, 5], [6, 6]]
     inds = sgrid.locate_nearest(diagonal, 'node')
-    print inds
     ind_ans = np.array([[0, 0],
                         [0, 0],
                         [0, 0],
@@ -136,6 +133,3 @@ def test_nearest_neighbor():
                         [2, 2]], dtype=np.int64)
 
     assert np.all(inds ==ind_ans)
-
-if __name__ == '__main__':
-    test_nearest_neighbor()

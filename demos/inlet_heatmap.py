@@ -2,6 +2,13 @@ from netCDF4 import Dataset
 import numpy as np
 import pysgrid
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+import cartopy.crs as ccrs
+from cartopy.io import shapereader
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
 #url = ('http://geoport.whoi.edu/thredds/dodsC/clay/usgs/users/jcwarner/Projects/Sandy/triple_nest/00_dir_NYB05.ncml')
 url2 = (
     'http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
@@ -17,14 +24,6 @@ print points.shape
 time_idx = 0
 v_idx = 0
 
-# interp_u = sgrid.interpolate_var_to_points(
-#     points, sgrid.u, slice=[time_idx, v_idx])
-# interp_v = sgrid.interpolate_var_to_points(
-#     points, sgrid.v, slice=[time_idx, v_idx])
-# sgrid.interpolate_var_to_points(
-#     points[19:21, 241:243], sgrid.u, slices=[time_idx, v_idx])
-# interp_u = sgrid.interpolate_var_to_points(
-#     points, sgrid.u, slices=[time_idx, v_idx])
 interp_u = sgrid.interpolate_var_to_points(
     points, sgrid.u[time_idx, v_idx], slices=None)
 interp_v = sgrid.interpolate_var_to_points(
@@ -44,15 +43,6 @@ v_rot = v_rot.reshape(600, -1)
 
 uv_vector_sum = vector_sum(u_rot, v_rot)
 
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-import cartopy.crs as ccrs
-from cartopy.io import shapereader
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-
 def make_map(projection=ccrs.PlateCarree(), figsize=(20, 20)):
     fig, ax = plt.subplots(figsize=figsize,
                            subplot_kw=dict(projection=projection))
@@ -71,13 +61,9 @@ lat_data = lats
 fig, ax = make_map()
 
 kw = dict(scale=1.0 / scale, pivot='middle', width=0.003, color='black')
-# q = plt.quiver(lon_data[::vscale, ::vscale], lat_data[::vscale, ::vscale],
-# u_rot[::vscale, ::vscale], v_rot[::vscale, ::vscale], zorder=2, **kw)
 
 cs = plt.pcolormesh(lon_data[::mscale, ::mscale],
                     lat_data[::mscale, ::mscale],
                     uv_vector_sum[::mscale, ::mscale], zorder=1, cmap=plt.cm.rainbow)
 ax.coastlines('10m')
-# plt.subplots(figsize=(20,20))
-# cs = plt.imshow(uv_vector_sum, cmap=plt.cm.rainbow)
 plt.show()

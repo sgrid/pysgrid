@@ -325,6 +325,16 @@ class SGrid(object):
             return None
 
     def _compute_transform_coeffs(self, grid):
+        """
+        https://www.particleincell.com/2012/quad-interpolation/
+
+        This computes the and b coefficients of the equations
+        x = a1 + a2*l + a3*m + a4*l*m
+        y = b1 + b2*l + b3*m + b4*l*m
+
+        The results are memoized per grid since their geometry is different, and
+        is not expected to change over the lifetime of the object.
+        """
         if not hasattr(self, '_l_coeffs'):
             self._l_coeffs = {}
             self._m_coeffs = {}
@@ -371,18 +381,6 @@ class SGrid(object):
         y_slice = slice(ymin, indices[:, 0].max() + 2)
         x_slice = slice(xmin, indices[:, 1].max() + 2)
         return (y_slice, x_slice)
-
-    def get_lines(self, grid='node'):
-        """
-        TEMPORARY
-        """
-        grid_names = ['node', 'center', 'edge1', 'edge2']
-        if grid not in grid_names:
-            raise ValueError(
-                'Name not recognized. Grid must be in {0}'.format(grid_names))
-        lons = getattr(self, grid + '_lon')
-        lats = getattr(self, grid + '_lat')
-        return np.ma.dstack((lons[:], lats[:]))
 
     def locate_faces(self,
                      points,
@@ -475,7 +473,6 @@ class SGrid(object):
         ind = np.array(ind).T
         return ind
 
-#     @profile
     def get_variable_by_index(self, var, index):
         """
         index = index arr of quads (maskedarray only)
@@ -510,7 +507,6 @@ class SGrid(object):
         raw -= np.array(var.shape[1], dtype=np.int32)
         rv[:, 3] = np.take(var, raw)
         return rv
-#         return np.ma.column_stack((var[x, y], var[x + 1, y], var[x + 1, y + 1], var[x, y + 1]))
 
     def get_variable_at_index(self, var, index):
         var = var[:]
@@ -535,7 +531,6 @@ class SGrid(object):
             raise ValueError(
                 "{0}_lon and {0}_lat must be defined in order to create and use KDTree for this grid".format(grid))
         lin_points = np.column_stack((lon.ravel(), lat.ravel()))
-        print(lin_points.shape)
         self._kd_trees[grid] = KDTree(lin_points, leafsize=4)
 
 
@@ -610,7 +605,6 @@ class SGrid(object):
         result = self.get_variable_at_index(variable, ind)
         return result
 
-#     @profile
     def interpolate_var_to_points(self,
                                   points,
                                   variable,
@@ -714,13 +708,24 @@ class SGrid(object):
                              _memo=False,
                              _copy=False,
                              _hash=None):
+        """
+        Given a list of Nx2 points, returns a Nx4 array of weights for
+        interpolating the corners of the cells containing the points
+        to the points.
+
+        Primary sources:
+        http://www.iquilezles.org/www/articles/ibilinear/ibilinear.htm
+        https://www.particleincell.com/2012/quad-interpolation/
+        Implemented math is a combination of the two
+        """
+
         def x_to_l(x, y, a, b):
             """
             Params:
-            a: x coefficients
-            b: y coefficients
             x: x coordinate of point
             y: y coordinate of point
+            a: x coefficients
+            b: y coefficients
 
             Returns:
             (l,m) - coordinate in logical space to use for interpolation
@@ -731,7 +736,9 @@ class SGrid(object):
             """
             def quad_eqn(l, m, t, aa, bb, cc):
                 """
-
+                solves the following eqns for m and l
+                m = (-bb +- sqrt(bb^2 - 4*aa*cc))/(2*aa)
+                l = (l-a1 - a3*m)/(a2 + a4*m)
                 """
                 if len(aa) is 0:
                     return
@@ -746,9 +753,6 @@ class SGrid(object):
                 m2 = (-bb + det) / (2 * aa)
                 l2 = (x[t] - a[0][t] - a[2][t] *
                       m2) / (a[1][t] + a[3][t] * m2)
-
-#                 m[t] = m1
-#                 l[t] = l1
 
                 t1 = np.logical_or(l1 < 0, l1 > 1)
                 t2 = np.logical_or(m1 < 0, m1 > 1)
@@ -767,10 +771,12 @@ class SGrid(object):
             l = np.zeros(bb.shape)
 
             t = aa[:] == 0
-            # lin_eqn
+
+            # Attempts to solve the simpler linear case first.
             with np.errstate(invalid='ignore'):
                 m[t] = -cc[t] / bb[t]
                 l[t] = (x[t] - a[0][t] - a[2][t] * m[t]) / (a[1][t] + a[3][t] * m[t])
+            # now solve the quadratic cases
             quad_eqn(l, m, ~t, aa[~t], bb[~t], cc[~t])
 
             return (l, m)
