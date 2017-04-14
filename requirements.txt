@@ -1,3 +1,4 @@
 netCDF4
 numpy
-cell_tree2d >=0.1.3
+cell_tree2d >=0.1.3 # optional -- needed if you want fast cell lookup
+scipy # optional -- only for node location (scipy.spatial.kdtree)

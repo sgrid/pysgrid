@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+
 """
 An animated image
 """
-from copy import copy
+
+from __future__ import (absolute_import, division, print_function)
+
 import netCDF4 as nc4
 import numpy as np
 import pysgrid
@@ -10,11 +13,9 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.animation import FFMpegWriter
-from matplotlib.widgets import Slider, Button, RadioButtons
 from pysgrid.processing_2d import rotate_vectors, vector_sum
 
 import cartopy.crs as ccrs
-from cartopy.io import shapereader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 """
@@ -31,7 +32,7 @@ This is a WIP. Reader beware.
 
 # url = ('C:\Users\Jay.Hennen\Documents\Code\pygnome\py_gnome\scripts\script_curv_field\TBOFS.nc')
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
-url = ('http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml')
+url = ('http://geoport-dev.whoi.edu/thredds/dodsC/clay/usgs/users/zdefne/run076/his/00_dir_roms_display.ncml') # noqa
 lons, lats = np.mgrid[-74.38:-74.26:600j, 39.45:39.56:600j]
 # lons, lats = np.mgrid[-82.8:-82.5:600j, 27.5:27.75:600j]
 maxslice = 3
@@ -52,11 +53,26 @@ def interpolated_velocities(grid, points, ind, timeobj, tindex, u, v, depth=-1.)
     mem = True
     _hash = grid._hash_of_pts(points)
 
-    u0 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index, -1], memo=mem, _hash=_hash)
-    u1 = grid.interpolate_var_to_points(points, grid.u, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
+    u0 = grid.interpolate_var_to_points(points,
+                                        grid.u,
+                                        slices=[t_index, -1],
+                                        memo=mem,
+                                        _hash=_hash)
+    u1 = grid.interpolate_var_to_points(points,
+                                        grid.u,
+                                        slices=[t_index + 1, -1],
+                                        memo=mem, _hash=_hash)
 
-    v0 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index, -1], memo=mem, _hash=_hash)
-    v1 = grid.interpolate_var_to_points(points, grid.v, slices=[t_index + 1, -1], memo=mem, _hash=_hash)
+    v0 = grid.interpolate_var_to_points(points,
+                                        grid.v,
+                                        slices=[t_index, -1],
+                                        memo=mem,
+                                        _hash=_hash)
+    v1 = grid.interpolate_var_to_points(points,
+                                        grid.v,
+                                        slices=[t_index + 1, -1],
+                                        memo=mem,
+                                        _hash=_hash)
 
     u_vels = u0 + (u1 - u0) * t_alphas
     v_vels = v0 + (v1 - v0) * t_alphas
@@ -76,7 +92,8 @@ class Time(object):
 
     def ialphas(self, index):
         '''
-        given a floating point index between 0 and max index, give interpolation alphas for that time
+        given a floating point index between 0 and max index,
+        give interpolation alphas for that time
         '''
         i0 = np.floor(index)
         i1 = np.ceil(index)
@@ -103,8 +120,17 @@ def f(time):
     '''
     time: float index
     '''
-    vels = interpolated_velocities(
-        sgrid, points, timeobj, time, sgrid.u, sgrid.v, u_alphas, v_alphas, u_ind, v_ind)
+    vels = interpolated_velocities(sgrid,
+                                   points,
+                                   timeobj,
+                                   time,
+                                   sgrid.u,
+                                   sgrid.v,
+                                   # u_alphas,
+                                   # v_alphas,
+                                   # u_ind,
+                                   # v_ind,
+                                   )
 
     u_rot = vels[:, 0]
     v_rot = vels[:, 1]
@@ -160,8 +186,8 @@ angles = sgrid.angles[:][ang_ind[:, 0], ang_ind[:, 1]]
 # current frame; here we are just animating one artist, the image, in
 # each frame
 fig, ax = make_map()
-print fig
-print ax
+print(fig)
+print(ax)
 index = 0
 ax.coastlines('10m')
 
@@ -186,8 +212,8 @@ def gen_map(k):
     lon_data = lons
     lat_data = lats
 
-    print tindex
-    print time_str
+    print(tindex)
+    print(time_str)
     u_rot, v_rot = interpolated_velocities(sgrid, points, ind, timeobj, tindex, sgrid.u, sgrid.v)
     u_rot, v_rot = rotate_vectors(u_rot, v_rot, angles)
     u_rot = u_rot.reshape(600, -1)
@@ -204,13 +230,18 @@ def gen_map(k):
     index += 1
     return cs, qv, tl
 
-print 'creating animation'
-ani = animation.FuncAnimation(
-    fig, gen_map, frames=maxslice * fps - 1, interval=100, blit=True, repeat=False)
+
+print('creating animation')
+ani = animation.FuncAnimation(fig,
+                              gen_map,
+                              frames=maxslice * fps - 1,
+                              interval=100,
+                              blit=True,
+                              repeat=False)
 
 writer = FFMpegWriter(fps=fps, bitrate=1500)
 # plt.show()
 
-print 'saving'
+print('saving')
 ani.save('currents_movie.mp4', writer=writer)
-print 'done'
+print('done')

@@ -1,6 +1,6 @@
-import pysgrid
 import numpy as np
 import matplotlib.pyplot as plt
+import pysgrid
 
 node_lon = np.array(([1, 3, 5], [1, 3, 5], [1, 3, 5]))
 node_lat = np.array(([1, 1, 1], [3, 3, 3], [5, 5, 5]))

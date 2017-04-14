@@ -119,6 +119,7 @@ def test_points_in_polys2():
     answer = np.logical_and(answer[:, 0], answer[:, 1])
     assert (answer == pinp).all()
 
+
 def test_nearest_neighbor():
     sgrid.build_kdtree()
 
@@ -132,4 +133,4 @@ def test_nearest_neighbor():
                         [2, 2],
                         [2, 2]], dtype=np.int64)
 
-    assert np.all(inds ==ind_ans)
+    assert np.all(inds == ind_ans)
