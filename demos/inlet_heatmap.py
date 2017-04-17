@@ -6,7 +6,6 @@ from netCDF4 import Dataset
 import numpy as np
 import pysgrid
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 import cartopy.crs as ccrs
@@ -43,6 +42,7 @@ u_rot = u_rot.reshape(600, -1)
 v_rot = v_rot.reshape(600, -1)
 
 uv_vector_sum = vector_sum(u_rot, v_rot)
+
 
 def make_map(projection=ccrs.PlateCarree(), figsize=(20, 20)):
     fig, ax = plt.subplots(figsize=figsize,
