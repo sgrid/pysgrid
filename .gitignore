@@ -1,0 +1,13 @@
+# generated files
+*.pyc
+*.log
+
+# Packaging
+*.egg
+*.egg-info
+dist
+build
+
+*.nc
+
+.cache

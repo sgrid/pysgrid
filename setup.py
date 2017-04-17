@@ -43,6 +43,7 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 setup(name='pysgrid',
       version=extract_version(),
       description='Python package for working with staggered gridded data',
@@ -55,15 +56,14 @@ setup(name='pysgrid',
       install_requires=install_requires,
       tests_require=tests_require,
       cmdclass=dict(test=PyTest),
-      classifiers=[
-          'Development Status :: 3 - Alpha',
-          'Intended Audience :: Developers',
-          'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: BSD License',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: Python',
-          'Topic :: Scientific/Engineering',
-          ],
+      classifiers=['Development Status :: 3 - Alpha',
+                   'Intended Audience :: Developers',
+                   'Intended Audience :: Science/Research',
+                   'License :: OSI Approved :: BSD License',
+                   'Operating System :: POSIX :: Linux',
+                   'Programming Language :: Python',
+                   'Topic :: Scientific/Engineering',
+                   ],
       include_package_data=True,
       zip_safe=False
       )

@@ -1,0 +1,30 @@
+# Conda recipe example.
+package:
+    name: pysgrid
+    version: "0.3.4"
+
+source:
+    git_url: https://github.com/NOAA-ORR-ERD/pysgrid.git
+    git_tag: v0.3.4
+
+build:
+    number: 3
+
+requirements:
+    build:
+        - python
+        - setuptools
+    run:
+        - python
+        - numpy
+        - netcdf4
+        - scipy
+
+test:
+    imports:
+        - pysgrid
+
+about:
+    home: https://github.com/pysgrid/pysgrid
+    license: BSD
+    summary: 'A Python API to utilize data written using the unstructured grid SGRID conventions'

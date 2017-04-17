@@ -178,4 +178,5 @@ class SGridVariable(object):
         return rv
 
     def __str__(self):
-        return "SGridVariable object: {0:s}, on the {1:s}s".format(self.standard_name, self.location)  # noqa
+        return "SGridVariable object: {0:s}, on the {1:s}s".format(self.standard_name,
+                                                                   self.location)
